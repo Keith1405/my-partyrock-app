@@ -37,12 +37,12 @@ Resources:
                 Action:
                   - bedrock:InvokeModel
                   - bedrock:InvokeModelWithResponseStream
+                  - bedrock:Converse
+                  - bedrock:ConverseStream
                 Resource:
-                  # Use * for region — the global cross-region inference profile
-                  # routes to us-east-2/us-west-2 as well as ap-southeast-1.
-                  - !Sub arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/global.anthropic.claude-haiku-4-5-20251001-v1:0
-                  - arn:aws:bedrock:*::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0
-                  - arn:aws:bedrock:::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0
+                  # Claude 3 Haiku — regional foundation model. * for region
+                  # keeps the policy valid regardless of deploy region.
+                  - arn:aws:bedrock:*::foundation-model/anthropic.claude-3-haiku-20240307-v1:0
 
   # ---------------------------------------------------------------------------
   # Text AI Lambdas (Flask + Lambda Web Adapter, response streaming)
