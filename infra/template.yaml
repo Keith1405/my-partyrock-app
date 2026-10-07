@@ -42,8 +42,21 @@ Parameters:
     Type: String
     Default: "*"
     Description: >
-      Browser origin allowed by CORS (e.g. https://your-site.example or
-      http://localhost:8000 for local testing). CORS is not authentication.
+      Browser origin allowed by CORS (e.g. the CloudFront URL after first deploy,
+      or http://localhost:8000 for local testing). CORS is not authentication.
+      Use "*" for the first deploy, then re-deploy with the real site origin.
+  LambdaExecutionRoleArn:
+    Type: String
+    Default: ""
+    Description: >
+      ARN of a PRE-EXISTING, sandbox-approved Lambda execution role to use when the
+      sandbox forbids IAM role creation. If blank, SAM creates per-function roles
+      (requires iam:CreateRole). The supplied role MUST allow CloudWatch Logs and
+      bedrock:InvokeModel on the permitted model/inference-profile.
+
+Conditions:
+  # When no role ARN is supplied, let SAM create per-function roles (needs IAM create).
+  CreateFunctionRoles: !Equals [!Ref LambdaExecutionRoleArn, ""]
 
 Globals:
   Function:
@@ -84,17 +97,9 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: app.extract_from_photo
-      Policies:
-        # Minimal, least-privilege. Bedrock invoke is declared for Stage 3 and
-        # scoped to a resource placeholder — no wildcards beyond the model arn
-        # shape, no real model id baked in.
-        - Statement:
-            - Sid: BedrockInvokePlaceholder
-              Effect: Allow
-              Action:
-                - bedrock:InvokeModel
-              Resource:
-                - !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/*"
+      # Honest 501 placeholder — no Bedrock permission needed. Uses the supplied
+      # sandbox role if given; otherwise SAM creates a basic logging-only role.
+      Role: !If [CreateFunctionRoles, !Ref "AWS::NoValue", !Ref LambdaExecutionRoleArn]
       Events:
         Api:
           Type: HttpApi
@@ -108,19 +113,23 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: app.build_medicine_card
-      Policies:
-        - Statement:
-            # Least-privilege Bedrock invoke. Covers both direct foundation-model
-            # invocation and cross-region inference profiles (many sandbox models are
-            # only invokable via an inference profile). Scope to specific model ARNs
-            # at deploy time if the sandbox requires it.
-            - Sid: BedrockInvokeMedicineCard
-              Effect: Allow
-              Action:
-                - bedrock:InvokeModel
-              Resource:
-                - !Sub "arn:aws:bedrock:*::foundation-model/*"
-                - !Sub "arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/*"
+      # Use the supplied sandbox role if given; otherwise let SAM create one with
+      # the least-privilege Bedrock policy below.
+      Role: !If [CreateFunctionRoles, !Ref "AWS::NoValue", !Ref LambdaExecutionRoleArn]
+      Policies: !If
+        - CreateFunctionRoles
+        - - Statement:
+              # Least-privilege Bedrock invoke. Covers direct foundation-model
+              # invocation and cross-region inference profiles (many sandbox models
+              # are only invokable via an inference profile).
+              - Sid: BedrockInvokeMedicineCard
+                Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                Resource:
+                  - !Sub "arn:aws:bedrock:*::foundation-model/*"
+                  - !Sub "arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/*"
+        - !Ref "AWS::NoValue"
       Events:
         Api:
           Type: HttpApi
@@ -134,14 +143,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: app.build_precautions_summary
-      Policies:
-        - Statement:
-            - Sid: BedrockInvokePlaceholder
-              Effect: Allow
-              Action:
-                - bedrock:InvokeModel
-              Resource:
-                - !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/*"
+      # Honest 501 placeholder — no Bedrock permission needed yet.
+      Role: !If [CreateFunctionRoles, !Ref "AWS::NoValue", !Ref LambdaExecutionRoleArn]
       Events:
         Api:
           Type: HttpApi
@@ -155,14 +158,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: app.chat_respond
-      Policies:
-        - Statement:
-            - Sid: BedrockInvokePlaceholder
-              Effect: Allow
-              Action:
-                - bedrock:InvokeModel
-              Resource:
-                - !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/*"
+      # Honest 501 placeholder — no Bedrock permission needed yet.
+      Role: !If [CreateFunctionRoles, !Ref "AWS::NoValue", !Ref LambdaExecutionRoleArn]
       Events:
         Api:
           Type: HttpApi
@@ -176,14 +173,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: app.prepare_return_plan
-      Policies:
-        - Statement:
-            - Sid: BedrockInvokePlaceholder
-              Effect: Allow
-              Action:
-                - bedrock:InvokeModel
-              Resource:
-                - !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/*"
+      # Honest 501 placeholder — no Bedrock permission needed yet.
+      Role: !If [CreateFunctionRoles, !Ref "AWS::NoValue", !Ref LambdaExecutionRoleArn]
       Events:
         Api:
           Type: HttpApi
@@ -192,12 +183,98 @@ Resources:
             Path: /prepare-return-plan
             Method: post
 
+  # =========================================================================
+  # Website hosting: PRIVATE S3 origin + CloudFront with Origin Access Control.
+  # The bucket stays fully private (Block Public Access ON); only CloudFront can
+  # read it. This avoids public-bucket settings many sandboxes forbid. If the
+  # sandbox also restricts CloudFront, see docs/build-status.md for the fallback.
+  # =========================================================================
+  SiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+
+  SiteOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub "${AWS::StackName}-oac"
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  SiteDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: SmartMed Cycle static site
+        DefaultRootObject: index.html
+        # SPA-style fallback so deep links resolve to index.html.
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+        Origins:
+          - Id: s3origin
+            DomainName: !GetAtt SiteBucket.RegionalDomainName
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+            OriginAccessControlId: !GetAtt SiteOriginAccessControl.Id
+        DefaultCacheBehavior:
+          TargetOriginId: s3origin
+          ViewerProtocolPolicy: redirect-to-https
+          Compress: true
+          # AWS managed "CachingOptimized" policy id (stable, public constant).
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+
+  # Bucket policy: allow ONLY this CloudFront distribution to read objects.
+  SiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref SiteBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowCloudFrontRead
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub "${SiteBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${SiteDistribution.Id}"
+
 Outputs:
   ApiBaseUrl:
     Description: >
-      Base URL of the SmartMed API. Put this into frontend/config.js as
-      `apiBaseUrl` (with liveMode: true) to connect the frontend.
+      Base URL of the SmartMed API. The deploy workflow writes this into
+      frontend/config.js as `apiBaseUrl` (with liveMode: true).
     Value: !Sub "https://${SmartMedApi}.execute-api.${AWS::Region}.amazonaws.com"
   MedicineCardEndpoint:
     Description: Full URL of the Medicine Card endpoint (POST).
     Value: !Sub "https://${SmartMedApi}.execute-api.${AWS::Region}.amazonaws.com/build-medicine-card"
+  SiteBucketName:
+    Description: S3 bucket that holds the uploaded frontend assets.
+    Value: !Ref SiteBucket
+  SiteDistributionId:
+    Description: CloudFront distribution id (used to invalidate the cache after upload).
+    Value: !Ref SiteDistribution
+  SiteUrl:
+    Description: Public HTTPS URL of the deployed SmartMed site (CloudFront).
+    Value: !Sub "https://${SiteDistribution.DomainName}"
