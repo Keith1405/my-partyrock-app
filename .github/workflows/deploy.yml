@@ -1,0 +1,209 @@
+# SmartMed Cycle — manual deployment to an AWS sandbox.
+#
+# Trigger: MANUAL ONLY (workflow_dispatch). Nothing deploys on push.
+#
+# What it does:
+#   1. Validates + builds the SAM app (validation errors FAIL the job — no "|| true").
+#   2. Deploys the backend (HTTP API + Lambda) and website hosting (private S3 +
+#      CloudFront) from infra/template.yaml.
+#   3. Reads stack outputs, writes frontend/config.js (public API URL only),
+#      uploads all frontend assets to the site bucket, invalidates CloudFront.
+#   4. Prints the API base URL and the site URL.
+#
+# Credentials: temporary sandbox credentials from GitHub repository SECRETS
+#   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN.
+# Non-secret settings come from repository VARIABLES (see env block + docs).
+#
+# This workflow does NOT enable any unfinished AI feature. Only the typed
+# Medicine Card calls a real model; the other routes stay honest 501 placeholders.
+
+name: Deploy SmartMed (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "deploy" to confirm a real deployment to the sandbox.'
+        required: true
+        default: ''
+
+# One deploy at a time.
+concurrency:
+  group: smartmed-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  # ---- Non-secret settings: set these as repository VARIABLES (Settings →
+  #      Secrets and variables → Actions → Variables). Do NOT hardcode values here. ----
+  AWS_REGION: ${{ vars.AWS_REGION }}                       # e.g. the sandbox's permitted region
+  SAM_DEPLOY_BUCKET: ${{ vars.SAM_DEPLOY_BUCKET }}         # existing S3 bucket for SAM artifacts
+  STACK_NAME: ${{ vars.STACK_NAME || 'smartmed-cycle' }}
+  BEDROCK_TEXT_MODEL_ID: ${{ vars.BEDROCK_TEXT_MODEL_ID }} # sandbox-permitted model/profile id
+  BEDROCK_REGION: ${{ vars.BEDROCK_REGION }}              # optional; blank = use AWS_REGION
+  LAMBDA_EXECUTION_ROLE_ARN: ${{ vars.LAMBDA_EXECUTION_ROLE_ARN }}  # blank if role creation allowed
+
+jobs:
+  deploy:
+    name: Validate, build and deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Guard — require explicit confirmation
+        if: ${{ github.event.inputs.confirm != 'deploy' }}
+        run: |
+          echo "::error::Deployment not confirmed. Re-run and type 'deploy' in the confirm box."
+          exit 1
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up AWS SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: Configure AWS credentials (temporary sandbox session)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Preflight — required settings present
+        run: |
+          missing=0
+          for v in AWS_REGION SAM_DEPLOY_BUCKET BEDROCK_TEXT_MODEL_ID; do
+            if [ -z "${!v}" ]; then echo "::error::Repository variable $v is not set."; missing=1; fi
+          done
+          if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ] || [ -z "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ] || [ -z "${{ secrets.AWS_SESSION_TOKEN }}" ]; then
+            echo "::error::One or more AWS_* secrets are missing."; missing=1
+          fi
+          if [ "$missing" -ne 0 ]; then exit 1; fi
+          echo "Deploying stack '$STACK_NAME' to region '$AWS_REGION'."
+
+      - name: Verify caller identity
+        run: aws sts get-caller-identity
+
+      # ---- Validation MUST fail the job on error (no "|| true"). ----
+      - name: SAM validate (lint)
+        run: sam validate --lint --template infra/template.yaml --region "$AWS_REGION"
+
+      - name: SAM build
+        run: sam build --template infra/template.yaml
+
+      - name: SAM deploy (backend + website hosting)
+        run: |
+          set -euo pipefail
+          sam deploy \
+            --stack-name "$STACK_NAME" \
+            --region "$AWS_REGION" \
+            --s3-bucket "$SAM_DEPLOY_BUCKET" \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
+            --parameter-overrides \
+              BedrockTextModelId="$BEDROCK_TEXT_MODEL_ID" \
+              BedrockRegion="$BEDROCK_REGION" \
+              LambdaExecutionRoleArn="$LAMBDA_EXECUTION_ROLE_ARN" \
+              AllowedOrigin="*"
+
+      - name: Read stack outputs
+        id: outputs
+        run: |
+          set -euo pipefail
+          get() {
+            aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region "$AWS_REGION" \
+              --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text
+          }
+          API_BASE_URL="$(get ApiBaseUrl)"
+          SITE_BUCKET="$(get SiteBucketName)"
+          DIST_ID="$(get SiteDistributionId)"
+          SITE_URL="$(get SiteUrl)"
+          for pair in "ApiBaseUrl=$API_BASE_URL" "SiteBucketName=$SITE_BUCKET" "SiteDistributionId=$DIST_ID" "SiteUrl=$SITE_URL"; do
+            key="${pair%%=*}"; val="${pair#*=}"
+            if [ -z "$val" ] || [ "$val" = "None" ]; then echo "::error::Missing stack output $key"; exit 1; fi
+          done
+          echo "api_base_url=$API_BASE_URL" >> "$GITHUB_OUTPUT"
+          echo "site_bucket=$SITE_BUCKET"   >> "$GITHUB_OUTPUT"
+          echo "dist_id=$DIST_ID"           >> "$GITHUB_OUTPUT"
+          echo "site_url=$SITE_URL"         >> "$GITHUB_OUTPUT"
+
+      # ---- Lock CORS to the real site origin now that we know it. ----
+      - name: Re-deploy with CORS locked to the site origin
+        run: |
+          set -euo pipefail
+          sam deploy \
+            --stack-name "$STACK_NAME" \
+            --region "$AWS_REGION" \
+            --s3-bucket "$SAM_DEPLOY_BUCKET" \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
+            --parameter-overrides \
+              BedrockTextModelId="$BEDROCK_TEXT_MODEL_ID" \
+              BedrockRegion="$BEDROCK_REGION" \
+              LambdaExecutionRoleArn="$LAMBDA_EXECUTION_ROLE_ARN" \
+              AllowedOrigin="${{ steps.outputs.outputs.site_url }}"
+
+      # ---- Generate the NON-SECRET frontend config (public API URL only). ----
+      - name: Generate frontend/config.js
+        run: |
+          set -euo pipefail
+          cat > frontend/config.js <<EOF
+          // GENERATED by the deploy workflow — do not edit by hand. Non-secret.
+          export const config = {
+            apiBaseUrl: '${{ steps.outputs.outputs.api_base_url }}',
+            liveMode: true,
+          };
+          export default config;
+          EOF
+          echo "Wrote frontend/config.js"
+
+      # ---- Upload all frontend assets to the private site bucket. ----
+      - name: Upload frontend assets
+        run: |
+          set -euo pipefail
+          # Long-cache the hashed/static assets; never cache the entry/config so
+          # updates and the generated config are picked up immediately.
+          aws s3 sync frontend/ "s3://${{ steps.outputs.outputs.site_bucket }}/" \
+            --delete \
+            --exclude "config.example.js" \
+            --cache-control "public,max-age=300"
+          # Force correct content types. ES modules MUST be served as JavaScript or the
+          # browser refuses them (this was the earlier blank-controls failure mode).
+          aws s3 cp frontend/ "s3://${{ steps.outputs.outputs.site_bucket }}/" \
+            --recursive --exclude "*" --include "*.js" \
+            --content-type "text/javascript; charset=utf-8" \
+            --cache-control "public,max-age=300" --metadata-directive REPLACE
+          aws s3 cp frontend/assets/css/styles.css "s3://${{ steps.outputs.outputs.site_bucket }}/assets/css/styles.css" \
+            --content-type "text/css; charset=utf-8" --cache-control "public,max-age=300"
+          aws s3 cp frontend/index.html  "s3://${{ steps.outputs.outputs.site_bucket }}/index.html" \
+            --content-type "text/html; charset=utf-8" --cache-control "no-cache"
+          aws s3 cp frontend/config.js   "s3://${{ steps.outputs.outputs.site_bucket }}/config.js" \
+            --content-type "text/javascript; charset=utf-8" --cache-control "no-cache"
+
+      - name: Invalidate CloudFront cache
+        run: |
+          set -euo pipefail
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ steps.outputs.outputs.dist_id }}" \
+            --paths "/*"
+
+      - name: Print result URLs
+        run: |
+          echo "### SmartMed deployed" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Site URL:    ${{ steps.outputs.outputs.site_url }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- API base:    ${{ steps.outputs.outputs.api_base_url }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Medicine Card: ${{ steps.outputs.outputs.api_base_url }}/build-medicine-card" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Only the typed Medicine Card uses a live model. Extraction, precautions, chat and returns are not connected yet (honest 501)." >> "$GITHUB_STEP_SUMMARY"
+          echo "Note: a new CloudFront distribution can take ~10-15 min to finish deploying before the site URL serves." >> "$GITHUB_STEP_SUMMARY"
