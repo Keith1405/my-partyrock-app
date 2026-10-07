@@ -1,0 +1,8 @@
+# SmartMed Cycle — backend (Lambda) dependencies.
+#
+# boto3/botocore are provided by the AWS Lambda Python runtime, but we pin them so
+# `sam build` packages a known-good version and local `pytest` can import the handler.
+# The Medicine Card handler uses the Bedrock Converse API via boto3.
+
+boto3==1.34.144
+botocore==1.34.144
