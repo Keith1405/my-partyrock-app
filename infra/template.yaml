@@ -1,0 +1,203 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+
+# =============================================================================
+# SmartMed Cycle — AWS SAM template.
+#
+# API Gateway (HTTP API) fronting Lambda handlers whose names mirror the frontend
+# service seam in frontend/src/js/services/index.js. `build_medicine_card` is a
+# real Bedrock-backed handler (typed Medicine Card entry); the others remain honest
+# 501 placeholders until their stages.
+#
+# No secret, account id, or real ARN is committed here. Model id, region and the
+# allowed browser origin are supplied as deploy-time parameters. Deploy only when
+# the sandbox AWS settings are available (see docs/build-status.md).
+# =============================================================================
+
+Description: >
+  SmartMed Cycle backend. HTTP API + Lambda. build_medicine_card uses Amazon
+  Bedrock (Converse) for typed Medicine Card entry; other routes are placeholders.
+
+Parameters:
+  # Supplied at deploy time. No values committed. Logical IDs are CamelCase
+  # (CloudFormation forbids AWS-prefixed parameter names); they feed the env-var
+  # NAMES the Lambda code reads (BEDROCK_TEXT_MODEL_ID, etc.).
+  BedrockTextModelId:
+    Type: String
+    Default: ""
+    Description: >
+      Bedrock text model id or inference-profile id (e.g. a sandbox-permitted
+      Claude/Nova id). Required for build_medicine_card to work.
+  BedrockVisionModelId:
+    Type: String
+    Default: ""
+    Description: Bedrock vision model id (reserved for the photo-extraction stage).
+  BedrockRegion:
+    Type: String
+    Default: ""
+    Description: >
+      Optional Bedrock region override. Leave blank to use the Lambda's own region
+      (AWS_REGION). Set only if Bedrock access is in a different permitted region.
+  AllowedOrigin:
+    Type: String
+    Default: "*"
+    Description: >
+      Browser origin allowed by CORS (e.g. https://your-site.example or
+      http://localhost:8000 for local testing). CORS is not authentication.
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Handler: app.build_medicine_card
+    CodeUri: ../backend/lambda/
+    Timeout: 29          # under the HTTP API 30s integration limit
+    MemorySize: 256
+    Environment:
+      Variables:
+        # Values come from stack parameters at deploy time. AWS_REGION is reserved
+        # and provided automatically by Lambda, so it is not set here; BedrockRegion
+        # is an optional override the code falls back from to AWS_REGION.
+        BEDROCK_TEXT_MODEL_ID: !Ref BedrockTextModelId
+        BEDROCK_VISION_MODEL_ID: !Ref BedrockVisionModelId
+        BEDROCK_REGION: !Ref BedrockRegion
+        ALLOWED_ORIGIN: !Ref AllowedOrigin
+
+Resources:
+  # --- HTTP API in front of the Lambda handlers ---------------------------
+  SmartMedApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Description: SmartMed Cycle API.
+      # CORS so the static frontend origin can call the API from the browser.
+      # (CORS restricts browsers; it is NOT auth or abuse protection.)
+      CorsConfiguration:
+        AllowOrigins:
+          - !Ref AllowedOrigin
+        AllowHeaders:
+          - content-type
+        AllowMethods:
+          - POST
+          - OPTIONS
+
+  # --- Section 1: extract from photo --------------------------------------
+  ExtractFromPhotoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: app.extract_from_photo
+      Policies:
+        # Minimal, least-privilege. Bedrock invoke is declared for Stage 3 and
+        # scoped to a resource placeholder — no wildcards beyond the model arn
+        # shape, no real model id baked in.
+        - Statement:
+            - Sid: BedrockInvokePlaceholder
+              Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource:
+                - !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/*"
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref SmartMedApi
+            Path: /extract-from-photo
+            Method: post
+
+  # --- Section 1: medicine card (REAL Bedrock, typed entry) ---------------
+  BuildMedicineCardFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: app.build_medicine_card
+      Policies:
+        - Statement:
+            # Least-privilege Bedrock invoke. Covers both direct foundation-model
+            # invocation and cross-region inference profiles (many sandbox models are
+            # only invokable via an inference profile). Scope to specific model ARNs
+            # at deploy time if the sandbox requires it.
+            - Sid: BedrockInvokeMedicineCard
+              Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource:
+                - !Sub "arn:aws:bedrock:*::foundation-model/*"
+                - !Sub "arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/*"
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref SmartMedApi
+            Path: /build-medicine-card
+            Method: post
+
+  # --- Section 2: precautions summary -------------------------------------
+  BuildPrecautionsSummaryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: app.build_precautions_summary
+      Policies:
+        - Statement:
+            - Sid: BedrockInvokePlaceholder
+              Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource:
+                - !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/*"
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref SmartMedApi
+            Path: /build-precautions-summary
+            Method: post
+
+  # --- Section 3: chat -----------------------------------------------------
+  ChatRespondFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: app.chat_respond
+      Policies:
+        - Statement:
+            - Sid: BedrockInvokePlaceholder
+              Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource:
+                - !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/*"
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref SmartMedApi
+            Path: /chat-respond
+            Method: post
+
+  # --- Section 4: return plan ----------------------------------------------
+  PrepareReturnPlanFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: app.prepare_return_plan
+      Policies:
+        - Statement:
+            - Sid: BedrockInvokePlaceholder
+              Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource:
+                - !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/*"
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref SmartMedApi
+            Path: /prepare-return-plan
+            Method: post
+
+Outputs:
+  ApiBaseUrl:
+    Description: >
+      Base URL of the SmartMed API. Put this into frontend/config.js as
+      `apiBaseUrl` (with liveMode: true) to connect the frontend.
+    Value: !Sub "https://${SmartMedApi}.execute-api.${AWS::Region}.amazonaws.com"
+  MedicineCardEndpoint:
+    Description: Full URL of the Medicine Card endpoint (POST).
+    Value: !Sub "https://${SmartMedApi}.execute-api.${AWS::Region}.amazonaws.com/build-medicine-card"
