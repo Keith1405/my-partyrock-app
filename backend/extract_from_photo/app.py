@@ -12,7 +12,7 @@ from flask import Flask, Response, request, stream_with_context
 
 app = Flask(__name__)
 
-MODEL_ID = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
+MODEL_ID = "anthropic.claude-3-haiku-20240307-v1:0"
 # The global. inference profile routes worldwide; the SDK still needs a region
 # to resolve the Bedrock runtime endpoint. ap-southeast-1 is the home region.
 REGION = os.environ.get("BEDROCK_REGION", "ap-southeast-1")
