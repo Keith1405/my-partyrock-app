@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>💊 SmartMed Cycle</title>
+<title>SmartMed Cycle — Know your medicine</title>
 <style>
   :root {
     --bg: #0f1419;
@@ -219,6 +219,7 @@
   .chat-input-row { display: flex; gap: 8px; margin-top: 10px; }
   .chat-input-row input { flex: 1; }
 </style>
+<link rel="stylesheet" href="assets/redesign.css" />
 </head>
 <body>
 <div class="wrap">
@@ -234,94 +235,69 @@
     };
   </script>
 
-  <!-- Widget 1: Hero static text -->
-  <header class="hero">
-    <h1>💊 SmartMed Cycle</h1>
-    <div class="tag">Your personal medicine companion — understand, check, ask, and return responsibly.</div>
-    <ul>
-      <li>🔎 <strong>Understand My Medicine</strong> — snap or type a label to get a plain-language summary</li>
-      <li>🛡️ <strong>Check My Precautions</strong> — spot what to watch for and what to ask</li>
-      <li>💬 <strong>Ask About My Medicines</strong> — chat with SmartMed Help, any time</li>
-      <li>♻️ <strong>Return Unused Medicines</strong> — find a verified drop-off point near you</li>
-    </ul>
-    <div class="notice">⚠️ <strong>Heads up:</strong> SmartMed Cycle is a preparation tool — not a substitute for pharmacist or prescriber advice. Always compare outputs with your original label.</div>
+  <a class="skip-link" href="#medicine">Skip to medicine details</a>
+  <nav class="topbar" aria-label="Main navigation">
+    <a class="brand" href="#top">SmartMed<span>Cycle</span></a>
+    <div class="navlinks" id="navigation">
+      <a href="#medicine">Medicine</a><a href="#precautions">Precautions</a>
+      <a href="#ask">Ask</a><a href="#returns">Returns</a>
+    </div>
+    <select id="preferred_language" aria-label="Preferred language">
+      <option value="Bahasa Melayu">Bahasa Melayu</option>
+      <option value="English" selected>English</option>
+      <option value="中文">中文</option>
+    </select>
+    <button class="menu-toggle" id="menu_toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="navigation"><img src="assets/list.svg" alt="" /></button>
+  </nav>
+  <header class="hero" id="top">
+    <h1>Know your medicine.<br />Feel prepared.</h1>
+    <p class="tag">Turn your medicine label into clear information<br class="desktop-break" /> and questions for your pharmacist.</p>
+    <a class="primary hero-cta" href="#medicine">Start with my medicine <img src="assets/arrow-right.svg" alt="" /></a>
+    <p class="hero-note">Preparation tool only. Always check your original label and speak with your pharmacist.</p>
   </header>
-
-  <!-- Run All -->
-  <div class="run-all-bar">
-    <button id="runAll">▶ Run All</button>
-    <span id="runAllStatus" class="status-line"></span>
-  </div>
-
-  <!-- ============ SECTION 1 ============ -->
-  <section class="sec">
-    <h2>1 · Understand My Medicine</h2>
-    <div class="sec-desc">
-      Type medicine details into <strong>Medicine Details</strong> or upload a readable label photo — either is enough.
-      If you use both, the Medicine Card will compare them and flag any conflicts.
-      <blockquote>Compare the Medicine Card with your original label before continuing to Section 2.</blockquote>
-    </div>
-
-    <div class="grid-sec1">
-      <div class="cell">
-        <div class="field">
-          <label>Medicine Details <span class="opt">Optional</span></label>
-          <textarea id="medicine_details" class="hinted" placeholder="💊 Type the medicine name and strength, if known. Add the label instructions if available.&#10;&#10;📝 Example: Metformin 500 mg — take one tablet twice daily with meals."></textarea>
+  <section class="medicine-section" id="medicine" aria-labelledby="medicine-title">
+    <div class="entry-surface">
+      <h2 id="medicine-title">Medicine details</h2>
+      <div class="entry-grid">
+        <div class="field medicine-input">
+          <label class="sr-only" for="medicine_details">Medicine details</label>
+          <textarea id="medicine_details" placeholder="Medicine name, strength and label instructions"></textarea>
         </div>
-      </div>
-      <div class="cell">
-        <div class="field">
-          <label>Preferred Language</label>
-          <select id="preferred_language">
-            <option value="English" selected>English</option>
-            <option value="Bahasa Melayu">Bahasa Melayu</option>
-            <option value="中文">中文</option>
-          </select>
+        <div class="dropzone compact-upload" id="dz_med" data-input="file_med" role="button" tabindex="0" aria-label="Upload a medicine label photo">
+          <img class="upload-icon" src="assets/upload.svg" alt="" />
+          <strong>Upload label photo</strong><span>JPG, PNG or WebP</span><span class="filename" id="fn_med"></span>
         </div>
-        <div class="field">
-          <label>Patient Age</label>
+        <input type="file" id="file_med" accept="image/jpeg,image/png,image/webp" hidden />
+        <div class="field age-input">
+          <label for="patient_age">Age <span class="opt">(optional)</span></label>
           <select id="patient_age">
-            <option value="Not provided" selected>Not provided</option>
-            <option value="Child : 0-12">Child : 0-12</option>
-            <option value="Teenager : 13-17">Teenager : 13-17</option>
-            <option value="Adult : 18-60">Adult : 18-60</option>
-            <option value="Older Adult : 60+">Older Adult : 60+</option>
+            <option value="Not provided" selected>Select age</option>
+            <option value="Child : 0-12">Child: 0–12</option>
+            <option value="Teenager : 13-17">Teenager: 13–17</option>
+            <option value="Adult : 18-60">Adult: 18–60</option>
+            <option value="Older Adult : 60+">Older adult: 60+</option>
           </select>
         </div>
       </div>
-
-      <div class="cell fill-cell">
-        <div class="field" style="display:flex;flex-direction:column;flex:1;margin-bottom:0">
-          <label>Medicine Photo or Scan <span class="opt">Optional</span></label>
-          <div class="dropzone" id="dz_med" data-input="file_med"><span class="arrow">⬆️</span>📸 Upload a clear photo of the medicine label.
-🙈 Cover your name and personal details if you wish.
-✅ The medicine name, strength, and dosing instructions must be visible and readable.
-<span class="filename" id="fn_med"></span></div>
-          <input type="file" id="file_med" accept="image/jpeg,image/png,image/webp" hidden />
-        </div>
-      </div>
-      <div class="cell fill-cell">
-        <label style="font-weight:600;margin-bottom:6px;font-size:0.95rem;display:block">&nbsp;</label>
-        <div class="ai-panel">
-          <div class="panel-head">⚙️ Extract from Photo
-            <button class="secondary" style="margin-left:auto;padding:4px 10px" data-run="extract_from_photo">Run</button>
-          </div>
-          <div class="output" id="out_extract_from_photo"><span class="placeholder">You're all set to Run</span></div>
-        </div>
-      </div>
     </div>
-
-    <div class="ai-panel" style="margin-top:16px">
-      <div class="panel-head">⚙️ Medicine Card
-        <button class="secondary" style="margin-left:auto;padding:4px 10px" data-run="medicine_card">Run</button>
-      </div>
-      <div class="output" id="out_medicine_card"><span class="placeholder">You're all set to Run</span></div>
+    <ol class="steps" aria-label="How it works">
+      <li><span class="step-number">1</span><div><strong>Add your medicine</strong><p>Type it or upload a photo<br /> of your label.</p></div></li>
+      <li><span class="step-number">2</span><div><strong>Get clear information</strong><p>See key points in plain language.</p></div></li>
+      <li><span class="step-number">3</span><div><strong>Take to your pharmacist</strong><p>Bring your questions and<br /> feel prepared.</p></div></li>
+    </ol>
+    <div class="medicine-workspace">
+      <div class="section-intro"><div><span class="eyebrow">01 / UNDERSTAND</span><h2>Your medicine, in plain language.</h2></div><button data-run="medicine_card">Create medicine card <img src="assets/arrow-right.svg" alt="" /></button></div>
+      <p class="sec-desc">Type medicine details or upload a readable label photo — either is enough. If you use both, the Medicine Card compares them and flags conflicts. The medicine name, strength, and instructions must be readable. Cover personal details if you wish.</p>
+      <div class="notice">Always compare the Medicine Card with your original label before continuing to precautions.</div>
+      <div class="ai-panel"><div class="panel-head">Extract from Photo <button class="secondary" data-run="extract_from_photo">Extract label</button></div><div class="output auto" id="out_extract_from_photo" aria-live="polite"><span class="placeholder">Upload a label photo, then choose Extract label.</span></div></div>
+      <div class="ai-panel"><div class="panel-head">Medicine Card <button class="secondary" data-run="medicine_card">Generate</button></div><div class="output auto" id="out_medicine_card" aria-live="polite"><span class="placeholder">Your medicine card will appear here.</span></div></div>
+      <div class="run-all-bar"><button id="runAll" class="secondary">Generate all panels</button><span id="runAllStatus" class="status-line" role="status"></span></div>
     </div>
   </section>
 
   <!-- ============ SECTION 2 ============ -->
-  <section class="sec">
-    <h2>2 · Check My Precautions</h2>
+  <section class="sec" id="precautions">
+    <h2>02 / Check my precautions</h2>
     <div class="sec-desc">
       Add other medicines and allergy history below, if known. Blank means not provided — it does not mean none.
       Generate this section to get a list of points to discuss with your pharmacist.
@@ -330,17 +306,17 @@
 
     <div class="grid">
       <div class="field">
-        <label>Other Medicines and Supplements <span class="opt">Optional</span></label>
-        <textarea id="other_medicines" class="hinted" placeholder="💊 Other medicines you are currently taking.&#10;📏 Add names and doses if known.&#10;&#10;📝 Example: Atorvastatin 20 mg once daily; Aspirin 100 mg once daily."></textarea>
+        <label for="other_medicines">Other Medicines and Supplements <span class="opt">Optional</span></label>
+          <textarea id="other_medicines" class="hinted" placeholder=" Other medicines you are currently taking.&#10; Add names and doses if known.&#10;&#10; Example: Atorvastatin 20 mg once daily; Aspirin 100 mg once daily."></textarea>
       </div>
       <div class="field">
-        <label>Medicine Allergies and Reactions <span class="opt">Optional</span></label>
-        <textarea id="allergies" class="hinted" placeholder="⚠️ Any known medicine or food allergies, and what reaction happened.&#10;&#10;📝 Example: Penicillin — rash and swelling. Write 'None known' or 'Not sure' if applicable.&#10;🌿 Also note any supplements or herbal products you take."></textarea>
+        <label for="allergies">Medicine Allergies and Reactions <span class="opt">Optional</span></label>
+          <textarea id="allergies" class="hinted" placeholder=" Any known medicine or food allergies, and what reaction happened.&#10;&#10; Example: Penicillin — rash and swelling. Write 'None known' or 'Not sure' if applicable.&#10; Also note any supplements or herbal products you take."></textarea>
       </div>
     </div>
 
     <div class="ai-panel">
-      <div class="panel-head">⚙️ My Medicine Summary
+      <div class="panel-head">My Medicine Summary
         <button class="secondary" style="margin-left:auto;padding:4px 10px" data-run="my_medicine_summary">Run</button>
       </div>
       <div class="output" id="out_my_medicine_summary"><span class="placeholder">You're all set to Run</span></div>
@@ -348,11 +324,11 @@
   </section>
 
   <!-- ============ SECTION 3 ============ -->
-  <section class="sec">
-    <h2>3 · Ask About My Medicines</h2>
+  <section class="sec" id="ask">
+    <h2>03 / Ask about my medicines</h2>
     <div class="sec-desc">
       Ask anything about your medicine, precautions, or what to tell your pharmacist.<br/>
-      💡 <strong>Try:</strong> <em>"Prepare my pharmacist summary"</em> — get a ready-to-share summary with your medicine details, uncertainties, and questions to ask.
+       <strong>Try:</strong> <em>"Prepare my pharmacist summary"</em> — get a ready-to-share summary with your medicine details, uncertainties, and questions to ask.
     </div>
 
     <div class="notice emergency" style="margin-bottom:16px">
@@ -360,7 +336,7 @@
     </div>
 
     <div class="ai-panel">
-      <div class="panel-head">💬 SmartMed Help</div>
+      <div class="panel-head">SmartMed Help</div>
       <div class="output chat" id="chat_log_wrap">
         <div class="chat-log" id="chat_log"></div>
       </div>
@@ -372,33 +348,33 @@
   </section>
 
   <!-- ============ SECTION 4 ============ -->
-  <section class="sec">
-    <h2>♻️ 4 · Return Unused Medicines</h2>
+  <section class="sec" id="returns">
+    <h2>04 / Return unused medicines</h2>
     <div class="sec-desc">
-      🗑️ You can return <strong>any</strong> unwanted medicine — prescription medicines, over-the-counter products, vitamins, supplements, or medicines found at home.<br/>
-      📍 Enter the medicine details and your location below and we'll help you find a verified drop-off point near you!
-      <blockquote>🔴 <strong>Not sure if you should stop taking a medicine?</strong> Check with your pharmacist or prescriber <strong>before</strong> returning it.</blockquote>
-      🔗 <strong>Official return directory:</strong> <a href="https://www.mymedisafe.org.my/" target="_blank" rel="noopener" style="color:var(--accent)">myMediSAFE</a> — search by state, city, or postcode.
+       You can return <strong>any</strong> unwanted medicine — prescription medicines, over-the-counter products, vitamins, supplements, or medicines found at home.<br/>
+       Enter the medicine details and your location below and we'll help you find a verified drop-off point near you!
+      <blockquote> <strong>Not sure if you should stop taking a medicine?</strong> Check with your pharmacist or prescriber <strong>before</strong> returning it.</blockquote>
+       <strong>Official return directory:</strong> <a href="https://www.mymedisafe.org.my/" target="_blank" rel="noopener" style="color:var(--link)">myMediSAFE</a> — search by state, city, or postcode.
     </div>
 
     <div class="field">
-      <label>Your Location <span class="opt">Optional</span></label>
-      <input type="text" id="your_location" placeholder="📍 Enter your area, city, or postcode (e.g. 50480 Kuala Lumpur, Petaling Jaya, Johor Bahru) — we will search for verified return points near you." />
+      <label for="your_location">Your Location <span class="opt">Optional</span></label>
+          <input type="text" id="your_location" placeholder=" Enter your area, city, or postcode (e.g. 50480 Kuala Lumpur, Petaling Jaya, Johor Bahru) — we will search for verified return points near you." />
     </div>
 
     <div class="grid-sec1">
       <div class="cell fill-cell">
         <div class="field">
-          <label>Return Item Details <span class="opt">Optional</span></label>
-          <textarea id="return_item_details" class="hinted" placeholder="💊 Medicine name and form (e.g. Paracetamol 500 mg tablets)&#10;🏷️ Prescription or over-the-counter (if known)&#10;🔢 Quantity remaining (e.g. 14 tablets — leave blank if unsure)&#10;🧴 Item type if special: liquid / inhaler / cream / drops / needles or sharps&#10;❓ Reason: expired / no longer needed / course completed / found at home / unsure"></textarea>
+          <label for="return_item_details">Return Item Details <span class="opt">Optional</span></label>
+          <textarea id="return_item_details" class="hinted" placeholder=" Medicine name and form (e.g. Paracetamol 500 mg tablets)&#10; Prescription or over-the-counter (if known)&#10; Quantity remaining (e.g. 14 tablets — leave blank if unsure)&#10; Item type if special: liquid / inhaler / cream / drops / needles or sharps&#10; Reason: expired / no longer needed / course completed / found at home / unsure"></textarea>
         </div>
       </div>
       <div class="cell fill-cell">
         <div class="field">
           <label>Return Item Photo <span class="opt">Optional</span></label>
-          <div class="dropzone" id="dz_ret" data-input="file_ret"><span class="arrow">⬆️</span>📦 Optional. Upload a clear photo of the labelled packaging.
-🔍 The label must be visible and readable.
-⚠️ Unlabelled pills with no readable label will not be identified from appearance.
+          <div class="dropzone" id="dz_ret" data-input="file_ret"><span class="arrow">⬆</span> Optional. Upload a clear photo of the labelled packaging.
+ The label must be visible and readable.
+ Unlabelled pills with no readable label will not be identified from appearance.
 <span class="filename" id="fn_ret"></span></div>
           <input type="file" id="file_ret" accept="image/jpeg,image/png,image/webp" hidden />
         </div>
@@ -406,7 +382,7 @@
     </div>
 
     <div class="ai-panel">
-      <div class="panel-head">⚙️ My Return Plan
+      <div class="panel-head">My Return Plan
         <button class="secondary" style="margin-left:auto;padding:4px 10px" data-run="my_return_plan">Run</button>
       </div>
       <div class="output" id="out_my_return_plan"><span class="placeholder">You're all set to Run</span></div>
@@ -424,6 +400,9 @@ function wireDropzone(dzId, inputId, filenameId) {
   const fn = document.getElementById(filenameId);
 
   dz.addEventListener('click', () => input.click());
+  dz.setAttribute('role', 'button');
+  dz.tabIndex = 0;
+  dz.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } });
   dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('drag'); });
   dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
   dz.addEventListener('drop', (e) => {
@@ -461,7 +440,7 @@ function inlineMd(text) {
   s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
   s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   s = s.replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
-  s = s.replace(/(https?:\/\/[^\s)]+)/g, '<a href="$1" target="_blank" rel="noopener" style="color:var(--accent)">$1</a>');
+  s = s.replace(/(https?:\/\/[^\s)]+)/g, '<a href="$1" target="_blank" rel="noopener" style="color:var(--link)">$1</a>');
   return s;
 }
 
@@ -485,6 +464,10 @@ async function streamInto(url, payload, outEl) {
   outEl.innerHTML = '<span class="status-line"><span class="spinner"></span> Generating…</span>';
   let started = false;
   let buffer = '';
+  if (!url || url.startsWith('__URL_')) {
+    outEl.innerHTML = '<span class="placeholder">This local preview is not connected to the medicine service. The deployed app will generate your results here.</span>';
+    return;
+  }
   const cursor = document.createElement('span');
   cursor.className = 'cursor';
   cursor.innerHTML = '&nbsp;';
@@ -634,6 +617,11 @@ async function sendChat() {
     message,
   };
 
+  if (STREAM_URLS.smartmed_help.startsWith('__URL_')) {
+    cursor.remove();
+    botBubble.textContent = 'This local preview is not connected to SmartMed Help. Chat is available in the deployed app.';
+    return;
+  }
   let full = '';
   try {
     const res = await fetch(STREAM_URLS.smartmed_help, {
@@ -671,6 +659,23 @@ document.getElementById('chat_send').addEventListener('click', sendChat);
 document.getElementById('chat_input').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') sendChat();
 });
+</script>
+<script>
+const menuToggle = document.getElementById('menu_toggle');
+const navigation = document.getElementById('navigation');
+function closeMenu() {
+  navigation.classList.remove('is-open');
+  menuToggle.setAttribute('aria-expanded', 'false');
+  menuToggle.setAttribute('aria-label', 'Open navigation');
+}
+menuToggle.addEventListener('click', () => {
+  const open = navigation.classList.toggle('is-open');
+  menuToggle.setAttribute('aria-expanded', String(open));
+  menuToggle.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+});
+navigation.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMenu));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+document.addEventListener('click', e => { if (!e.target.closest('.topbar')) closeMenu(); });
 </script>
 </body>
 </html>
