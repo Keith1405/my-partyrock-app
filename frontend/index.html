@@ -68,7 +68,7 @@
     color: var(--text-dim);
   }
 
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
   @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
 
   .field { margin-bottom: 14px; }
@@ -269,14 +269,13 @@
             <option value="Older Adult : 60+">Older Adult : 60+</option>
           </select>
         </div>
+        <div class="ai-panel">
+          <div class="panel-head">⚙️ Extract from Photo
+            <button class="secondary" style="margin-left:auto;padding:4px 10px" data-run="extract_from_photo">Run</button>
+          </div>
+          <div class="output" id="out_extract_from_photo"><span class="placeholder">You're all set to Run</span></div>
+        </div>
       </div>
-    </div>
-
-    <div class="ai-panel">
-      <div class="panel-head">⚙️ Extract from Photo
-        <button class="secondary" style="margin-left:auto;padding:4px 10px" data-run="extract_from_photo">Run</button>
-      </div>
-      <div class="output" id="out_extract_from_photo"><span class="placeholder">You're all set to Run</span></div>
     </div>
 
     <div class="ai-panel">
