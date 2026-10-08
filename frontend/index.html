@@ -71,6 +71,18 @@
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
   @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
 
+  /* Section 1: explicit 2-row grid so the two columns align row-by-row.
+     Row 1 = Medicine Details  |  Language + Age stack
+     Row 2 = Medicine Photo    |  Extract from Photo  (uniform, same level) */
+  .grid-sec1 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: stretch;
+  }
+  .grid-sec1 .cell { display: flex; flex-direction: column; }
+  @media (max-width: 760px) { .grid-sec1 { grid-template-columns: 1fr; } }
+
   .field { margin-bottom: 14px; }
   .field label {
     display: block;
@@ -92,7 +104,6 @@
     resize: none;
   }
   textarea { height: 110px; }
-  /* Medicine Details sits beside the two stacked dropdowns — match their height */
   textarea.hinted { height: 165px; }
   textarea:focus, select:focus, input:focus { outline: 1px solid var(--accent-dim); }
 
@@ -136,8 +147,13 @@
     font-size: 0.93rem;
   }
   .output.chat, .output.auto { height: auto; min-height: 120px; max-height: 560px; }
-  /* Extract from Photo panel — fixed height to match the Medicine Photo dropzone */
-  .output.match-photo { height: 210px; }
+
+  /* The Extract from Photo panel and the Medicine Photo dropzone fill their
+     grid row equally, so their tops and bottoms line up. */
+  .fill-cell { flex: 1; display: flex; flex-direction: column; }
+  .fill-cell .ai-panel { margin-top: 0; display: flex; flex-direction: column; flex: 1; }
+  .fill-cell .output { flex: 1; height: auto; }
+  .fill-cell .dropzone { flex: 1; display: flex; flex-direction: column; justify-content: center; }
 
   /* thin custom scrollbar */
   .output::-webkit-scrollbar { width: 7px; }
@@ -248,24 +264,17 @@
       <blockquote>Compare the Medicine Card with your original label before continuing to Section 2.</blockquote>
     </div>
 
-    <div class="grid">
-      <div>
+    <div class="grid-sec1">
+      <!-- Row 1, Col 1: Medicine Details -->
+      <div class="cell">
         <!-- Widget 3 -->
         <div class="field">
           <label>Medicine Details <span class="opt">Optional</span></label>
           <textarea id="medicine_details" class="hinted" placeholder="💊 Type the medicine name and strength, if known. Add the label instructions if available.&#10;&#10;📝 Example: Metformin 500 mg — take one tablet twice daily with meals."></textarea>
         </div>
-        <!-- Widget 6 -->
-        <div class="field">
-          <label>Medicine Photo or Scan <span class="opt">Optional</span></label>
-          <div class="dropzone" id="dz_med" data-input="file_med"><span class="arrow">⬆️</span>📸 Upload a clear photo of the medicine label.
-🙈 Cover your name and personal details if you wish.
-✅ The medicine name, strength, and dosing instructions must be visible and readable.
-<span class="filename" id="fn_med"></span></div>
-          <input type="file" id="file_med" accept="image/jpeg,image/png,image/webp" hidden />
-        </div>
       </div>
-      <div>
+      <!-- Row 1, Col 2: Language + Age -->
+      <div class="cell">
         <!-- Widget 4 -->
         <div class="field">
           <label>Preferred Language</label>
@@ -286,18 +295,35 @@
             <option value="Older Adult : 60+">Older Adult : 60+</option>
           </select>
         </div>
-        <!-- Widget 7: Extract from Photo — sits beside Medicine Photo or Scan -->
+      </div>
+
+      <!-- Row 2, Col 1: Medicine Photo or Scan -->
+      <div class="cell fill-cell">
+        <!-- Widget 6 -->
+        <div class="field" style="display:flex;flex-direction:column;flex:1;margin-bottom:0">
+          <label>Medicine Photo or Scan <span class="opt">Optional</span></label>
+          <div class="dropzone" id="dz_med" data-input="file_med"><span class="arrow">⬆️</span>📸 Upload a clear photo of the medicine label.
+🙈 Cover your name and personal details if you wish.
+✅ The medicine name, strength, and dosing instructions must be visible and readable.
+<span class="filename" id="fn_med"></span></div>
+          <input type="file" id="file_med" accept="image/jpeg,image/png,image/webp" hidden />
+        </div>
+      </div>
+      <!-- Row 2, Col 2: Extract from Photo — same level as Medicine Photo or Scan -->
+      <div class="cell fill-cell">
+        <!-- Widget 7 -->
+        <label style="font-weight:600;margin-bottom:6px;font-size:0.95rem;display:block">&nbsp;</label>
         <div class="ai-panel">
           <div class="panel-head">⚙️ Extract from Photo
             <button class="secondary" style="margin-left:auto;padding:4px 10px" data-run="extract_from_photo">Run</button>
           </div>
-          <div class="output match-photo" id="out_extract_from_photo"><span class="placeholder">You're all set to Run</span></div>
+          <div class="output" id="out_extract_from_photo"><span class="placeholder">You're all set to Run</span></div>
         </div>
       </div>
     </div>
 
     <!-- Widget 8: Medicine Card -->
-    <div class="ai-panel">
+    <div class="ai-panel" style="margin-top:16px">
       <div class="panel-head">⚙️ Medicine Card
         <button class="secondary" style="margin-left:auto;padding:4px 10px" data-run="medicine_card">Run</button>
       </div>
@@ -439,7 +465,6 @@ function handleFile(file, inputId, fn, dz) {
     const base64 = dataUrl.split(',')[1];      // strip the prefix
     uploads[inputId] = { file_data: base64, file_mime: file.type };
     fn.textContent = '✅ ' + file.name;
-    // thumbnail
     const existing = dz.querySelector('.thumb');
     if (existing) existing.remove();
     if (file.type.startsWith('image/')) {
@@ -458,12 +483,10 @@ wireDropzone('dz_ret', 'file_ret', 'fn_ret');
 // Markdown line renderer (per complete line)
 // ---------------------------------------------------------------------------
 function inlineMd(text) {
-  // escape HTML first
-  let s = text.replace(/&/g, '&').replace(/</g, '&lt;').replace(/>/g, '>');
+  let s = text.replace(/&/g, '&').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
   s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   s = s.replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
-  // linkify bare URLs
   s = s.replace(/(https?:\/\/[^\s)]+)/g, '<a href="$1" target="_blank" rel="noopener" style="color:var(--accent)">$1</a>');
   return s;
 }
@@ -526,7 +549,7 @@ async function streamInto(url, payload, outEl) {
         flushLine(line);
       }
     }
-    if (buffer.length) flushLine(buffer);        // trailing partial line
+    if (buffer.length) flushLine(buffer);
     cursor.remove();
     if (!started) outEl.innerHTML = '<span class="placeholder">No response.</span>';
   } catch (err) {
