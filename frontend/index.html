@@ -60,7 +60,15 @@
     margin-bottom: 22px;
   }
   section.sec > h2 { margin-top: 0; font-size: 1.3rem; }
-  .sec-desc { color: var(--text-dim); font-size: 0.95rem; margin-bottom: 16px; }
+  .sec-desc {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    margin-bottom: 16px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
   .sec-desc blockquote {
     border-left: 3px solid var(--accent-dim);
     margin: 10px 0 0;
@@ -79,7 +87,16 @@
     font-size: 0.95rem;
   }
   .field .opt { color: var(--text-dim); font-weight: 400; font-size: 0.82rem; }
-  .field .hint { color: var(--text-dim); font-size: 0.82rem; margin-top: 5px; white-space: pre-line; }
+  .field .hint {
+    color: var(--text-dim);
+    font-size: 0.82rem;
+    margin-top: 6px;
+    white-space: pre-line;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+  }
   textarea, select, input[type="text"] {
     width: 100%;
     background: var(--panel-2);
@@ -94,7 +111,6 @@
   textarea { min-height: 90px; }
   textarea:focus, select:focus, input:focus { outline: 1px solid var(--accent-dim); }
 
-  /* Upload zone */
   .dropzone {
     border: 2px dashed var(--border);
     border-radius: 12px;
@@ -112,7 +128,6 @@
   .dropzone .filename { color: var(--accent); margin-top: 8px; display: block; word-break: break-all; }
   .thumb { max-width: 120px; max-height: 120px; margin-top: 10px; border-radius: 8px; }
 
-  /* AI output panels */
   .panel-head {
     display: flex; align-items: center; gap: 8px;
     background: var(--accent);
@@ -135,7 +150,6 @@
   }
   .output.chat, .output.auto { height: auto; min-height: 120px; max-height: 560px; }
 
-  /* thin custom scrollbar */
   .output::-webkit-scrollbar { width: 7px; }
   .output::-webkit-scrollbar-track { background: transparent; }
   .output::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
@@ -144,7 +158,6 @@
 
   .placeholder { color: var(--text-dim); font-style: italic; }
 
-  /* streaming markdown lines */
   .md-line { display: block; margin: 2px 0; animation: fade .35s ease; }
   .md-line.h1 { font-size: 1.3rem; font-weight: 700; margin: 10px 0 4px; }
   .md-line.h2 { font-size: 1.15rem; font-weight: 700; margin: 10px 0 4px; }
@@ -192,7 +205,6 @@
     display: flex; gap: 10px; align-items: center;
   }
 
-  /* chat */
   .chat-log { display: flex; flex-direction: column; gap: 10px; }
   .bubble { padding: 10px 13px; border-radius: 12px; max-width: 85%; font-size: 0.92rem; }
   .bubble.user { align-self: flex-end; background: var(--accent); color: #0f1419; }
@@ -204,7 +216,6 @@
 <body>
 <div class="wrap">
 
-  <!-- URL injection targets (replaced by GitHub Actions sed) -->
   <script>
     const STREAM_URLS = {
       extract_from_photo:  '__URL_EXTRACT_FROM_PHOTO__',
@@ -215,7 +226,6 @@
     };
   </script>
 
-  <!-- Widget 1: Hero static text -->
   <header class="hero">
     <h1>💊 SmartMed Cycle</h1>
     <div class="tag">Your personal medicine companion — understand, check, ask, and return responsibly.</div>
@@ -228,15 +238,12 @@
     <div class="notice">⚠️ <strong>Heads up:</strong> SmartMed Cycle is a preparation tool — not a substitute for pharmacist or prescriber advice. Always compare outputs with your original label.</div>
   </header>
 
-  <!-- Run All -->
   <div class="run-all-bar">
     <button id="runAll">▶ Run All</button>
     <span id="runAllStatus" class="status-line"></span>
   </div>
 
-  <!-- ============ SECTION 1 ============ -->
   <section class="sec">
-    <!-- Widget 2 -->
     <h2>1 · Understand My Medicine</h2>
     <div class="sec-desc">
       Type medicine details into <strong>Medicine Details</strong> or upload a readable label photo — either is enough.
@@ -246,14 +253,12 @@
 
     <div class="grid">
       <div>
-        <!-- Widget 3 -->
         <div class="field">
           <label>Medicine Details <span class="opt">Optional</span></label>
           <textarea id="medicine_details" placeholder="Type the medicine name and strength, if known. Add the label instructions if available."></textarea>
           <div class="hint">💊 Type the medicine name and strength, if known. Add the label instructions if available.
 📝 Example: Metformin 500 mg — take one tablet twice daily with meals.</div>
         </div>
-        <!-- Widget 6 -->
         <div class="field">
           <label>Medicine Photo or Scan <span class="opt">Optional</span></label>
           <div class="dropzone" id="dz_med" data-input="file_med"><span class="arrow">⬆️</span>📸 Upload a clear photo of the medicine label.
@@ -264,7 +269,6 @@
         </div>
       </div>
       <div>
-        <!-- Widget 4 -->
         <div class="field">
           <label>Preferred Language</label>
           <select id="preferred_language">
@@ -273,7 +277,6 @@
             <option value="中文">中文</option>
           </select>
         </div>
-        <!-- Widget 5 -->
         <div class="field">
           <label>Patient Age</label>
           <select id="patient_age">
@@ -287,7 +290,6 @@
       </div>
     </div>
 
-    <!-- Widget 7: Extract from Photo -->
     <div class="ai-panel">
       <div class="panel-head">⚙️ Extract from Photo
         <button class="secondary" style="margin-left:auto;padding:4px 10px" data-run="extract_from_photo">Run</button>
@@ -295,7 +297,6 @@
       <div class="output" id="out_extract_from_photo"><span class="placeholder">You're all set to Run</span></div>
     </div>
 
-    <!-- Widget 8: Medicine Card -->
     <div class="ai-panel">
       <div class="panel-head">⚙️ Medicine Card
         <button class="secondary" style="margin-left:auto;padding:4px 10px" data-run="medicine_card">Run</button>
@@ -304,9 +305,7 @@
     </div>
   </section>
 
-  <!-- ============ SECTION 2 ============ -->
   <section class="sec">
-    <!-- Widget 9 -->
     <h2>2 · Check My Precautions</h2>
     <div class="sec-desc">
       Add other medicines and allergy history below, if known. Blank means not provided — it does not mean none.
@@ -315,7 +314,6 @@
     </div>
 
     <div class="grid">
-      <!-- Widget 10 -->
       <div class="field">
         <label>Other Medicines and Supplements <span class="opt">Optional</span></label>
         <textarea id="other_medicines" placeholder="Other medicines you are currently taking. Add names and doses if known."></textarea>
@@ -323,7 +321,6 @@
 📏 Add names and doses if known.
 📝 Example: Atorvastatin 20 mg once daily; Aspirin 100 mg once daily.</div>
       </div>
-      <!-- Widget 11 -->
       <div class="field">
         <label>Medicine Allergies and Reactions <span class="opt">Optional</span></label>
         <textarea id="allergies" placeholder="Any known medicine or food allergies, and what reaction happened."></textarea>
@@ -333,7 +330,6 @@
       </div>
     </div>
 
-    <!-- Widget 12: My Medicine Summary -->
     <div class="ai-panel">
       <div class="panel-head">⚙️ My Medicine Summary
         <button class="secondary" style="margin-left:auto;padding:4px 10px" data-run="my_medicine_summary">Run</button>
@@ -342,21 +338,17 @@
     </div>
   </section>
 
-  <!-- ============ SECTION 3 ============ -->
   <section class="sec">
-    <!-- Widget 13 -->
     <h2>3 · Ask About My Medicines</h2>
     <div class="sec-desc">
       Ask anything about your medicine, precautions, or what to tell your pharmacist.<br/>
       💡 <strong>Try:</strong> <em>"Prepare my pharmacist summary"</em> — get a ready-to-share summary with your medicine details, uncertainties, and questions to ask.
     </div>
 
-    <!-- Widget 14: Emergency Notice -->
     <div class="notice emergency" style="margin-bottom:16px">
       <strong>Medical emergency?</strong> In Malaysia, call <strong>999</strong> now. Outside Malaysia, call your local emergency number. Do not wait for this tool.
     </div>
 
-    <!-- Widget 15: SmartMed Help chat -->
     <div class="ai-panel">
       <div class="panel-head">💬 SmartMed Help</div>
       <div class="output chat" id="chat_log_wrap">
@@ -369,9 +361,7 @@
     </div>
   </section>
 
-  <!-- ============ SECTION 4 ============ -->
   <section class="sec">
-    <!-- Widget 16 -->
     <h2>♻️ 4 · Return Unused Medicines</h2>
     <div class="sec-desc">
       🗑️ You can return <strong>any</strong> unwanted medicine — prescription medicines, over-the-counter products, vitamins, supplements, or medicines found at home.<br/>
@@ -380,7 +370,6 @@
       🔗 <strong>Official return directory:</strong> <a href="https://www.mymedisafe.org.my/" target="_blank" rel="noopener" style="color:var(--accent)">myMediSAFE</a> — search by state, city, or postcode.
     </div>
 
-    <!-- Widget 17 -->
     <div class="field">
       <label>Your Location <span class="opt">Optional</span></label>
       <input type="text" id="your_location" placeholder="Enter your area, city, or postcode (e.g. 50480 Kuala Lumpur)" />
@@ -388,7 +377,6 @@
     </div>
 
     <div class="grid">
-      <!-- Widget 18 -->
       <div class="field">
         <label>Return Item Details <span class="opt">Optional</span></label>
         <textarea id="return_item_details" placeholder="Medicine name and form, prescription/OTC, quantity remaining, item type, reason."></textarea>
@@ -398,7 +386,6 @@
 🧴 Item type if special: liquid / inhaler / cream / drops / needles or sharps
 ❓ Reason: expired / no longer needed / course completed / found at home / unsure</div>
       </div>
-      <!-- Widget 19 -->
       <div class="field">
         <label>Return Item Photo <span class="opt">Optional</span></label>
         <div class="dropzone" id="dz_ret" data-input="file_ret"><span class="arrow">⬆️</span>📦 Optional. Upload a clear photo of the labelled packaging.
@@ -409,7 +396,6 @@
       </div>
     </div>
 
-    <!-- Widget 20: My Return Plan -->
     <div class="ai-panel">
       <div class="panel-head">⚙️ My Return Plan
         <button class="secondary" style="margin-left:auto;padding:4px 10px" data-run="my_return_plan">Run</button>
@@ -421,9 +407,6 @@
 </div>
 
 <script>
-// ---------------------------------------------------------------------------
-// File upload handling — store raw base64 + mime per dropzone
-// ---------------------------------------------------------------------------
 const uploads = { file_med: null, file_ret: null };
 
 function wireDropzone(dzId, inputId, filenameId) {
@@ -446,11 +429,10 @@ function wireDropzone(dzId, inputId, filenameId) {
 function handleFile(file, inputId, fn, dz) {
   const reader = new FileReader();
   reader.onload = () => {
-    const dataUrl = reader.result;             // data:<mime>;base64,xxxx
-    const base64 = dataUrl.split(',')[1];      // strip the prefix
+    const dataUrl = reader.result;
+    const base64 = dataUrl.split(',')[1];
     uploads[inputId] = { file_data: base64, file_mime: file.type };
     fn.textContent = '✅ ' + file.name;
-    // thumbnail
     const existing = dz.querySelector('.thumb');
     if (existing) existing.remove();
     if (file.type.startsWith('image/')) {
@@ -465,16 +447,11 @@ function handleFile(file, inputId, fn, dz) {
 wireDropzone('dz_med', 'file_med', 'fn_med');
 wireDropzone('dz_ret', 'file_ret', 'fn_ret');
 
-// ---------------------------------------------------------------------------
-// Markdown line renderer (per complete line)
-// ---------------------------------------------------------------------------
 function inlineMd(text) {
-  // escape HTML first
-  let s = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  let s = text.replace(/&/g, '&').replace(/</g, '&lt;').replace(/>/g, '>');
   s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
   s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   s = s.replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
-  // linkify bare URLs
   s = s.replace(/(https?:\/\/[^\s)]+)/g, '<a href="$1" target="_blank" rel="noopener" style="color:var(--accent)">$1</a>');
   return s;
 }
@@ -495,9 +472,6 @@ function makeLine(raw) {
   return span;
 }
 
-// ---------------------------------------------------------------------------
-// Streaming fetch into an output panel with line-buffered markdown
-// ---------------------------------------------------------------------------
 async function streamInto(url, payload, outEl) {
   outEl.innerHTML = '<span class="status-line"><span class="spinner"></span> Generating…</span>';
   let started = false;
@@ -537,7 +511,7 @@ async function streamInto(url, payload, outEl) {
         flushLine(line);
       }
     }
-    if (buffer.length) flushLine(buffer);        // trailing partial line
+    if (buffer.length) flushLine(buffer);
     cursor.remove();
     if (!started) outEl.innerHTML = '<span class="placeholder">No response.</span>';
   } catch (err) {
@@ -545,9 +519,6 @@ async function streamInto(url, payload, outEl) {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Collect inputs & build payload per widget
-// ---------------------------------------------------------------------------
 const val = (id) => (document.getElementById(id)?.value || '').trim();
 
 function payloadFor(key) {
@@ -582,7 +553,6 @@ function payloadFor(key) {
   }
 }
 
-// read already-rendered text back out of a panel (for chaining widgets)
 function lastText(outId) {
   const el = document.getElementById(outId);
   if (!el || el.querySelector('.placeholder')) return '';
@@ -595,14 +565,10 @@ async function runWidget(key) {
   await streamInto(url, payloadFor(key), out);
 }
 
-// per-panel Run buttons
 document.querySelectorAll('[data-run]').forEach((btn) => {
   btn.addEventListener('click', () => runWidget(btn.dataset.run));
 });
 
-// ---------------------------------------------------------------------------
-// Run All — fire the 4 text widgets simultaneously
-// ---------------------------------------------------------------------------
 document.getElementById('runAll').addEventListener('click', async () => {
   const btn = document.getElementById('runAll');
   const status = document.getElementById('runAllStatus');
@@ -615,9 +581,6 @@ document.getElementById('runAll').addEventListener('click', async () => {
   setTimeout(() => (status.textContent = ''), 4000);
 });
 
-// ---------------------------------------------------------------------------
-// Chat — SmartMed Help
-// ---------------------------------------------------------------------------
 const chatHistory = [];
 const chatLog = document.getElementById('chat_log');
 
@@ -631,7 +594,6 @@ function addBubble(role, text) {
   return b;
 }
 
-// opening message (Widget 15)
 addBubble('bot',
 `Hi! 👋 I'm SmartMed Help. Ask me anything about your medicine.
 
