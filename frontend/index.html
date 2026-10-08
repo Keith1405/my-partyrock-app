@@ -60,15 +60,7 @@
     margin-bottom: 22px;
   }
   section.sec > h2 { margin-top: 0; font-size: 1.3rem; }
-  .sec-desc {
-    color: var(--text-dim);
-    font-size: 0.95rem;
-    margin-bottom: 16px;
-    background: var(--panel-2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 14px;
-  }
+  .sec-desc { color: var(--text-dim); font-size: 0.95rem; margin-bottom: 16px; }
   .sec-desc blockquote {
     border-left: 3px solid var(--accent-dim);
     margin: 10px 0 0;
@@ -87,16 +79,8 @@
     font-size: 0.95rem;
   }
   .field .opt { color: var(--text-dim); font-weight: 400; font-size: 0.82rem; }
-  .field .hint {
-    color: var(--text-dim);
-    font-size: 0.82rem;
-    margin-top: 6px;
-    white-space: pre-line;
-    background: var(--panel-2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px 10px;
-  }
+  textarea::placeholder, input::placeholder { color: var(--text-dim); opacity: 0.85; }
+  textarea.hinted { min-height: 120px; }
   textarea, select, input[type="text"] {
     width: 100%;
     background: var(--panel-2);
@@ -255,9 +239,7 @@
       <div>
         <div class="field">
           <label>Medicine Details <span class="opt">Optional</span></label>
-          <textarea id="medicine_details" placeholder="Type the medicine name and strength, if known. Add the label instructions if available."></textarea>
-          <div class="hint">💊 Type the medicine name and strength, if known. Add the label instructions if available.
-📝 Example: Metformin 500 mg — take one tablet twice daily with meals.</div>
+          <textarea id="medicine_details" class="hinted" placeholder="💊 Type the medicine name and strength, if known. Add the label instructions if available.&#10;&#10;📝 Example: Metformin 500 mg — take one tablet twice daily with meals."></textarea>
         </div>
         <div class="field">
           <label>Medicine Photo or Scan <span class="opt">Optional</span></label>
@@ -316,17 +298,11 @@
     <div class="grid">
       <div class="field">
         <label>Other Medicines and Supplements <span class="opt">Optional</span></label>
-        <textarea id="other_medicines" placeholder="Other medicines you are currently taking. Add names and doses if known."></textarea>
-        <div class="hint">💊 Other medicines you are currently taking.
-📏 Add names and doses if known.
-📝 Example: Atorvastatin 20 mg once daily; Aspirin 100 mg once daily.</div>
+        <textarea id="other_medicines" class="hinted" placeholder="💊 Other medicines you are currently taking.&#10;📏 Add names and doses if known.&#10;&#10;📝 Example: Atorvastatin 20 mg once daily; Aspirin 100 mg once daily."></textarea>
       </div>
       <div class="field">
         <label>Medicine Allergies and Reactions <span class="opt">Optional</span></label>
-        <textarea id="allergies" placeholder="Any known medicine or food allergies, and what reaction happened."></textarea>
-        <div class="hint">⚠️ Any known medicine or food allergies, and what reaction happened.
-📝 Example: Penicillin — rash and swelling. Write 'None known' or 'Not sure' if applicable.
-🌿 Also note any supplements or herbal products you take.</div>
+        <textarea id="allergies" class="hinted" placeholder="⚠️ Any known medicine or food allergies, and what reaction happened.&#10;&#10;📝 Example: Penicillin — rash and swelling. Write 'None known' or 'Not sure' if applicable.&#10;🌿 Also note any supplements or herbal products you take."></textarea>
       </div>
     </div>
 
@@ -372,19 +348,13 @@
 
     <div class="field">
       <label>Your Location <span class="opt">Optional</span></label>
-      <input type="text" id="your_location" placeholder="Enter your area, city, or postcode (e.g. 50480 Kuala Lumpur)" />
-      <div class="hint">📍 Enter your area, city, or postcode (e.g. 50480 Kuala Lumpur, Petaling Jaya, Johor Bahru) — we will search for verified return points near you.</div>
+      <input type="text" id="your_location" placeholder="📍 Enter your area, city, or postcode (e.g. 50480 Kuala Lumpur, Petaling Jaya, Johor Bahru) — we will search for verified return points near you." />
     </div>
 
     <div class="grid">
       <div class="field">
         <label>Return Item Details <span class="opt">Optional</span></label>
-        <textarea id="return_item_details" placeholder="Medicine name and form, prescription/OTC, quantity remaining, item type, reason."></textarea>
-        <div class="hint">💊 Medicine name and form (e.g. Paracetamol 500 mg tablets)
-🏷️ Prescription or over-the-counter (if known)
-🔢 Quantity remaining (e.g. 14 tablets — leave blank if unsure)
-🧴 Item type if special: liquid / inhaler / cream / drops / needles or sharps
-❓ Reason: expired / no longer needed / course completed / found at home / unsure</div>
+        <textarea id="return_item_details" class="hinted" placeholder="💊 Medicine name and form (e.g. Paracetamol 500 mg tablets)&#10;🏷️ Prescription or over-the-counter (if known)&#10;🔢 Quantity remaining (e.g. 14 tablets — leave blank if unsure)&#10;🧴 Item type if special: liquid / inhaler / cream / drops / needles or sharps&#10;❓ Reason: expired / no longer needed / course completed / found at home / unsure"></textarea>
       </div>
       <div class="field">
         <label>Return Item Photo <span class="opt">Optional</span></label>
@@ -448,7 +418,7 @@ wireDropzone('dz_med', 'file_med', 'fn_med');
 wireDropzone('dz_ret', 'file_ret', 'fn_ret');
 
 function inlineMd(text) {
-  let s = text.replace(/&/g, '&').replace(/</g, '&lt;').replace(/>/g, '>');
+  let s = text.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>');
   s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
   s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   s = s.replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
