@@ -33,7 +33,6 @@ RATE_MAX = int(os.environ.get("RATE_MAX", 30))
 RATE_WINDOW = int(os.environ.get("RATE_WINDOW", 60))
 _hits = deque()
 
-
 def _rate_limited():
     now = time.time()
     while _hits and now - _hits[0] > RATE_WINDOW:
@@ -43,7 +42,6 @@ def _rate_limited():
     _hits.append(now)
     return False
 
-
 def _guard():
     length = request.content_length or 0
     if length > MAX_BODY_BYTES:
@@ -51,7 +49,6 @@ def _guard():
     if _rate_limited():
         return 429, "Too many requests — slow down and try again shortly."
     return None
-
 
 SYSTEM_PROMPT = """You are a pharmacist assistant. Be brief, friendly, and phone-friendly. Use emojis to make it easy to scan.
 
@@ -66,34 +63,40 @@ RULES:
 - If any field is unclear: show ⚠️ Label Quality Warning at the top.
 - At the end, show 1 to 2 real sources retrieved this session (title and URL). If none retrieved, omit the sources section.
 
-Output format:
+Output EXACTLY in this format and structure (fill in the values; keep the emojis, the bullets, and the inline pipe separators):
 
----
 ## 💊 Medicine Card
 *Draft only — compare with your original label.*
-
-🏷️ Name: | 💪 Strength: | 💉 Form:
-
+🏷️ Name: <value> | 💪 Strength: <value> | 💉 Form: <value>
 📋 Your label says:
-- 🕐 Take: | 🔁 How often: | 🍽️ How to take: | ⏳ For how long:
 
-💬 Plain words: One line per instruction — what it means in simple terms.
+- 🕐 Take: <value> | 🔁 How often: <value> | 🍽️ How to take: <value> | ⏳ For how long: <value>
 
-ℹ️ What it is for: 1 sentence. *(General info only — not specific to your prescription.)*
+💬 Plain words:
 
-⚠️ Needs checking: Bullet any missing, conflicting, or unreadable fields. If none: ✅ No issues found.
+- <one short bullet per instruction — what it means in simple terms>
 
-📦 Extra (if on label): Expiry, quantity, storage, warnings. If none, skip this section.
+ℹ️ What it is for:
+<one sentence> *(General info only — not specific to your prescription.)*
+⚠️ Needs checking:
+
+- <bullet each missing, conflicting, or unreadable field>
+- <if none, write a single bullet: ✅ No issues found>
+
+📦 Extra (if on label):
+
+- 📅 Written: <value>
+- 💊 Quantity: <value>
+- 🔁 Refills: <value>
+- ⏱️ Expiry date: <value>
+
+(Only include Extra bullets that actually appear on the label. If nothing extra, skip the whole Extra section.)
 
 📚 Sources:
-- Source title — URL
-- DailyMed (US National Library of Medicine) — https://dailymed.nlm.nih.gov
-- MedlinePlus Drug Information — https://medlineplus.gov/druginformation.html
-- Malaysian Drug Control Authority (DCA) — https://www.pharmacy.gov.my
 
----
+- <Source title — URL — only real sources retrieved this session; omit this section if none>
+
 *➡️ For precautions go to Section 2. For questions go to Section 3.*"""
-
 
 def build_messages(body):
     language = body.get("preferred_language", "English")
@@ -125,7 +128,6 @@ def build_messages(body):
     content.append({"text": user_text})
     return [{"role": "user", "content": content}]
 
-
 def generate(body):
     messages = build_messages(body)
     try:
@@ -142,7 +144,6 @@ def generate(body):
                     yield text
     except Exception as exc:  # noqa: BLE001
         yield f"\n\n⚠️ Error: {exc}"
-
 
 @app.route("/", methods=["POST", "OPTIONS"])
 def handler():
@@ -163,7 +164,6 @@ def handler():
     for key, value in CORS_HEADERS.items():
         resp.headers[key] = value
     return resp
-
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
