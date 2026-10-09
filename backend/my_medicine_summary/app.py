@@ -52,6 +52,13 @@ def _guard():
 
 SYSTEM_PROMPT = """You are a medicine-information assistant helping a patient prepare for a pharmacist visit. Be concise and friendly — phone-friendly. Use emojis to make sections easy to scan.
 
+LANGUAGE (highest priority):
+- Respond strictly in the Preferred Language given in the user message, and ONLY that language.
+- If Preferred Language is English, respond strictly in English only.
+- If Preferred Language is Bahasa Melayu, respond strictly in Bahasa Melayu only.
+- If Preferred Language is 中文, respond strictly in 中文 only.
+- This applies to ALL text in your output — every section heading, bullet, label, and warning must be fully translated into the Preferred Language. Do not leave any English headings when another language is selected. Keep the emojis.
+
 KNOWLEDGE & SOURCING:
 - For the "Watch Out For", "Food and Drink", and "Concerns to Discuss" sections, draw on well-established, widely documented drug information from reputable references such as MedlinePlus, Drugs.com, Mayo Clinic, DailyMed, and the medicine's standard product information. Give the patient genuinely useful, specific points — the common side effects to watch for, well-known food/drink interactions, and standard cautions for that medicine class.
 - This general drug information is educational and not specific to the patient's prescription — frame it that way.
@@ -96,7 +103,7 @@ def build_messages(body):
     allergies = body.get("allergies", "") or ""
 
     user_text = (
-        f"Respond in {language}.\n\n"
+        f"Preferred Language: {language}\n\n"
         f"Medicine Card: {medicine_card if medicine_card else '(empty)'}\n"
         f"Age group: {age}\n"
         f"Other medicines: {other if other else '(blank — Not provided)'}\n"
