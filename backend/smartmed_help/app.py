@@ -4,17 +4,6 @@ SmartMed Cycle — SmartMed Help chatbot (streaming Flask Lambda).
 Conversational assistant that answers questions about the patient's medicine,
 supports Quiz Mode and Pharmacist Summary. Accepts the full conversation
 history plus the new message and streams the reply token-by-token.
-
-Request body:
-  {
-    "topic":   <string>  — reserved / unused context hint (optional),
-    "level":   <string>  — reserved / unused context hint (optional),
-    "history": [{ "role": "user"|"assistant", "content": <string> }, ...],
-    "message": <string>  — the new user message,
-    "preferred_language": <string>,
-    "medicine_card":      <string>,
-    "my_medicine_summary":<string>
-  }
 """
 import os
 
@@ -44,7 +33,6 @@ RATE_MAX = int(os.environ.get("RATE_MAX", 30))
 RATE_WINDOW = int(os.environ.get("RATE_WINDOW", 60))
 _hits = deque()
 
-
 def _rate_limited():
     now = time.time()
     while _hits and now - _hits[0] > RATE_WINDOW:
@@ -54,7 +42,6 @@ def _rate_limited():
     _hits.append(now)
     return False
 
-
 def _guard():
     length = request.content_length or 0
     if length > MAX_BODY_BYTES:
@@ -63,8 +50,16 @@ def _guard():
         return 429, "Too many requests — slow down and try again shortly."
     return None
 
+SYSTEM_PROMPT_TEMPLATE = """You are SmartMed Help.
 
-SYSTEM_PROMPT_TEMPLATE = """You are SmartMed Help. Respond in {language}. Match language if patient writes differently. Use emojis to make answers easy to read.
+LANGUAGE (highest priority):
+- Respond strictly in {language}, and ONLY that language, for ALL text — every heading, label, bullet, and warning.
+- If {language} is English, respond strictly in English only.
+- If {language} is Bahasa Melayu, respond strictly in Bahasa Melayu only.
+- If {language} is 中文, respond strictly in 中文 only.
+- Exception: if the patient writes to you in a different language, you may match the language they wrote in. Keep the emojis.
+
+Use emojis to make answers easy to read.
 
 Medicine Card: {medicine_card}
 Precautions: {precautions}
@@ -104,7 +99,6 @@ Questions to ask:
 
 Note: Copy this to share with your pharmacist."""
 
-
 def build_request(body):
     language = body.get("preferred_language", "English")
     medicine_card = body.get("medicine_card", "") or "(not provided)"
@@ -126,13 +120,10 @@ def build_request(body):
     new_message = body.get("message", "") or ""
     messages.append({"role": "user", "content": [{"text": new_message}]})
 
-    # Converse requires the conversation to start with a user turn and to
-    # alternate roles. If history is malformed, fall back to just the new msg.
     if not messages or messages[0]["role"] != "user":
         messages = [{"role": "user", "content": [{"text": new_message}]}]
 
     return system_text, messages
-
 
 def generate(body):
     system_text, messages = build_request(body)
@@ -150,7 +141,6 @@ def generate(body):
                     yield text
     except Exception as exc:  # noqa: BLE001
         yield f"\n\n⚠️ Error: {exc}"
-
 
 @app.route("/", methods=["POST", "OPTIONS"])
 def handler():
@@ -171,7 +161,6 @@ def handler():
     for key, value in CORS_HEADERS.items():
         resp.headers[key] = value
     return resp
-
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
