@@ -1,9 +1,5 @@
 """
 SmartMed Cycle — My Medicine Summary (streaming Flask Lambda).
-
-Produces pharmacist-visit discussion points from the Medicine Card, patient age
-group, other medicines, and allergies. Text-only; no file upload. Streams the
-Bedrock response token-by-token.
 """
 import os
 
@@ -12,7 +8,9 @@ from flask import Flask, Response, request, stream_with_context
 
 app = Flask(__name__)
 
-MODEL_ID = "anthropic.claude-3-haiku-20240307-v1:0"
+# Model is configurable via the MODEL_ID env var (set by the SAM template).
+# Default: Claude Haiku 4.5 via the Global cross-Region inference profile.
+MODEL_ID = os.environ.get("MODEL_ID", "global.anthropic.claude-haiku-4-5-20251001-v1:0")
 REGION = os.environ.get("BEDROCK_REGION", "ap-southeast-1")
 bedrock = boto3.client("bedrock-runtime", region_name=REGION)
 
@@ -22,9 +20,6 @@ CORS_HEADERS = {
     "Access-Control-Allow-Methods": "POST,OPTIONS",
 }
 
-# ---------------------------------------------------------------------------
-# Lightweight abuse guards (per-instance; best-effort, not a substitute for WAF)
-# ---------------------------------------------------------------------------
 import time
 from collections import deque
 
@@ -119,7 +114,8 @@ def generate(body):
             modelId=MODEL_ID,
             messages=messages,
             system=[{"text": SYSTEM_PROMPT}],
-            inferenceConfig={"temperature": 0, "topP": 0, "maxTokens": 2000},
+            # Claude Haiku 4.5 rejects temperature + topP together; send only temperature.
+            inferenceConfig={"temperature": 0, "maxTokens": 2000},
         )
         for event in response["stream"]:
             if "contentBlockDelta" in event:
