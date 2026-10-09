@@ -51,6 +51,19 @@
     border-color: rgba(255, 107, 107, 0.4);
     color: #ffb3b3;
   }
+  /* Red callout box for important cautions */
+  .notice-red {
+    background: #fdecec;
+    border: 1px solid #e4572e;
+    border-left: 5px solid #c0392b;
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: #a01b1b;
+    font-size: 0.95rem;
+    margin: 12px 0;
+  }
+  .notice-red a { color: #7a1414; text-decoration: underline; }
+  .notice-red strong { color: #8a1414; }
 
   section.sec {
     background: var(--panel);
@@ -282,7 +295,7 @@
     <div class="medicine-workspace">
       <div class="section-intro"><div><span class="eyebrow">01 / UNDERSTAND</span><h2>Your medicine, in plain language.</h2></div><button data-run="medicine_card">Create medicine card <img src="assets/arrow-right.svg" alt="" /></button></div>
       <p class="sec-desc">Type medicine details or upload a readable label photo — either is enough. If you use both, the Medicine Card compares them and flags conflicts. The medicine name, strength, and instructions must be readable. Cover personal details if you wish.</p>
-      <div class="notice">Always compare the Medicine Card with your original label before continuing to precautions.</div>
+      <div class="notice-red">Always compare the Medicine Card with your original label before continuing to precautions.</div>
       <div class="ai-panel"><div class="panel-head">Medicine Card <button class="secondary" data-run="medicine_card">Generate</button></div><div class="output auto" id="out_medicine_card" aria-live="polite"><span class="placeholder">Your medicine card will appear here.</span></div></div>
       <div class="run-all-bar"><button id="runAll" class="secondary">Generate all panels</button><span id="runAllStatus" class="status-line" role="status"></span></div>
     </div>
@@ -346,9 +359,10 @@
     <div class="sec-desc">
        You can return <strong>any</strong> unwanted medicine — prescription medicines, over-the-counter products, vitamins, supplements, or medicines found at home.<br/>
        Enter the medicine details and your location below and we'll help you find a verified drop-off point near you!
-      <blockquote> <strong>Not sure if you should stop taking a medicine?</strong> Check with your pharmacist or prescriber <strong>before</strong> returning it.</blockquote>
-       <strong>Official return directory:</strong> <a href="https://www.mymedisafe.org.my/" target="_blank" rel="noopener" style="color:var(--link)">myMediSAFE</a> — search by state, city, or postcode.
     </div>
+
+    <div class="notice-red"><strong>Not sure if you should stop taking a medicine?</strong> Check with your pharmacist or prescriber <strong>before</strong> returning it.</div>
+    <div class="notice-red"><strong>Official return directory:</strong> <a href="https://www.mymedisafe.org.my/" target="_blank" rel="noopener">myMediSAFE</a> — search by state, city, or postcode.</div>
 
     <div class="field">
       <label for="your_location">Your Location <span class="opt">Optional</span></label>
@@ -429,7 +443,7 @@ wireDropzone('dz_med', 'file_med', 'fn_med');
 wireDropzone('dz_ret', 'file_ret', 'fn_ret');
 
 function inlineMd(text) {
-  let s = text.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>');
+  let s = text.replace(/&/g, '&').replace(/</g, '&lt;').replace(/>/g, '>');
   s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
   s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   s = s.replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
