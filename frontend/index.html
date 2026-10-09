@@ -235,6 +235,8 @@
   .remove-photo { display:inline-block; margin-top:8px; background:#e74c3c; color:#fff; border:none; border-radius:8px; padding:6px 14px; font-size:0.82rem; font-weight:600; cursor:pointer; }
   .remove-photo:hover { background:#c0392b; }
   .remove-photo[hidden] { display:none; }
+    .brand { display:inline-flex; align-items:center; gap:12px; }
+  .brand-logo { height:40px; width:auto; display:block; }
 </style>
 <link rel="stylesheet" href="assets/redesign.css" />
 </head>
@@ -254,7 +256,7 @@
 
   <a class="skip-link" href="#medicine">Skip to medicine details</a>
   <nav class="topbar" aria-label="Main navigation">
-    <a class="brand" href="#top">SmartMed<span>Cycle</span></a>
+    <a class="brand" href="#top"><img class="brand-logo" src="assets/logo.png" alt="SmartMed Cycle logo" />SmartMed<span>Cycle</span></a>
     <div class="navlinks" id="navigation">
       <a href="#medicine">Medicine</a><a href="#precautions">Precautions</a>
       <a href="#ask">Ask</a><a href="#returns">Returns</a>
