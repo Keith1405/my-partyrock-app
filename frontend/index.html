@@ -231,6 +231,10 @@
   .bubble.bot { align-self: flex-start; background: var(--panel); border: 1px solid var(--border); }
   .chat-input-row { display: flex; gap: 8px; margin-top: 10px; }
   .chat-input-row input { flex: 1; }
+  /* Remove photo button */
+  .remove-photo { display:inline-block; margin-top:8px; background:#e74c3c; color:#fff; border:none; border-radius:8px; padding:6px 14px; font-size:0.82rem; font-weight:600; cursor:pointer; }
+  .remove-photo:hover { background:#c0392b; }
+  .remove-photo[hidden] { display:none; }
 </style>
 <link rel="stylesheet" href="assets/redesign.css" />
 </head>
@@ -282,6 +286,7 @@
           <img class="upload-icon" src="assets/upload.svg" alt="" />
           <strong>Upload label photo</strong><span>JPG, PNG or WebP</span><span class="filename" id="fn_med"></span>
         </div>
+        <button type="button" class="remove-photo" id="rm_med" hidden>✕ Remove photo</button>
         <input type="file" id="file_med" accept="image/jpeg,image/png,image/webp" hidden />
         </div>
         <div class="ai-panel"><div class="panel-head">Extract from Photo <button class="secondary" data-run="extract_from_photo">Extract label</button></div><div class="output auto" id="out_extract_from_photo" aria-live="polite"><span class="placeholder">Upload a label photo, then choose Extract label.</span></div></div>
@@ -382,6 +387,7 @@
  The label must be visible and readable.
  Unlabelled pills with no readable label will not be identified from appearance.
 <span class="filename" id="fn_ret"></span></div>
+          <button type="button" class="remove-photo" id="rm_ret" hidden>✕ Remove photo</button>
           <input type="file" id="file_ret" accept="image/jpeg,image/png,image/webp" hidden />
         </div>
       </div>
@@ -434,9 +440,28 @@ function handleFile(file, inputId, fn, dz) {
       img.src = dataUrl; img.className = 'thumb';
       dz.appendChild(img);
     }
+    const rm = removeBtns[inputId];
+    if (rm) rm.hidden = false;
   };
   reader.readAsDataURL(file);
 }
+
+// Map each upload input to its Remove button, and clear everything on click.
+const removeBtns = { file_med: document.getElementById('rm_med'), file_ret: document.getElementById('rm_ret') };
+function clearUpload(inputId, dzId, fnId) {
+  uploads[inputId] = null;
+  const input = document.getElementById(inputId);
+  if (input) input.value = '';
+  const fn = document.getElementById(fnId);
+  if (fn) fn.textContent = '';
+  const dz = document.getElementById(dzId);
+  const thumb = dz && dz.querySelector('.thumb');
+  if (thumb) thumb.remove();
+  const rm = removeBtns[inputId];
+  if (rm) rm.hidden = true;
+}
+if (removeBtns.file_med) removeBtns.file_med.addEventListener('click', () => clearUpload('file_med', 'dz_med', 'fn_med'));
+if (removeBtns.file_ret) removeBtns.file_ret.addEventListener('click', () => clearUpload('file_ret', 'dz_ret', 'fn_ret'));
 
 wireDropzone('dz_med', 'file_med', 'fn_med');
 wireDropzone('dz_ret', 'file_ret', 'fn_ret');
