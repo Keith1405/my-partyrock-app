@@ -144,7 +144,7 @@ def generate(body):
             modelId=MODEL_ID,
             messages=messages,
             system=[{"text": SYSTEM_PROMPT}],
-            inferenceConfig={"temperature": 0, "topP": 0, "maxTokens": 2000},
+            inferenceConfig={"temperature": 0, "maxTokens": 2000},
         )
         for event in response["stream"]:
             if "contentBlockDelta" in event:
