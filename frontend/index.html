@@ -260,24 +260,18 @@
       <h2 id="medicine-title">Medicine details</h2>
       <div class="entry-grid">
         <div class="field medicine-input">
-          <label class="sr-only" for="medicine_details">Medicine details</label>
+          <label for="medicine_details">Medicine name and details</label>
           <textarea id="medicine_details" placeholder="Medicine name, strength and label instructions"></textarea>
         </div>
-        <div class="dropzone compact-upload" id="dz_med" data-input="file_med" role="button" tabindex="0" aria-label="Upload a medicine label photo">
+        <div class="field photo-input">
+          <label id="photo-label">Photo upload</label>
+        <div class="dropzone compact-upload" id="dz_med" data-input="file_med" role="button" tabindex="0" aria-labelledby="photo-label">
           <img class="upload-icon" src="assets/upload.svg" alt="" />
           <strong>Upload label photo</strong><span>JPG, PNG or WebP</span><span class="filename" id="fn_med"></span>
         </div>
         <input type="file" id="file_med" accept="image/jpeg,image/png,image/webp" hidden />
-        <div class="field age-input">
-          <label for="patient_age">Age <span class="opt">(optional)</span></label>
-          <select id="patient_age">
-            <option value="Not provided" selected>Select age</option>
-            <option value="Child : 0-12">Child: 0–12</option>
-            <option value="Teenager : 13-17">Teenager: 13–17</option>
-            <option value="Adult : 18-60">Adult: 18–60</option>
-            <option value="Older Adult : 60+">Older adult: 60+</option>
-          </select>
         </div>
+        <div class="ai-panel"><div class="panel-head">Extract from Photo <button class="secondary" data-run="extract_from_photo">Extract label</button></div><div class="output auto" id="out_extract_from_photo" aria-live="polite"><span class="placeholder">Upload a label photo, then choose Extract label.</span></div></div>
       </div>
     </div>
     <ol class="steps" aria-label="How it works">
@@ -289,7 +283,6 @@
       <div class="section-intro"><div><span class="eyebrow">01 / UNDERSTAND</span><h2>Your medicine, in plain language.</h2></div><button data-run="medicine_card">Create medicine card <img src="assets/arrow-right.svg" alt="" /></button></div>
       <p class="sec-desc">Type medicine details or upload a readable label photo — either is enough. If you use both, the Medicine Card compares them and flags conflicts. The medicine name, strength, and instructions must be readable. Cover personal details if you wish.</p>
       <div class="notice">Always compare the Medicine Card with your original label before continuing to precautions.</div>
-      <div class="ai-panel"><div class="panel-head">Extract from Photo <button class="secondary" data-run="extract_from_photo">Extract label</button></div><div class="output auto" id="out_extract_from_photo" aria-live="polite"><span class="placeholder">Upload a label photo, then choose Extract label.</span></div></div>
       <div class="ai-panel"><div class="panel-head">Medicine Card <button class="secondary" data-run="medicine_card">Generate</button></div><div class="output auto" id="out_medicine_card" aria-live="polite"><span class="placeholder">Your medicine card will appear here.</span></div></div>
       <div class="run-all-bar"><button id="runAll" class="secondary">Generate all panels</button><span id="runAllStatus" class="status-line" role="status"></span></div>
     </div>
@@ -529,7 +522,7 @@ function payloadFor(key) {
       return {
         ...common,
         medicine_card: lastText('out_medicine_card'),
-        patient_age: val('patient_age'),
+        patient_age: 'Not provided',
         other_medicines: val('other_medicines'),
         allergies: val('allergies'),
       };
