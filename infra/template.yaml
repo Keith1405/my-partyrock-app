@@ -12,9 +12,6 @@ Globals:
 
 Resources:
 
-  # ---------------------------------------------------------------------------
-  # IAM role shared by all text Lambdas
-  # ---------------------------------------------------------------------------
   AppBedrockRole:
     Type: AWS::IAM::Role
     Properties:
@@ -40,13 +37,9 @@ Resources:
                   - bedrock:Converse
                   - bedrock:ConverseStream
                 Resource:
-                  # Claude 3 Haiku — regional foundation model. * for region
-                  # keeps the policy valid regardless of deploy region.
-                  - arn:aws:bedrock:*::foundation-model/anthropic.claude-3-haiku-20240307-v1:0
+                  - !Sub arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:inference-profile/global.anthropic.claude-haiku-4-5-20251001-v1:0
+                  - arn:aws:bedrock:*::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0
 
-  # ---------------------------------------------------------------------------
-  # Text AI Lambdas (Flask + Lambda Web Adapter, response streaming)
-  # ---------------------------------------------------------------------------
   ExtractfromPhotoFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -60,6 +53,7 @@ Resources:
           AWS_LAMBDA_EXEC_WRAPPER: /opt/bootstrap
           AWS_LWA_INVOKE_MODE: response_stream
           PORT: "8080"
+          MODEL_ID: global.anthropic.claude-haiku-4-5-20251001-v1:0
       FunctionUrlConfig:
         AuthType: NONE
         InvokeMode: RESPONSE_STREAM
@@ -77,6 +71,7 @@ Resources:
           AWS_LAMBDA_EXEC_WRAPPER: /opt/bootstrap
           AWS_LWA_INVOKE_MODE: response_stream
           PORT: "8080"
+          MODEL_ID: global.anthropic.claude-haiku-4-5-20251001-v1:0
       FunctionUrlConfig:
         AuthType: NONE
         InvokeMode: RESPONSE_STREAM
@@ -94,6 +89,7 @@ Resources:
           AWS_LAMBDA_EXEC_WRAPPER: /opt/bootstrap
           AWS_LWA_INVOKE_MODE: response_stream
           PORT: "8080"
+          MODEL_ID: global.anthropic.claude-haiku-4-5-20251001-v1:0
       FunctionUrlConfig:
         AuthType: NONE
         InvokeMode: RESPONSE_STREAM
@@ -111,6 +107,7 @@ Resources:
           AWS_LAMBDA_EXEC_WRAPPER: /opt/bootstrap
           AWS_LWA_INVOKE_MODE: response_stream
           PORT: "8080"
+          MODEL_ID: global.anthropic.claude-haiku-4-5-20251001-v1:0
       FunctionUrlConfig:
         AuthType: NONE
         InvokeMode: RESPONSE_STREAM
@@ -128,13 +125,11 @@ Resources:
           AWS_LAMBDA_EXEC_WRAPPER: /opt/bootstrap
           AWS_LWA_INVOKE_MODE: response_stream
           PORT: "8080"
+          MODEL_ID: global.anthropic.claude-haiku-4-5-20251001-v1:0
       FunctionUrlConfig:
         AuthType: NONE
         InvokeMode: RESPONSE_STREAM
 
-  # ---------------------------------------------------------------------------
-  # S3 static website hosting for the frontend
-  # ---------------------------------------------------------------------------
   FrontendBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -166,23 +161,16 @@ Resources:
 
 Outputs:
   ExtractfromPhotoUrl:
-    Description: Function URL for the Extract from Photo Lambda
     Value: !GetAtt ExtractfromPhotoFunctionUrl.FunctionUrl
   MedicineCardUrl:
-    Description: Function URL for the Medicine Card Lambda
     Value: !GetAtt MedicineCardFunctionUrl.FunctionUrl
   MyMedicineSummaryUrl:
-    Description: Function URL for the My Medicine Summary Lambda
     Value: !GetAtt MyMedicineSummaryFunctionUrl.FunctionUrl
   MyReturnPlanUrl:
-    Description: Function URL for the My Return Plan Lambda
     Value: !GetAtt MyReturnPlanFunctionUrl.FunctionUrl
   SmartMedHelpUrl:
-    Description: Function URL for the SmartMed Help chat Lambda
     Value: !GetAtt SmartMedHelpFunctionUrl.FunctionUrl
   WebsiteUrl:
-    Description: S3 static website URL
     Value: !GetAtt FrontendBucket.WebsiteURL
   BucketName:
-    Description: Frontend S3 bucket name
     Value: !Ref FrontendBucket
