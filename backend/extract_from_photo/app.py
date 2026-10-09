@@ -12,9 +12,9 @@ from flask import Flask, Response, request, stream_with_context
 
 app = Flask(__name__)
 
-MODEL_ID = "anthropic.claude-3-haiku-20240307-v1:0"
-# Claude 3 Haiku is a regional model; the SDK resolves the Bedrock runtime
-# endpoint for this region. ap-southeast-1 is the deploy region.
+# Model is configurable via the MODEL_ID env var (set by the SAM template).
+# Default: Claude Haiku 4.5 via the Global cross-Region inference profile.
+MODEL_ID = os.environ.get("MODEL_ID", "global.anthropic.claude-haiku-4-5-20251001-v1:0")
 REGION = os.environ.get("BEDROCK_REGION", "ap-southeast-1")
 
 bedrock = boto3.client("bedrock-runtime", region_name=REGION)
@@ -25,9 +25,6 @@ CORS_HEADERS = {
     "Access-Control-Allow-Methods": "POST,OPTIONS",
 }
 
-# ---------------------------------------------------------------------------
-# Lightweight abuse guards (per-instance; best-effort, not a substitute for WAF)
-# ---------------------------------------------------------------------------
 import time
 from collections import deque
 
@@ -46,7 +43,6 @@ def _rate_limited():
     return False
 
 def _guard():
-    """Return (status, message) if the request should be rejected, else None."""
     length = request.content_length or 0
     if length > MAX_BODY_BYTES:
         return 413, "Payload too large."
@@ -54,9 +50,6 @@ def _guard():
         return 429, "Too many requests — slow down and try again shortly."
     return None
 
-# ---------------------------------------------------------------------------
-# Prompt
-# ---------------------------------------------------------------------------
 SYSTEM_PROMPT = """You are a clinical pharmacist assistant. A patient has uploaded a photo or scan of a medicine label. Extract the details and display them field by field so the patient can type each value into the matching input box below.
 
 LANGUAGE (highest priority):
@@ -90,8 +83,6 @@ Output the extracted details in this exact format:
 ⚠️ Always compare with your actual label before typing values in."""
 
 def build_messages(body):
-    """Assemble the Bedrock messages list, prepending an image/document block
-    when a file was uploaded with the request."""
     content = []
 
     file_data = body.get("file_data")
@@ -99,24 +90,11 @@ def build_messages(body):
     if file_data:
         if file_mime and file_mime.startswith("image/"):
             fmt = file_mime.split("/", 1)[1]
-            content.append(
-                {
-                    "image": {
-                        "format": fmt,
-                        "source": {"bytes": file_data},
-                    }
-                }
-            )
+            content.append({"image": {"format": fmt, "source": {"bytes": file_data}}})
         else:
             fmt = (file_mime or "application/octet-stream").split("/")[-1]
             content.append(
-                {
-                    "document": {
-                        "format": fmt,
-                        "name": "upload",
-                        "source": {"bytes": file_data},
-                    }
-                }
+                {"document": {"format": fmt, "name": "upload", "source": {"bytes": file_data}}}
             )
 
     language = body.get("preferred_language", "English")
@@ -129,10 +107,8 @@ def build_messages(body):
     return [{"role": "user", "content": content}]
 
 def generate(body):
-    """Yield raw text chunks from the Bedrock streaming response."""
     messages = build_messages(body)
 
-    # Decode base64 file bytes for the Converse API, which wants raw bytes.
     for msg in messages:
         for block in msg["content"]:
             src = block.get("image", {}).get("source") or block.get("document", {}).get("source")
@@ -146,14 +122,15 @@ def generate(body):
             modelId=MODEL_ID,
             messages=messages,
             system=[{"text": SYSTEM_PROMPT}],
-            inferenceConfig={"temperature": 0, "topP": 0, "maxTokens": 2000},
+            # Claude Haiku 4.5 rejects temperature + topP together; send only temperature.
+            inferenceConfig={"temperature": 0, "maxTokens": 2000},
         )
         for event in response["stream"]:
             if "contentBlockDelta" in event:
                 text = event["contentBlockDelta"]["delta"].get("text", "")
                 if text:
                     yield text
-    except Exception as exc:  # noqa: BLE001 — surface any failure to the client
+    except Exception as exc:  # noqa: BLE001
         yield f"\n\n⚠️ Error: {exc}"
 
 @app.route("/", methods=["POST", "OPTIONS"])
