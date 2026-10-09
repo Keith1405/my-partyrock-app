@@ -1,9 +1,5 @@
 """
 SmartMed Cycle — SmartMed Help chatbot (streaming Flask Lambda).
-
-Conversational assistant that answers questions about the patient's medicine,
-supports Quiz Mode and Pharmacist Summary. Accepts the full conversation
-history plus the new message and streams the reply token-by-token.
 """
 import os
 
@@ -12,7 +8,9 @@ from flask import Flask, Response, request, stream_with_context
 
 app = Flask(__name__)
 
-MODEL_ID = "anthropic.claude-3-haiku-20240307-v1:0"
+# Model is configurable via the MODEL_ID env var (set by the SAM template).
+# Default: Claude Haiku 4.5 via the Global cross-Region inference profile.
+MODEL_ID = os.environ.get("MODEL_ID", "global.anthropic.claude-haiku-4-5-20251001-v1:0")
 REGION = os.environ.get("BEDROCK_REGION", "ap-southeast-1")
 bedrock = boto3.client("bedrock-runtime", region_name=REGION)
 
@@ -22,9 +20,6 @@ CORS_HEADERS = {
     "Access-Control-Allow-Methods": "POST,OPTIONS",
 }
 
-# ---------------------------------------------------------------------------
-# Lightweight abuse guards (per-instance; best-effort, not a substitute for WAF)
-# ---------------------------------------------------------------------------
 import time
 from collections import deque
 
@@ -132,7 +127,8 @@ def generate(body):
             modelId=MODEL_ID,
             messages=messages,
             system=[{"text": system_text}],
-            inferenceConfig={"temperature": 0.2, "topP": 0.9, "maxTokens": 1500},
+            # Claude Haiku 4.5 rejects temperature + topP together; send only temperature.
+            inferenceConfig={"temperature": 0.2, "maxTokens": 1500},
         )
         for event in response["stream"]:
             if "contentBlockDelta" in event:
