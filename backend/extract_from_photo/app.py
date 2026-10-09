@@ -13,8 +13,8 @@ from flask import Flask, Response, request, stream_with_context
 app = Flask(__name__)
 
 MODEL_ID = "anthropic.claude-3-haiku-20240307-v1:0"
-# The global. inference profile routes worldwide; the SDK still needs a region
-# to resolve the Bedrock runtime endpoint. ap-southeast-1 is the home region.
+# Claude 3 Haiku is a regional model; the SDK resolves the Bedrock runtime
+# endpoint for this region. ap-southeast-1 is the deploy region.
 REGION = os.environ.get("BEDROCK_REGION", "ap-southeast-1")
 
 bedrock = boto3.client("bedrock-runtime", region_name=REGION)
@@ -31,14 +31,10 @@ CORS_HEADERS = {
 import time
 from collections import deque
 
-# Max request body size. Images are base64 (~1.37x raw); 8 MB covers a large
-# photo while rejecting obviously abusive payloads.
 MAX_BODY_BYTES = int(os.environ.get("MAX_BODY_BYTES", 8 * 1024 * 1024))
-# Simple sliding-window rate limit per warm instance.
-RATE_MAX = int(os.environ.get("RATE_MAX", 30))        # requests
-RATE_WINDOW = int(os.environ.get("RATE_WINDOW", 60))  # seconds
+RATE_MAX = int(os.environ.get("RATE_MAX", 30))
+RATE_WINDOW = int(os.environ.get("RATE_WINDOW", 60))
 _hits = deque()
-
 
 def _rate_limited():
     now = time.time()
@@ -49,7 +45,6 @@ def _rate_limited():
     _hits.append(now)
     return False
 
-
 def _guard():
     """Return (status, message) if the request should be rejected, else None."""
     length = request.content_length or 0
@@ -59,11 +54,17 @@ def _guard():
         return 429, "Too many requests — slow down and try again shortly."
     return None
 
-
 # ---------------------------------------------------------------------------
 # Prompt
 # ---------------------------------------------------------------------------
 SYSTEM_PROMPT = """You are a clinical pharmacist assistant. A patient has uploaded a photo or scan of a medicine label. Extract the details and display them field by field so the patient can type each value into the matching input box below.
+
+LANGUAGE (highest priority):
+- Respond strictly in the Preferred Language given in the user message, and ONLY that language.
+- If Preferred Language is English, respond strictly in English only.
+- If Preferred Language is Bahasa Melayu, respond strictly in Bahasa Melayu only.
+- If Preferred Language is 中文, respond strictly in 中文 only.
+- Translate ALL field labels, headings, and warnings fully into the Preferred Language. Keep the emojis. (Values copied verbatim from the label stay as written on the label.)
 
 RULES:
 - Extract only what is explicitly and clearly visible on the label. Do not infer or calculate missing fields.
@@ -78,16 +79,15 @@ Output the extracted details in this exact format:
 ---
 📋 **Extracted from photo — type each value into the matching field below:**
 
-**Medicine name and strength:** 
-**Amount each time:** 
-**How often:** 
-**Other label instructions:** 
-**Start date and duration:** 
-**Quantity supplied and expiry:** 
+**Medicine name and strength:**
+**Amount each time:**
+**How often:**
+**Other label instructions:**
+**Start date and duration:**
+**Quantity supplied and expiry:**
 
 ---
 ⚠️ Always compare with your actual label before typing values in."""
-
 
 def build_messages(body):
     """Assemble the Bedrock messages list, prepending an image/document block
@@ -119,18 +119,17 @@ def build_messages(body):
                 }
             )
 
-    user_text = "Uploaded photo or document is attached above (if any). Extract the label details."
+    language = body.get("preferred_language", "English")
+    user_text = (
+        f"Preferred Language: {language}\n"
+        "Uploaded photo or document is attached above (if any). Extract the label details."
+    )
     content.append({"text": user_text})
 
     return [{"role": "user", "content": content}]
 
-
 def generate(body):
-    """Yield raw text chunks from the Bedrock streaming response.
-
-    Uses the Converse Stream API, which accepts the base64 string the frontend
-    sends and transparently handles the global cross-region inference profile.
-    """
+    """Yield raw text chunks from the Bedrock streaming response."""
     messages = build_messages(body)
 
     # Decode base64 file bytes for the Converse API, which wants raw bytes.
@@ -157,7 +156,6 @@ def generate(body):
     except Exception as exc:  # noqa: BLE001 — surface any failure to the client
         yield f"\n\n⚠️ Error: {exc}"
 
-
 @app.route("/", methods=["POST", "OPTIONS"])
 def handler():
     if request.method == "OPTIONS":
@@ -179,7 +177,6 @@ def handler():
     for key, value in CORS_HEADERS.items():
         resp.headers[key] = value
     return resp
-
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
