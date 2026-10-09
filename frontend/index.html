@@ -293,11 +293,10 @@
       <li><span class="step-number">3</span><div><strong>Take to your pharmacist</strong><p>Bring your questions and<br /> feel prepared.</p></div></li>
     </ol>
     <div class="medicine-workspace">
-      <div class="section-intro"><div><span class="eyebrow">01 / UNDERSTAND</span><h2>Your medicine, in plain language.</h2></div><button data-run="medicine_card">Create medicine card <img src="assets/arrow-right.svg" alt="" /></button></div>
+      <div class="section-intro"><div><span class="eyebrow">01 / UNDERSTAND</span><h2>Your medicine, in plain language.</h2></div></div>
       <p class="sec-desc">Type medicine details or upload a readable label photo — either is enough. If you use both, the Medicine Card compares them and flags conflicts. The medicine name, strength, and instructions must be readable. Cover personal details if you wish.</p>
       <div class="notice-red">Always compare the Medicine Card with your original label before continuing to precautions.</div>
       <div class="ai-panel"><div class="panel-head">Medicine Card <button class="secondary" data-run="medicine_card">Generate</button></div><div class="output auto" id="out_medicine_card" aria-live="polite"><span class="placeholder">Your medicine card will appear here.</span></div></div>
-      <div class="run-all-bar"><button id="runAll" class="secondary">Generate all panels</button><span id="runAllStatus" class="status-line" role="status"></span></div>
     </div>
   </section>
 
@@ -443,7 +442,7 @@ wireDropzone('dz_med', 'file_med', 'fn_med');
 wireDropzone('dz_ret', 'file_ret', 'fn_ret');
 
 function inlineMd(text) {
-  let s = text.replace(/&/g, '&').replace(/</g, '&lt;').replace(/>/g, '>');
+  let s = text.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>');
   s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
   s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   s = s.replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
@@ -568,18 +567,6 @@ document.querySelectorAll('[data-run]').forEach((btn) => {
   btn.addEventListener('click', () => runWidget(btn.dataset.run));
 });
 
-document.getElementById('runAll').addEventListener('click', async () => {
-  const btn = document.getElementById('runAll');
-  const status = document.getElementById('runAllStatus');
-  btn.disabled = true;
-  status.innerHTML = '<span class="spinner"></span> Running all panels…';
-  const keys = ['extract_from_photo', 'medicine_card', 'my_medicine_summary', 'my_return_plan'];
-  await Promise.allSettled(keys.map(runWidget));
-  status.textContent = '✅ Done';
-  btn.disabled = false;
-  setTimeout(() => (status.textContent = ''), 4000);
-});
-
 const chatHistory = [];
 const chatLog = document.getElementById('chat_log');
 
@@ -671,18 +658,21 @@ document.getElementById('chat_input').addEventListener('keydown', (e) => {
 const menuToggle = document.getElementById('menu_toggle');
 const navigation = document.getElementById('navigation');
 function closeMenu() {
+  if (!navigation || !menuToggle) return;
   navigation.classList.remove('is-open');
   menuToggle.setAttribute('aria-expanded', 'false');
   menuToggle.setAttribute('aria-label', 'Open navigation');
 }
-menuToggle.addEventListener('click', () => {
-  const open = navigation.classList.toggle('is-open');
-  menuToggle.setAttribute('aria-expanded', String(open));
-  menuToggle.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
-});
-navigation.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMenu));
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
-document.addEventListener('click', e => { if (!e.target.closest('.topbar')) closeMenu(); });
+if (menuToggle && navigation) {
+  menuToggle.addEventListener('click', () => {
+    const open = navigation.classList.toggle('is-open');
+    menuToggle.setAttribute('aria-expanded', String(open));
+    menuToggle.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+  });
+  navigation.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMenu));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+  document.addEventListener('click', e => { if (!e.target.closest('.topbar')) closeMenu(); });
+}
 </script>
 </body>
 </html>
