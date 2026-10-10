@@ -1,0 +1,78 @@
+{
+  "source": {
+    "title": "MIMS Abbreviation Index + common prescription/dispensing shorthand",
+    "note": "MIMS Abbreviation Index (© MIMS) plus widely-used Malaysian/Commonwealth prescription Latin shorthand. Use ONLY to DECODE abbreviations that are actually written on the label/prescription. Never invent a value that is not written. If a mark is unclear or illegible, use 'Not readable'. Expand to the full meaning and also keep the original shorthand in brackets, e.g. '2 tablets (TT)'."
+  },
+  "quantity_per_dose": {
+    "T": "1 tablet",
+    "TT": "2 tablets",
+    "TTT": "3 tablets",
+    "C": "1 capsule",
+    "CC": "2 capsules",
+    "i": "1 (one)",
+    "ii": "2 (two)",
+    "iii": "3 (three)",
+    "ss": "half",
+    "½": "half"
+  },
+  "frequency": {
+    "od": "once daily",
+    "om": "once in the morning (omni mane)",
+    "on": "once at night (omni nocte)",
+    "mane": "in the morning",
+    "nocte": "at night",
+    "bd": "twice daily",
+    "bid": "twice daily",
+    "tds": "three times daily",
+    "tid": "three times daily",
+    "qds": "four times daily",
+    "qid": "four times daily",
+    "q4h": "every 4 hours",
+    "q6h": "every 6 hours",
+    "q8h": "every 8 hours",
+    "q12h": "every 12 hours",
+    "qhs": "at bedtime",
+    "prn": "as needed (pro re nata)",
+    "stat": "immediately, once",
+    "altdie": "every other day",
+    "weekly": "once a week"
+  },
+  "route": {
+    "po": "by mouth (per orem/oral)",
+    "pr": "rectally (per rectum)",
+    "pv": "vaginally (per vaginam)",
+    "sl": "under the tongue (sublingual)",
+    "im": "into muscle (intramuscular)",
+    "iv": "into vein (intravenous)",
+    "sc": "under the skin (subcutaneous)",
+    "top": "applied to the skin (topical)",
+    "inh": "inhaled",
+    "neb": "nebulised",
+    "gtt": "drops",
+    "od_eye": "right eye (oculus dexter)",
+    "os_eye": "left eye (oculus sinister)",
+    "ou_eye": "both eyes (oculus uterque)"
+  },
+  "timing_food": {
+    "ac": "before food (ante cibum)",
+    "pc": "after food (post cibum)",
+    "cc_food": "with food (cum cibo)",
+    "hs": "at bedtime (hora somni)",
+    "p.c.": "after food",
+    "a.c.": "before food"
+  },
+  "misc": {
+    "p.o.": "by mouth",
+    "p.r.n.": "as needed",
+    "x": "for (duration), e.g. x 7 days = for 7 days",
+    "/7": "days (e.g. 5/7 = 5 days)",
+    "/52": "weeks (e.g. 2/52 = 2 weeks)",
+    "/12": "months (e.g. 3/12 = 3 months)",
+    "mdu": "to be used as directed (more dicto utendus)",
+    "ut dict": "as directed",
+    "rpt": "repeat",
+    "disp": "dispense",
+    "sig": "directions / label instructions"
+  },
+  "mims_index_note": "The full MIMS Abbreviation Index (bd/bid=twice daily, tds/tid=three times daily, qds/qid=four times daily, prn, po, SR/XR/ER=extended-release, EC=enteric-coated, cap=capsule, tab=tablet, susp=suspension, soln=solution, inj=injection, mcg=microgram, etc.) also applies when decoding product/form abbreviations on the label."
+}
