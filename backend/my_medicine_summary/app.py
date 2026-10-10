@@ -129,7 +129,7 @@ CLINICAL CONTENT & SOURCING:
 - Food/drink interactions are covered in the "Food and Drink" section below; only mention a food interaction when it genuinely applies to the supplied medicine, word a genuine interaction as a caution to discuss rather than an absolute ban (unless it is a true hard rule), and never write "no interactions found" for anything not actually checked.
 - If something could not be verified, say so plainly rather than implying it is fine.
 
-OUTPUT — ONE combined summary for ALL supplied medicines (do NOT repeat the full Medicine Card). Start with the title line "💊 Your Medicine Summary" (translated), then use EXACTLY these six sections IN THIS ORDER, with headings translated into the Preferred Language and the emojis kept:
+OUTPUT — ONE combined summary for ALL supplied medicines (do NOT repeat the full Medicine Card). Do NOT print any title line such as "Your Medicine Summary" — start DIRECTLY with the first section heading "💊 Your Instructions". Use EXACTLY these six sections IN THIS ORDER, with headings translated into the Preferred Language and the emojis kept:
 
 💊 Your Instructions
 [How to take each medicine, in plain words, using ONLY the supplied dose/schedule. Flag any unusual or unclear dose for pharmacist confirmation. If an unidentified medicine exists, place the "⚠️ Please recheck the medicine name" block here or above.]
@@ -144,7 +144,8 @@ OUTPUT — ONE combined summary for ALL supplied medicines (do NOT repeat the fu
 [Give food/drink guidance SPECIFIC to the actual supplied medicine(s). Where a medicine has meaningful dietary guidance, present it in a helpful eat-less / eat-more style, for example (this is only an illustration of the STYLE — do NOT reuse these items unless they truly apply to the supplied medicine):
   "What to Eat Less Of (Limit or Avoid)" — a short bulleted list, then
   "What to Eat More Of" — a short bulleted list.
-Keep it to what genuinely applies to THIS medicine; if a medicine has little dietary guidance, just give the one or two relevant lines (e.g. "Take with food if your stomach feels upset") instead of forcing the two-list layout.
+Keep it to what genuinely applies to THIS medicine; if a medicine has little dietary guidance, give just the one or two relevant lines instead of forcing the two-list layout.
+- Do NOT repeat the dose, schedule, or timing already given in "Your Instructions" (e.g. do not restate "take 1 hour before food or 2 hours after food" or "take on an empty stomach" here if it is already in Your Instructions). This section is ONLY about which foods/drinks to favour or limit and genuine food/drink interactions — not how or when to take the medicine.
 - Only mention a specific food interaction (e.g. grapefruit with a statin, high-purine foods with a gout medicine, vitamin-K foods with warfarin) when it ACTUALLY applies to the supplied medicine. NEVER list grapefruit or any food by default or as a generic example — if the medicine has no known interaction with a food, do not mention that food at all. Do NOT add lines like "Grapefruit: No known interaction" for foods that are irrelevant.
 - Word any genuine interaction as a caution to discuss, not an absolute ban, unless it is a true hard rule (e.g. alcohol with metronidazole). Mention alcohol only when it is relevant to the supplied medicine.
 - Never state "no interactions found" for anything not actually checked; instead say what could not be verified.]
@@ -181,9 +182,11 @@ def build_messages(body):
         f"Age group: {age}\n"
         f"Other medicines/supplements: {other if other else '(blank — Not provided)'}\n"
         f"Allergies: {allergies if allergies else '(blank — Not provided, NOT no allergies)'}\n\n"
-        "Produce the combined '💊 Your Medicine Summary' with the six sections in order "
+        "Produce the combined summary with NO title line — start directly with the first "
+        "heading '💊 Your Instructions' — then the six sections in order "
         "(Your Instructions, What It Is For, Watch Out For, Food and Drink, Ask Your Pharmacist, "
-        "Sources) and the closing SmartMed Help line, following all rules above."
+        "Sources) and the closing SmartMed Help line, following all rules above. "
+        "Do not repeat dose/timing in Food and Drink if it is already in Your Instructions."
     )
     return [{"role": "user", "content": [{"text": user_text}]}]
 
