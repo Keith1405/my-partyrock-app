@@ -1,0 +1,41 @@
+{
+  "source": {
+    "title": "Guide on Handling Look Alike, Sound Alike Medications",
+    "publisher": "Pharmaceutical Services Division, Ministry of Health Malaysia",
+    "edition": "First Edition",
+    "year": 2012,
+    "url": "https://www.pharmacy.gov.my",
+    "note": "This is a 2012 publication. It is NOT a current or complete drug database. The confusable-name pairs and Tall Man list below are illustrative and NON-EXHAUSTIVE. Absence from these lists does NOT mean a name is safe or correctly identified."
+  },
+  "lasa_pairs": [
+    ["madopar", "methyldopa"],
+    ["lovastatin", "loratadine"],
+    ["chlorpromazine", "carbamazepine"],
+    ["cotrimoxazole", "clotrimazole"],
+    ["carbimazole", "cotrimoxazole"],
+    ["amlodipine", "felodipine"],
+    ["Difflam", "Daflon"],
+    ["enalapril", "perindopril"],
+    ["Neurobion", "Neurontin"],
+    ["cycloserine", "cyclosporine"],
+    ["Glucophage XR", "Glucovance"],
+    ["gliclazide", "glibenclamide"],
+    ["imipenem", "meropenem"],
+    ["lovastatin", "simvastatin"],
+    ["losartan", "valsartan"],
+    ["Progyluton", "Progynova"]
+  ],
+  "tall_man": [
+    "ATRAcurium", "BISOprolol", "BUPIvacaine", "carBAMAZepine", "carBIMazole",
+    "cefOTAXime", "cefTAZIDime", "cefTRIAXone", "chlorproMAZINE", "chlorproPAMIDE",
+    "COzaar", "DAUNOrubicin", "DOBUTamine", "DOXOrubicin", "DOPamine",
+    "DuphASTON", "DuspaTALIN", "ENALApril", "ESOMEprazole", "FORTzaar",
+    "gliBENclamide", "gliCLAzide", "LANSOprazole", "LIGNOcaine", "LOsartan",
+    "LOVAstatin", "metFORMIN", "METOprolol", "NEostigmine", "NeuroBION",
+    "NeuroNTIN", "niFEDipine", "niMODipine", "nitroGLYCERINe", "nitroPRUSSIDe",
+    "PANcuronium", "PANTOprazole", "PERINDOpril", "ProgyLUTON", "ProgyNOVA",
+    "ProSCAR", "PROzac", "ROcuronium", "ROPIvacaine", "SETRAline",
+    "STELLAzine", "VEcuronium", "vinBLAStine", "vinCRIStine",
+    "XalaTAN", "XalaCOM"
+  ]
+}
