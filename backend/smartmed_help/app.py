@@ -223,22 +223,22 @@ def _candidate_names(*texts):
 SYSTEM_PROMPT_TEMPLATE = """You are SmartMed Help, a careful medicine-information assistant for a patient in Malaysia.
 
 LANGUAGE (highest priority):
-- Respond strictly in {language}, and ONLY that language, for ALL text — every heading, label, bullet, and warning.
-- If {language} is English, respond strictly in English only.
-- If {language} is Bahasa Melayu, respond strictly in Bahasa Melayu only.
-- If {language} is 中文, respond strictly in 中文 only.
+- Respond strictly in [[LANGUAGE]], and ONLY that language, for ALL text — every heading, label, bullet, and warning.
+- If [[LANGUAGE]] is English, respond strictly in English only.
+- If [[LANGUAGE]] is Bahasa Melayu, respond strictly in Bahasa Melayu only.
+- If [[LANGUAGE]] is 中文, respond strictly in 中文 only.
 - Exception: if the patient writes to you in a different language, you may match the language they wrote in. Keep the emojis.
 
 Use emojis to make answers easy to read. Use plain patient-friendly words.
 
-Medicine Card: {medicine_card}
-Precautions / Medicine Summary: {precautions}
+Medicine Card: [[MEDICINE_CARD]]
+Precautions / Medicine Summary: [[PRECAUTIONS]]
 
-{lasa_summary}
+[[LASA_SUMMARY]]
 
-{retrieved}
+[[RETRIEVED]]
 
-{faqs}
+[[FAQS]]
 
 GROUNDING & SOURCING RULES (follow strictly):
 - Use the CURATED FAQ LIBRARY first when an approved entry matches: prefer its wording and cite its source link(s). If the FAQ block says no approved FAQ matched, do NOT cite or invent any FAQ.
@@ -299,13 +299,17 @@ def build_request(body):
     matched = _match_faqs(new_message, " ".join([medicine_card] + names))
     faqs = _faq_block(matched)
 
-    system_text = SYSTEM_PROMPT_TEMPLATE.format(
-        language=language,
-        medicine_card=medicine_card,
-        precautions=precautions,
-        lasa_summary=_lasa_summary(),
-        retrieved=retrieved,
-        faqs=faqs,
+    # Use plain .replace() rather than str.format(): the injected blocks
+    # (retrieved reference data, FAQ answers, MedlinePlus titles) may contain
+    # literal { or } characters, which would make str.format() raise.
+    system_text = (
+        SYSTEM_PROMPT_TEMPLATE
+        .replace("[[LANGUAGE]]", str(language))
+        .replace("[[MEDICINE_CARD]]", str(medicine_card))
+        .replace("[[PRECAUTIONS]]", str(precautions))
+        .replace("[[LASA_SUMMARY]]", _lasa_summary())
+        .replace("[[RETRIEVED]]", retrieved)
+        .replace("[[FAQS]]", faqs)
     )
 
     messages = []
@@ -325,8 +329,11 @@ def build_request(body):
     return system_text, messages
 
 def generate(body):
-    system_text, messages = build_request(body)
+    # Everything (including prompt assembly, FAQ matching, and the live RxNorm
+    # verification in build_request) is inside the try so any failure streams
+    # as an inline error instead of a hard 500 — matching the other Lambdas.
     try:
+        system_text, messages = build_request(body)
         response = bedrock.converse_stream(
             modelId=MODEL_ID,
             messages=messages,
