@@ -235,7 +235,8 @@
   .remove-photo { display:inline-block; margin-top:8px; background:#e74c3c; color:#fff; border:none; border-radius:8px; padding:6px 14px; font-size:0.82rem; font-weight:600; cursor:pointer; }
   .remove-photo:hover { background:#c0392b; }
   .remove-photo[hidden] { display:none; }
-    .brand { display:inline-flex; align-items:center; gap:12px; }
+  /* Brand logo in the navbar */
+  .brand { display:inline-flex; align-items:center; gap:12px; }
   .brand-logo { height:40px; width:auto; display:block; }
 </style>
 <link rel="stylesheet" href="assets/redesign.css" />
@@ -469,7 +470,7 @@ wireDropzone('dz_med', 'file_med', 'fn_med');
 wireDropzone('dz_ret', 'file_ret', 'fn_ret');
 
 function inlineMd(text) {
-  let s = text.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>');
+  let s = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
   s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   s = s.replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
@@ -491,6 +492,18 @@ function makeLine(raw) {
   if (ul) { span.classList.add('li'); span.innerHTML = inlineMd(ul[1]); return span; }
   span.innerHTML = inlineMd(t) || '&nbsp;';
   return span;
+}
+
+// Render a full markdown string into an element, line by line, reusing the
+// same formatter the result panels use (so **bold**, # headings, and
+// - bullets display properly in the chat instead of showing raw * and #).
+function renderMarkdownInto(el, text, trailingNode) {
+  el.innerHTML = '';
+  const lines = (text || '').split('\n');
+  for (const line of lines) {
+    el.appendChild(makeLine(line));
+  }
+  if (trailingNode) el.appendChild(trailingNode);
 }
 
 async function streamInto(url, payload, outEl) {
@@ -661,13 +674,12 @@ async function sendChat() {
       if (done) break;
       const chunk = decoder.decode(value, { stream: true });
       full += chunk;
-      botBubble.textContent = full;
-      botBubble.appendChild(cursor);
+      renderMarkdownInto(botBubble, full, cursor);
       const wrap = document.getElementById('chat_log_wrap');
       wrap.scrollTop = wrap.scrollHeight;
     }
     cursor.remove();
-    botBubble.textContent = full;
+    renderMarkdownInto(botBubble, full);
     chatHistory.push({ role: 'user', content: message });
     chatHistory.push({ role: 'assistant', content: full });
   } catch (err) {
