@@ -255,12 +255,12 @@
     };
   </script>
 
-  <a class="skip-link" href="#medicine">Skip to medicine details</a>
+  <a class="skip-link" href="#medicine" data-i18n="skip_link">Skip to medicine details</a>
   <nav class="topbar" aria-label="Main navigation">
     <a class="brand" href="#top"><img class="brand-logo" src="assets/logo.png" alt="SmartMed Cycle logo" />SmartMed<span>Cycle</span></a>
     <div class="navlinks" id="navigation">
-      <a href="#medicine">Medicine</a><a href="#precautions">Precautions</a>
-      <a href="#ask">Ask</a><a href="#returns">Returns</a>
+      <a href="#medicine" data-i18n="nav_medicine">Medicine</a><a href="#precautions" data-i18n="nav_precautions">Precautions</a>
+      <a href="#ask" data-i18n="nav_ask">Ask</a><a href="#returns" data-i18n="nav_returns">Returns</a>
     </div>
     <select id="preferred_language" aria-label="Preferred language">
       <option value="Bahasa Melayu">Bahasa Melayu</option>
@@ -270,137 +270,134 @@
     <button class="menu-toggle" id="menu_toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="navigation"><img src="assets/list.svg" alt="" /></button>
   </nav>
   <header class="hero" id="top">
-    <h1>Know your medicine.<br />Feel prepared.</h1>
-    <p class="tag">Turn your medicine label into clear information<br class="desktop-break" /> and questions for your pharmacist.</p>
-    <a class="primary hero-cta" href="#medicine">Start with my medicine <img src="assets/arrow-right.svg" alt="" /></a>
-    <p class="hero-note">Preparation tool only. Always check your original label and speak with your pharmacist.</p>
+    <h1 data-i18n="hero_h1">Know your medicine.<br />Feel prepared.</h1>
+    <p class="tag" data-i18n="hero_tag">Turn your medicine label into clear information<br class="desktop-break" /> and questions for your pharmacist.</p>
+    <a class="primary hero-cta" href="#medicine"><span data-i18n="hero_cta">Start with my medicine</span> <img src="assets/arrow-right.svg" alt="" /></a>
+    <p class="hero-note" data-i18n="hero_note">Preparation tool only. Always check your original label and speak with your pharmacist.</p>
   </header>
   <section class="medicine-section" id="medicine" aria-labelledby="medicine-title">
     <div class="entry-surface">
-      <h2 id="medicine-title">Medicine details</h2>
+      <h2 id="medicine-title" data-i18n="med_title">Medicine details</h2>
       <div class="entry-grid">
         <div class="field medicine-input">
-          <label for="medicine_details">Medicine name and details</label>
-          <textarea id="medicine_details" placeholder="Medicine name, strength and label instructions"></textarea>
+          <label for="medicine_details" data-i18n="med_label">Medicine name and details</label>
+          <textarea id="medicine_details" data-i18n-ph="med_ph" placeholder="Medicine name, strength and label instructions"></textarea>
         </div>
         <div class="field photo-input">
-          <label id="photo-label">Photo upload</label>
+          <label id="photo-label" data-i18n="photo_label">Photo upload</label>
         <div class="dropzone compact-upload" id="dz_med" data-input="file_med" role="button" tabindex="0" aria-labelledby="photo-label">
           <img class="upload-icon" src="assets/upload.svg" alt="" />
-          <strong>Upload label photo</strong><span>JPG, PNG or WebP</span><span class="filename" id="fn_med"></span>
+          <strong data-i18n="upload_strong">Upload label photo</strong><span data-i18n="upload_formats">JPG, PNG or WebP</span><span class="filename" id="fn_med"></span>
         </div>
-        <button type="button" class="remove-photo" id="rm_med" hidden>✕ Remove photo</button>
+        <button type="button" class="remove-photo" id="rm_med" data-i18n="remove_photo" hidden>✕ Remove photo</button>
         <input type="file" id="file_med" accept="image/jpeg,image/png,image/webp" hidden />
         </div>
-        <div class="ai-panel"><div class="panel-head">Extract from Photo <button class="secondary" data-run="extract_from_photo">Extract label</button></div><div class="output auto" id="out_extract_from_photo" aria-live="polite"><span class="placeholder">Upload a label photo, then choose Extract label.</span></div></div>
+        <div class="ai-panel"><div class="panel-head"><span data-i18n="panel_extract">Extract from Photo</span> <button class="secondary" data-run="extract_from_photo" data-i18n="btn_extract">Extract label</button></div><div class="output auto" id="out_extract_from_photo" aria-live="polite"><span class="placeholder" data-i18n="ph_extract">Upload a label photo, then choose Extract label.</span></div></div>
       </div>
     </div>
     <ol class="steps" aria-label="How it works">
-      <li><span class="step-number">1</span><div><strong>Add your medicine</strong><p>Type it or upload a photo<br /> of your label.</p></div></li>
-      <li><span class="step-number">2</span><div><strong>Get clear information</strong><p>See key points in plain language.</p></div></li>
-      <li><span class="step-number">3</span><div><strong>Take to your pharmacist</strong><p>Bring your questions and<br /> feel prepared.</p></div></li>
+      <li><span class="step-number">1</span><div><strong data-i18n="step1_h">Add your medicine</strong><p data-i18n="step1_p">Type it or upload a photo<br /> of your label.</p></div></li>
+      <li><span class="step-number">2</span><div><strong data-i18n="step2_h">Get clear information</strong><p data-i18n="step2_p">See key points in plain language.</p></div></li>
+      <li><span class="step-number">3</span><div><strong data-i18n="step3_h">Take to your pharmacist</strong><p data-i18n="step3_p">Bring your questions and<br /> feel prepared.</p></div></li>
     </ol>
     <div class="medicine-workspace">
-      <div class="section-intro"><div><span class="eyebrow">01 / UNDERSTAND</span><h2>Your medicine, in plain language.</h2></div></div>
-      <p class="sec-desc">Type medicine details or upload a readable label photo — either is enough. If you use both, the Medicine Card compares them and flags conflicts. The medicine name, strength, and instructions must be readable. Cover personal details if you wish.</p>
-      <div class="notice-red">Always compare the Medicine Card with your original label before continuing to precautions.</div>
-      <div class="ai-panel"><div class="panel-head">Medicine Card <button class="secondary" data-run="medicine_card">Generate</button></div><div class="output auto" id="out_medicine_card" aria-live="polite"><span class="placeholder">Your medicine card will appear here.</span></div></div>
+      <div class="section-intro"><div><span class="eyebrow" data-i18n="eyebrow1">01 / UNDERSTAND</span><h2 data-i18n="med_intro_h">Your medicine, in plain language.</h2></div></div>
+      <p class="sec-desc" data-i18n="med_desc">Type medicine details or upload a readable label photo — either is enough. If you use both, the Medicine Card compares them and flags conflicts. The medicine name, strength, and instructions must be readable. Cover personal details if you wish.</p>
+      <div class="notice-red" data-i18n="med_redbox">Always compare the Medicine Card with your original label before continuing to precautions.</div>
+      <div class="ai-panel"><div class="panel-head"><span data-i18n="panel_card">Medicine Card</span> <button class="secondary" data-run="medicine_card" data-i18n="btn_generate">Generate</button></div><div class="output auto" id="out_medicine_card" aria-live="polite"><span class="placeholder" data-i18n="ph_card">Your medicine card will appear here.</span></div></div>
     </div>
   </section>
 
   <!-- ============ SECTION 2 ============ -->
   <section class="sec" id="precautions">
-    <h2>02 / Check my precautions</h2>
+    <h2 data-i18n="sec2_title">02 / Check my precautions</h2>
     <div class="sec-desc">
-      Add other medicines and allergy history below, if known. Blank means not provided — it does not mean none.
-      Generate this section to get a list of points to discuss with your pharmacist.
-      <blockquote>If you updated Section 1, regenerate the Medicine Card first, then regenerate this section.</blockquote>
+      <span data-i18n="sec2_desc">Add other medicines and allergy history below, if known. Blank means not provided — it does not mean none. Generate this section to get a list of points to discuss with your pharmacist.</span>
+      <blockquote data-i18n="sec2_quote">If you updated Section 1, regenerate the Medicine Card first, then regenerate this section.</blockquote>
     </div>
 
     <div class="grid">
       <div class="field">
-        <label for="other_medicines">Other Medicines and Supplements <span class="opt">Optional</span></label>
-          <textarea id="other_medicines" class="hinted" placeholder=" Other medicines you are currently taking.&#10; Add names and doses if known.&#10;&#10; Example: Atorvastatin 20 mg once daily; Aspirin 100 mg once daily."></textarea>
+        <label for="other_medicines"><span data-i18n="other_med_label">Other Medicines and Supplements</span> <span class="opt" data-i18n="optional">Optional</span></label>
+          <textarea id="other_medicines" class="hinted" data-i18n-ph="other_med_ph" placeholder=" Other medicines you are currently taking.&#10; Add names and doses if known.&#10;&#10; Example: Atorvastatin 20 mg once daily; Aspirin 100 mg once daily."></textarea>
       </div>
       <div class="field">
-        <label for="allergies">Medicine Allergies and Reactions <span class="opt">Optional</span></label>
-          <textarea id="allergies" class="hinted" placeholder=" Any known medicine or food allergies, and what reaction happened.&#10;&#10; Example: Penicillin — rash and swelling. Write 'None known' or 'Not sure' if applicable.&#10; Also note any supplements or herbal products you take."></textarea>
+        <label for="allergies"><span data-i18n="allergy_label">Medicine Allergies and Reactions</span> <span class="opt" data-i18n="optional">Optional</span></label>
+          <textarea id="allergies" class="hinted" data-i18n-ph="allergy_ph" placeholder=" Any known medicine or food allergies, and what reaction happened.&#10;&#10; Example: Penicillin — rash and swelling. Write 'None known' or 'Not sure' if applicable.&#10; Also note any supplements or herbal products you take."></textarea>
       </div>
     </div>
 
     <div class="ai-panel">
-      <div class="panel-head">My Medicine Summary
-        <button class="secondary" style="margin-left:auto;padding:4px 10px" data-run="my_medicine_summary">Run</button>
+      <div class="panel-head"><span data-i18n="panel_summary">My Medicine Summary</span>
+        <button class="secondary" style="margin-left:auto;padding:4px 10px" data-run="my_medicine_summary" data-i18n="btn_run">Run</button>
       </div>
-      <div class="output" id="out_my_medicine_summary"><span class="placeholder">You're all set to Run</span></div>
+      <div class="output" id="out_my_medicine_summary"><span class="placeholder" data-i18n="ph_run">You're all set to Run</span></div>
     </div>
   </section>
 
   <!-- ============ SECTION 3 ============ -->
   <section class="sec" id="ask">
-    <h2>03 / Ask about my medicines</h2>
+    <h2 data-i18n="sec3_title">03 / Ask about my medicines</h2>
     <div class="sec-desc">
-      Ask anything about your medicine, precautions, or what to tell your pharmacist.<br/>
-       <strong>Try:</strong> <em>"Prepare my pharmacist summary"</em> — get a ready-to-share summary with your medicine details, uncertainties, and questions to ask.
+      <span data-i18n="sec3_desc">Ask anything about your medicine, precautions, or what to tell your pharmacist.</span><br/>
+       <strong data-i18n="try">Try:</strong> <em data-i18n="sec3_try">"Prepare my pharmacist summary"</em> <span data-i18n="sec3_try2">— get a ready-to-share summary with your medicine details, uncertainties, and questions to ask.</span>
     </div>
 
-    <div class="notice emergency" style="margin-bottom:16px">
+    <div class="notice emergency" style="margin-bottom:16px" data-i18n="emergency_note">
       <strong>Medical emergency?</strong> In Malaysia, call <strong>999</strong> now. Outside Malaysia, call your local emergency number. Do not wait for this tool.
     </div>
 
     <div class="ai-panel">
-      <div class="panel-head">SmartMed Help</div>
+      <div class="panel-head" data-i18n="panel_help">SmartMed Help</div>
       <div class="output chat" id="chat_log_wrap">
         <div class="chat-log" id="chat_log"></div>
       </div>
       <div class="chat-input-row">
-        <input type="text" id="chat_input" placeholder="Ask anything. For example: explain this instruction, prepare my pharmacist summary, quiz me" />
-        <button id="chat_send">Send</button>
+        <input type="text" id="chat_input" data-i18n-ph="chat_ph" placeholder="Ask anything. For example: explain this instruction, prepare my pharmacist summary, quiz me" />
+        <button id="chat_send" data-i18n="btn_send">Send</button>
       </div>
     </div>
   </section>
 
   <!-- ============ SECTION 4 ============ -->
   <section class="sec" id="returns">
-    <h2>04 / Return unused medicines</h2>
-    <div class="sec-desc">
+    <h2 data-i18n="sec4_title">04 / Return unused medicines</h2>
+    <div class="sec-desc" data-i18n="sec4_desc">
        You can return <strong>any</strong> unwanted medicine — prescription medicines, over-the-counter products, vitamins, supplements, or medicines found at home.<br/>
        Enter the medicine details and your location below and we'll help you find a verified drop-off point near you!
     </div>
 
-    <div class="notice-red"><strong>Not sure if you should stop taking a medicine?</strong> Check with your pharmacist or prescriber <strong>before</strong> returning it.</div>
-    <div class="notice-red"><strong>Official return directory:</strong> <a href="https://www.mymedisafe.org.my/" target="_blank" rel="noopener">myMediSAFE</a> — search by state, city, or postcode.</div>
+    <div class="notice-red" data-i18n="sec4_red1"><strong>Not sure if you should stop taking a medicine?</strong> Check with your pharmacist or prescriber <strong>before</strong> returning it.</div>
+    <div class="notice-red" data-i18n="sec4_red2"><strong>Official return directory:</strong> <a href="https://www.mymedisafe.org.my/" target="_blank" rel="noopener">myMediSAFE</a> — search by state, city, or postcode.</div>
 
     <div class="field">
-      <label for="your_location">Your Location <span class="opt">Optional</span></label>
-          <input type="text" id="your_location" placeholder=" Enter your area, city, or postcode (e.g. 50480 Kuala Lumpur, Petaling Jaya, Johor Bahru) — we will search for verified return points near you." />
+      <label for="your_location"><span data-i18n="location_label">Your Location</span> <span class="opt" data-i18n="optional">Optional</span></label>
+          <input type="text" id="your_location" data-i18n-ph="location_ph" placeholder=" Enter your area, city, or postcode (e.g. 50480 Kuala Lumpur, Petaling Jaya, Johor Bahru) — we will search for verified return points near you." />
     </div>
 
     <div class="grid-sec1">
       <div class="cell fill-cell">
         <div class="field">
-          <label for="return_item_details">Return Item Details <span class="opt">Optional</span></label>
-          <textarea id="return_item_details" class="hinted" placeholder=" Medicine name and form (e.g. Paracetamol 500 mg tablets)&#10; Prescription or over-the-counter (if known)&#10; Quantity remaining (e.g. 14 tablets — leave blank if unsure)&#10; Item type if special: liquid / inhaler / cream / drops / needles or sharps&#10; Reason: expired / no longer needed / course completed / found at home / unsure"></textarea>
+          <label for="return_item_details"><span data-i18n="return_label">Return Item Details</span> <span class="opt" data-i18n="optional">Optional</span></label>
+          <textarea id="return_item_details" class="hinted" data-i18n-ph="return_ph" placeholder=" Medicine name and form (e.g. Paracetamol 500 mg tablets)&#10; Prescription or over-the-counter (if known)&#10; Quantity remaining (e.g. 14 tablets — leave blank if unsure)&#10; Item type if special: liquid / inhaler / cream / drops / needles or sharps&#10; Reason: expired / no longer needed / course completed / found at home / unsure"></textarea>
         </div>
       </div>
       <div class="cell fill-cell">
         <div class="field">
-          <label>Return Item Photo <span class="opt">Optional</span></label>
-          <div class="dropzone" id="dz_ret" data-input="file_ret"><span class="arrow">⬆</span> Optional. Upload a clear photo of the labelled packaging.
- The label must be visible and readable.
- Unlabelled pills with no readable label will not be identified from appearance.
+          <label><span data-i18n="return_photo_label">Return Item Photo</span> <span class="opt" data-i18n="optional">Optional</span></label>
+          <div class="dropzone" id="dz_ret" data-input="file_ret"><span class="arrow">⬆</span> <span data-i18n="return_dz">Optional. Upload a clear photo of the labelled packaging. The label must be visible and readable. Unlabelled pills with no readable label will not be identified from appearance.</span>
 <span class="filename" id="fn_ret"></span></div>
-          <button type="button" class="remove-photo" id="rm_ret" hidden>✕ Remove photo</button>
+          <button type="button" class="remove-photo" id="rm_ret" data-i18n="remove_photo" hidden>✕ Remove photo</button>
           <input type="file" id="file_ret" accept="image/jpeg,image/png,image/webp" hidden />
         </div>
       </div>
     </div>
 
     <div class="ai-panel">
-      <div class="panel-head">My Return Plan
-        <button class="secondary" style="margin-left:auto;padding:4px 10px" data-run="my_return_plan">Run</button>
+      <div class="panel-head"><span data-i18n="panel_return">My Return Plan</span>
+        <button class="secondary" style="margin-left:auto;padding:4px 10px" data-run="my_return_plan" data-i18n="btn_run">Run</button>
       </div>
-      <div class="output" id="out_my_return_plan"><span class="placeholder">You're all set to Run</span></div>
+      <div class="output" id="out_my_return_plan"><span class="placeholder" data-i18n="ph_run">You're all set to Run</span></div>
     </div>
   </section>
 
@@ -607,6 +604,187 @@ document.querySelectorAll('[data-run]').forEach((btn) => {
   btn.addEventListener('click', () => runWidget(btn.dataset.run));
 });
 
+// ---------------------------------------------------------------------------
+// UI translations. When the language selector changes, the WHOLE page switches
+// (not just the AI answers). Keys match the data-i18n / data-i18n-ph attributes
+// in the markup above. 'en' English, 'ms' Bahasa Melayu, 'zh' 中文.
+// ---------------------------------------------------------------------------
+const I18N = {
+  en: {
+    skip_link: "Skip to medicine details",
+    nav_medicine: "Medicine", nav_precautions: "Precautions", nav_ask: "Ask", nav_returns: "Returns",
+    hero_h1: "Know your medicine.<br />Feel prepared.",
+    hero_tag: "Turn your medicine label into clear information<br class='desktop-break' /> and questions for your pharmacist.",
+    hero_cta: "Start with my medicine",
+    hero_note: "Preparation tool only. Always check your original label and speak with your pharmacist.",
+    med_title: "Medicine details",
+    med_label: "Medicine name and details",
+    med_ph: "Medicine name, strength and label instructions",
+    photo_label: "Photo upload",
+    upload_strong: "Upload label photo", upload_formats: "JPG, PNG or WebP",
+    remove_photo: "✕ Remove photo",
+    panel_extract: "Extract from Photo", btn_extract: "Extract label",
+    ph_extract: "Upload a label photo, then choose Extract label.",
+    step1_h: "Add your medicine", step1_p: "Type it or upload a photo<br /> of your label.",
+    step2_h: "Get clear information", step2_p: "See key points in plain language.",
+    step3_h: "Take to your pharmacist", step3_p: "Bring your questions and<br /> feel prepared.",
+    eyebrow1: "01 / UNDERSTAND", med_intro_h: "Your medicine, in plain language.",
+    med_desc: "Type medicine details or upload a readable label photo — either is enough. If you use both, the Medicine Card compares them and flags conflicts. The medicine name, strength, and instructions must be readable. Cover personal details if you wish.",
+    med_redbox: "Always compare the Medicine Card with your original label before continuing to precautions.",
+    panel_card: "Medicine Card", btn_generate: "Generate", ph_card: "Your medicine card will appear here.",
+    sec2_title: "02 / Check my precautions",
+    sec2_desc: "Add other medicines and allergy history below, if known. Blank means not provided — it does not mean none. Generate this section to get a list of points to discuss with your pharmacist.",
+    sec2_quote: "If you updated Section 1, regenerate the Medicine Card first, then regenerate this section.",
+    other_med_label: "Other Medicines and Supplements", optional: "Optional",
+    other_med_ph: " Other medicines you are currently taking.\n Add names and doses if known.\n\n Example: Atorvastatin 20 mg once daily; Aspirin 100 mg once daily.",
+    allergy_label: "Medicine Allergies and Reactions",
+    allergy_ph: " Any known medicine or food allergies, and what reaction happened.\n\n Example: Penicillin — rash and swelling. Write 'None known' or 'Not sure' if applicable.\n Also note any supplements or herbal products you take.",
+    panel_summary: "My Medicine Summary", btn_run: "Run", ph_run: "You're all set to Run",
+    sec3_title: "03 / Ask about my medicines",
+    sec3_desc: "Ask anything about your medicine, precautions, or what to tell your pharmacist.",
+    try: "Try:", sec3_try: "\"Prepare my pharmacist summary\"",
+    sec3_try2: "— get a ready-to-share summary with your medicine details, uncertainties, and questions to ask.",
+    emergency_note: "<strong>Medical emergency?</strong> In Malaysia, call <strong>999</strong> now. Outside Malaysia, call your local emergency number. Do not wait for this tool.",
+    panel_help: "SmartMed Help",
+    chat_ph: "Ask anything. For example: explain this instruction, prepare my pharmacist summary, quiz me",
+    btn_send: "Send",
+    sec4_title: "04 / Return unused medicines",
+    sec4_desc: " You can return <strong>any</strong> unwanted medicine — prescription medicines, over-the-counter products, vitamins, supplements, or medicines found at home.<br/> Enter the medicine details and your location below and we'll help you find a verified drop-off point near you!",
+    sec4_red1: "<strong>Not sure if you should stop taking a medicine?</strong> Check with your pharmacist or prescriber <strong>before</strong> returning it.",
+    sec4_red2: "<strong>Official return directory:</strong> <a href='https://www.mymedisafe.org.my/' target='_blank' rel='noopener'>myMediSAFE</a> — search by state, city, or postcode.",
+    location_label: "Your Location",
+    location_ph: " Enter your area, city, or postcode (e.g. 50480 Kuala Lumpur, Petaling Jaya, Johor Bahru) — we will search for verified return points near you.",
+    return_label: "Return Item Details",
+    return_ph: " Medicine name and form (e.g. Paracetamol 500 mg tablets)\n Prescription or over-the-counter (if known)\n Quantity remaining (e.g. 14 tablets — leave blank if unsure)\n Item type if special: liquid / inhaler / cream / drops / needles or sharps\n Reason: expired / no longer needed / course completed / found at home / unsure",
+    return_photo_label: "Return Item Photo",
+    return_dz: "Optional. Upload a clear photo of the labelled packaging. The label must be visible and readable. Unlabelled pills with no readable label will not be identified from appearance.",
+    panel_return: "My Return Plan",
+    chat_greeting: "Hi! 👋 I'm SmartMed Help. Ask me anything about your medicine.\n\nTry:\n- 💬 Explain this instruction simply\n- ⏰ What if I miss a dose?\n- 📋 Prepare my pharmacist summary\n- 🧠 Quiz me on my medicine\n\n🚨 Medical emergency? Call 999 (Malaysia) or your local emergency number now.",
+  },
+  ms: {
+    skip_link: "Langkau ke butiran ubat",
+    nav_medicine: "Ubat", nav_precautions: "Langkah Berjaga", nav_ask: "Tanya", nav_returns: "Pulangan",
+    hero_h1: "Kenali ubat anda.<br />Rasa bersedia.",
+    hero_tag: "Tukar label ubat anda kepada maklumat yang jelas<br class='desktop-break' /> dan soalan untuk ahli farmasi anda.",
+    hero_cta: "Mulakan dengan ubat saya",
+    hero_note: "Alat persediaan sahaja. Sentiasa semak label asal anda dan berbincang dengan ahli farmasi.",
+    med_title: "Butiran ubat",
+    med_label: "Nama dan butiran ubat",
+    med_ph: "Nama ubat, kekuatan dan arahan label",
+    photo_label: "Muat naik foto",
+    upload_strong: "Muat naik foto label", upload_formats: "JPG, PNG atau WebP",
+    remove_photo: "✕ Buang foto",
+    panel_extract: "Ekstrak daripada Foto", btn_extract: "Ekstrak label",
+    ph_extract: "Muat naik foto label, kemudian pilih Ekstrak label.",
+    step1_h: "Tambah ubat anda", step1_p: "Taip atau muat naik foto<br /> label anda.",
+    step2_h: "Dapatkan maklumat jelas", step2_p: "Lihat perkara penting dalam bahasa mudah.",
+    step3_h: "Bawa kepada ahli farmasi", step3_p: "Bawa soalan anda dan<br /> rasa bersedia.",
+    eyebrow1: "01 / FAHAM", med_intro_h: "Ubat anda, dalam bahasa mudah.",
+    med_desc: "Taip butiran ubat atau muat naik foto label yang boleh dibaca — satu pun sudah memadai. Jika anda guna kedua-duanya, Kad Ubat akan membandingkannya dan menandakan percanggahan. Nama ubat, kekuatan dan arahan mesti boleh dibaca. Tutup butiran peribadi jika mahu.",
+    med_redbox: "Sentiasa bandingkan Kad Ubat dengan label asal anda sebelum meneruskan ke langkah berjaga.",
+    panel_card: "Kad Ubat", btn_generate: "Jana", ph_card: "Kad ubat anda akan dipaparkan di sini.",
+    sec2_title: "02 / Semak langkah berjaga saya",
+    sec2_desc: "Tambah ubat lain dan sejarah alahan di bawah, jika diketahui. Kosong bermaksud tidak dinyatakan — bukan bermaksud tiada. Jana bahagian ini untuk mendapat senarai perkara untuk dibincangkan dengan ahli farmasi anda.",
+    sec2_quote: "Jika anda mengemas kini Bahagian 1, jana semula Kad Ubat dahulu, kemudian jana semula bahagian ini.",
+    other_med_label: "Ubat dan Suplemen Lain", optional: "Pilihan",
+    other_med_ph: " Ubat lain yang anda ambil sekarang.\n Tambah nama dan dos jika diketahui.\n\n Contoh: Atorvastatin 20 mg sekali sehari; Aspirin 100 mg sekali sehari.",
+    allergy_label: "Alahan Ubat dan Reaksi",
+    allergy_ph: " Sebarang alahan ubat atau makanan yang diketahui, dan reaksi yang berlaku.\n\n Contoh: Penisilin — ruam dan bengkak. Tulis 'Tiada diketahui' atau 'Tidak pasti' jika berkenaan.\n Nyatakan juga sebarang suplemen atau produk herba yang anda ambil.",
+    panel_summary: "Ringkasan Ubat Saya", btn_run: "Jalankan", ph_run: "Anda sedia untuk Jalankan",
+    sec3_title: "03 / Tanya tentang ubat saya",
+    sec3_desc: "Tanya apa sahaja tentang ubat anda, langkah berjaga, atau apa yang perlu diberitahu kepada ahli farmasi.",
+    try: "Cuba:", sec3_try: "\"Sediakan ringkasan ahli farmasi saya\"",
+    sec3_try2: "— dapatkan ringkasan sedia kongsi dengan butiran ubat, ketidakpastian, dan soalan untuk ditanya.",
+    emergency_note: "<strong>Kecemasan perubatan?</strong> Di Malaysia, hubungi <strong>999</strong> sekarang. Di luar Malaysia, hubungi nombor kecemasan tempatan anda. Jangan tunggu alat ini.",
+    panel_help: "Bantuan SmartMed",
+    chat_ph: "Tanya apa sahaja. Contoh: terangkan arahan ini, sediakan ringkasan ahli farmasi, kuiz saya",
+    btn_send: "Hantar",
+    sec4_title: "04 / Pulangkan ubat tidak digunakan",
+    sec4_desc: " Anda boleh memulangkan <strong>mana-mana</strong> ubat tidak diingini — ubat preskripsi, produk tanpa preskripsi, vitamin, suplemen, atau ubat yang dijumpai di rumah.<br/> Masukkan butiran ubat dan lokasi anda di bawah dan kami akan bantu anda cari pusat pemulangan berdekatan!",
+    sec4_red1: "<strong>Tidak pasti sama ada perlu berhenti mengambil ubat?</strong> Semak dengan ahli farmasi atau pengamal perubatan anda <strong>sebelum</strong> memulangkannya.",
+    sec4_red2: "<strong>Direktori pemulangan rasmi:</strong> <a href='https://www.mymedisafe.org.my/' target='_blank' rel='noopener'>myMediSAFE</a> — cari mengikut negeri, bandar, atau poskod.",
+    location_label: "Lokasi Anda",
+    location_ph: " Masukkan kawasan, bandar, atau poskod anda (cth. 50480 Kuala Lumpur, Petaling Jaya, Johor Bahru) — kami akan cari pusat pemulangan berdekatan anda.",
+    return_label: "Butiran Item Pemulangan",
+    return_ph: " Nama dan bentuk ubat (cth. Paracetamol 500 mg tablet)\n Preskripsi atau tanpa preskripsi (jika diketahui)\n Kuantiti berbaki (cth. 14 tablet — biar kosong jika tidak pasti)\n Jenis item jika khas: cecair / penyedut / krim / titisan / jarum atau tajam\n Sebab: luput / tidak diperlukan lagi / rawatan selesai / dijumpai di rumah / tidak pasti",
+    return_photo_label: "Foto Item Pemulangan",
+    return_dz: "Pilihan. Muat naik foto jelas pembungkusan berlabel. Label mesti kelihatan dan boleh dibaca. Pil tanpa label yang boleh dibaca tidak akan dikenal pasti daripada rupa.",
+    panel_return: "Pelan Pemulangan Saya",
+    chat_greeting: "Hai! 👋 Saya Bantuan SmartMed. Tanya saya apa sahaja tentang ubat anda.\n\nCuba:\n- 💬 Terangkan arahan ini dengan mudah\n- ⏰ Bagaimana jika saya terlepas satu dos?\n- 📋 Sediakan ringkasan ahli farmasi saya\n- 🧠 Kuiz saya tentang ubat saya\n\n🚨 Kecemasan perubatan? Hubungi 999 (Malaysia) atau nombor kecemasan tempatan anda sekarang.",
+  },
+  zh: {
+    skip_link: "跳至药物详情",
+    nav_medicine: "药物", nav_precautions: "注意事项", nav_ask: "询问", nav_returns: "退回",
+    hero_h1: "了解您的药物。<br />做好准备。",
+    hero_tag: "将您的药物标签转化为清晰的信息<br class='desktop-break' /> 以及给药剂师的问题。",
+    hero_cta: "从我的药物开始",
+    hero_note: "仅为准备工具。请务必查看原始标签并咨询您的药剂师。",
+    med_title: "药物详情",
+    med_label: "药物名称与详情",
+    med_ph: "药物名称、剂量和标签说明",
+    photo_label: "上传照片",
+    upload_strong: "上传标签照片", upload_formats: "JPG、PNG 或 WebP",
+    remove_photo: "✕ 移除照片",
+    panel_extract: "从照片提取", btn_extract: "提取标签",
+    ph_extract: "上传标签照片，然后选择提取标签。",
+    step1_h: "添加您的药物", step1_p: "输入或上传您的<br /> 标签照片。",
+    step2_h: "获取清晰信息", step2_p: "以简明语言查看要点。",
+    step3_h: "带给您的药剂师", step3_p: "带上您的问题<br /> 做好准备。",
+    eyebrow1: "01 / 了解", med_intro_h: "用简单易懂的语言了解您的药物。",
+    med_desc: "输入药物详情或上传清晰可读的标签照片——任选其一即可。若两者都用，药物卡会进行比对并标出不一致之处。药物名称、剂量和说明必须清晰可读。如愿可遮盖个人信息。",
+    med_redbox: "继续查看注意事项之前，请务必将药物卡与您的原始标签进行比对。",
+    panel_card: "药物卡", btn_generate: "生成", ph_card: "您的药物卡将显示在此处。",
+    sec2_title: "02 / 查看我的注意事项",
+    sec2_desc: "如知道，请在下方添加其他药物和过敏史。空白表示未提供——并不表示没有。生成此部分以获得与药剂师讨论的要点清单。",
+    sec2_quote: "如果您更新了第 1 部分，请先重新生成药物卡，然后再重新生成此部分。",
+    other_med_label: "其他药物与补充剂", optional: "选填",
+    other_med_ph: " 您目前正在服用的其他药物。\n 如知道请加上名称和剂量。\n\n 例如：阿托伐他汀 20 毫克每日一次；阿司匹林 100 毫克每日一次。",
+    allergy_label: "药物过敏与反应",
+    allergy_ph: " 任何已知的药物或食物过敏，以及发生的反应。\n\n 例如：青霉素——皮疹和肿胀。如适用请写“无已知”或“不确定”。\n 也请注明您服用的任何补充剂或草药产品。",
+    panel_summary: "我的药物摘要", btn_run: "运行", ph_run: "一切就绪，可运行",
+    sec3_title: "03 / 询问我的药物",
+    sec3_desc: "询问任何关于您的药物、注意事项，或要告诉药剂师的内容。",
+    try: "试试：", sec3_try: "“准备我的药剂师摘要”",
+    sec3_try2: "——获取可直接分享的摘要，包含您的药物详情、不确定之处和要问的问题。",
+    emergency_note: "<strong>医疗紧急情况？</strong> 在马来西亚，请立即拨打 <strong>999</strong>。在马来西亚以外，请拨打当地紧急电话。请勿等待此工具。",
+    panel_help: "SmartMed 帮助",
+    chat_ph: "问任何问题。例如：解释这条说明、准备我的药剂师摘要、给我做测验",
+    btn_send: "发送",
+    sec4_title: "04 / 退回未使用的药物",
+    sec4_desc: " 您可以退回<strong>任何</strong>不需要的药物——处方药、非处方产品、维生素、补充剂，或在家中找到的药物。<br/> 在下方输入药物详情和您的位置，我们将帮您找到附近的回收点！",
+    sec4_red1: "<strong>不确定是否应停止服用某种药物？</strong> 在退回之前，请<strong>先</strong>咨询您的药剂师或开药医生。",
+    sec4_red2: "<strong>官方退回目录：</strong> <a href='https://www.mymedisafe.org.my/' target='_blank' rel='noopener'>myMediSAFE</a> — 按州、城市或邮区编号搜索。",
+    location_label: "您的位置",
+    location_ph: " 输入您的地区、城市或邮区编号（例如 50480 Kuala Lumpur、Petaling Jaya、Johor Bahru）——我们将搜索您附近的回收点。",
+    return_label: "退回物品详情",
+    return_ph: " 药物名称和剂型（例如 Paracetamol 500 毫克片剂）\n 处方或非处方（如知道）\n 剩余数量（例如 14 片——不确定可留空）\n 特殊物品类型：液体 / 吸入器 / 药膏 / 滴剂 / 针头或锐器\n 原因：过期 / 不再需要 / 疗程完成 / 家中找到 / 不确定",
+    return_photo_label: "退回物品照片",
+    return_dz: "选填。上传带标签包装的清晰照片。标签必须可见且可读。没有可读标签的药片将无法从外观识别。",
+    panel_return: "我的退回计划",
+    chat_greeting: "你好！👋 我是 SmartMed 帮助。有关您的药物，尽管问我。\n\n试试：\n- 💬 用简单的方式解释这条说明\n- ⏰ 如果我漏服一剂怎么办？\n- 📋 准备我的药剂师摘要\n- 🧠 给我做药物测验\n\n🚨 医疗紧急情况？请立即拨打 999（马来西亚）或您当地的紧急电话。",
+  },
+};
+
+const LANG_CODE = { "English": "en", "Bahasa Melayu": "ms", "中文": "zh" };
+
+function applyLanguage(value) {
+  const code = LANG_CODE[value] || "en";
+  const dict = I18N[code] || I18N.en;
+  document.documentElement.lang = code === "zh" ? "zh" : code;
+  document.querySelectorAll('[data-i18n]').forEach((el) => {
+    const key = el.getAttribute('data-i18n');
+    if (dict[key] != null) el.innerHTML = dict[key];
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach((el) => {
+    const key = el.getAttribute('data-i18n-ph');
+    if (dict[key] != null) el.setAttribute('placeholder', dict[key]);
+  });
+  // Refresh the chat greeting (first bot bubble) if the chat hasn't started.
+  if (chatHistory.length === 0 && chatLog && chatLog.firstChild) {
+    chatLog.firstChild.textContent = dict.chat_greeting || I18N.en.chat_greeting;
+  }
+}
+
 const chatHistory = [];
 const chatLog = document.getElementById('chat_log');
 
@@ -620,16 +798,15 @@ function addBubble(role, text) {
   return b;
 }
 
-addBubble('bot',
-`Hi! 👋 I'm SmartMed Help. Ask me anything about your medicine.
+addBubble('bot', I18N.en.chat_greeting);
 
-Try:
-- 💬 Explain this instruction simply
-- ⏰ What if I miss a dose?
-- 📋 Prepare my pharmacist summary
-- 🧠 Quiz me on my medicine
-
-🚨 Medical emergency? Call 999 (Malaysia) or your local emergency number now.`);
+// Switch the whole UI whenever the language selector changes, and once on load.
+(function initLanguage() {
+  const sel = document.getElementById('preferred_language');
+  if (!sel) return;
+  sel.addEventListener('change', () => applyLanguage(sel.value));
+  applyLanguage(sel.value);
+})();
 
 async function sendChat() {
   const input = document.getElementById('chat_input');
