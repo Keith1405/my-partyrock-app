@@ -33,19 +33,23 @@ _UA = "SmartMedCycle/1.0 (patient medicine-prep tool)"
 _CACHE = {}
 _CACHE_TTL = 12 * 60 * 60  # 12 hours, per MedlinePlus guidance
 
+
 def _cache_get(key):
     hit = _CACHE.get(key)
     if hit and hit[0] > time.time():
         return hit[1]
     return None
 
+
 def _cache_put(key, value):
     _CACHE[key] = (time.time() + _CACHE_TTL, value)
+
 
 def _get_json(url):
     req = urllib.request.Request(url, headers={"User-Agent": _UA, "Accept": "application/json"})
     with urllib.request.urlopen(req, timeout=_TIMEOUT) as resp:
         return json.loads(resp.read().decode("utf-8", "replace"))
+
 
 # ---------------------------------------------------------------------------
 # RxNorm
@@ -63,6 +67,7 @@ def _rxcui_exact(name):
         return ids[0] if ids else None
     except Exception:
         return None
+
 
 def _rxcui_approx(name):
     """Spell-tolerant approximate match. Returns a list of candidate dicts
@@ -89,6 +94,7 @@ def _rxcui_approx(name):
     except Exception:
         return []
 
+
 def _ingredients(rxcui):
     """Return a list of active-ingredient names for an RxCUI (TTY IN + PIN)."""
     url = (
@@ -109,6 +115,7 @@ def _ingredients(rxcui):
     except Exception:
         return []
 
+
 def _rxcui_name(rxcui):
     url = "https://rxnav.nlm.nih.gov/REST/rxcui/" + urllib.parse.quote(str(rxcui)) + "/property.json?propName=RxNorm%20Name"
     try:
@@ -118,10 +125,12 @@ def _rxcui_name(rxcui):
     except Exception:
         return None
 
+
 # ---------------------------------------------------------------------------
 # MedlinePlus Connect (patient drug page by RXCUI)
 # ---------------------------------------------------------------------------
 _LANG_MAP = {"English": "en", "Bahasa Melayu": "en", "中文": "en"}  # Connect supports en/es only
+
 
 def _medlineplus_by_rxcui(rxcui, language="English"):
     """Return {title, url} for a MedlinePlus drug page, or None.
@@ -151,6 +160,7 @@ def _medlineplus_by_rxcui(rxcui, language="English"):
         return None
     except Exception:
         return None
+
 
 # ---------------------------------------------------------------------------
 # Public: verify a single medicine name
@@ -232,6 +242,7 @@ def verify_medicine(name, language="English"):
     result["note"] = "no RxNorm match (may be a Malaysia-only brand, misspelling, or offline)"
     _cache_put(cache_key, result)
     return result
+
 
 def reference_block(verifications):
     """Render a compact, machine-readable block for the model prompt describing
