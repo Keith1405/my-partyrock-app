@@ -75,28 +75,53 @@ def _lasa_summary():
 
 _SPLIT = re.compile(r"[\n;]+|(?:,\s)")
 _NAME_HEAD = re.compile(r"[A-Za-z][A-Za-z\-]{2,}")
-_STOP = {"take", "tablet", "capsule", "once", "twice", "daily", "the", "and",
-         "with", "after", "before", "none", "known", "not", "sure", "mg", "ml"}
+_STOP = {
+    "take", "tablet", "capsule", "once", "twice", "daily", "the", "and",
+    "with", "after", "before", "none", "known", "not", "sure", "mg", "ml",
+    # Structural / boilerplate words that appear in a rendered Medicine Card or
+    # retrieval output — these are NOT medicine names and must never be verified.
+    "draft", "rxnorm", "rxnav", "medlineplus", "source", "sources", "note",
+    "three", "including", "watch", "medicine", "card", "name", "strength",
+    "form", "active", "ingredient", "please", "recheck", "your", "instructions",
+    "example", "add", "write", "applicable",
+}
+
+# Lines that are headings, disclaimers, source links, or retrieval boilerplate
+# must be skipped entirely before we look for medicine names. Without this, a
+# rendered Medicine Card (which contains "Draft only", "RxNorm", "MedlinePlus",
+# "## 💊 Medicine Card", source URLs, etc.) leaks those words as fake medicines.
+_NOISE_LINE = re.compile(
+    r"(^\s*[#*>\-•])"                     # markdown heading / bullet / quote
+    r"|https?://"                          # any URL
+    r"|rxnorm|rxnav|medlineplus"           # retrieval service names
+    r"|draft only|please recheck"          # card disclaimer / recheck block
+    r"|retrieved reference|lasa reference"  # injected data block headers
+    r"|^\s*(source|sources|note|status|query|matched_name|active_ingredient)\b",
+    re.IGNORECASE,
+)
 
 def _candidate_names(*texts):
     names = []
     seen = set()
     for text in texts:
-        for chunk in _SPLIT.split(text or ""):
-            chunk = chunk.strip()
-            if not chunk:
-                continue
-            m = _NAME_HEAD.match(chunk)
-            if not m:
-                continue
-            head = m.group(0)
-            key = head.lower()
-            if key in seen or key in _STOP:
-                continue
-            seen.add(key)
-            names.append(head)
-            if len(names) >= 6:
-                return names
+        for line in (text or "").splitlines():
+            if _NOISE_LINE.search(line):
+                continue  # skip headings, disclaimers, sources, data blocks
+            for chunk in _SPLIT.split(line):
+                chunk = chunk.strip()
+                if not chunk:
+                    continue
+                m = _NAME_HEAD.match(chunk)
+                if not m:
+                    continue
+                head = m.group(0)
+                key = head.lower()
+                if key in seen or key in _STOP:
+                    continue
+                seen.add(key)
+                names.append(head)
+                if len(names) >= 6:
+                    return names
     return names
 
 SYSTEM_PROMPT = """You are a careful medicine-information assistant helping a patient in Malaysia understand their medicines. Be concise, friendly, phone-friendly, and use plain patient-friendly words (say "Twice a day" not "BD"; say "low blood pressure" not "hypotension"). Use emojis to make sections easy to scan.
