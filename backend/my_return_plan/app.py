@@ -30,7 +30,6 @@ except Exception:  # noqa: BLE001
 
 _POSTCODE_RE = re.compile(r"\b(\d{5})\b")
 
-
 def resolve_location(location):
     """Resolve a 5-digit Malaysian postcode found in the free-text location to
     an exact 'City, State'. Returns a dict:
@@ -100,7 +99,6 @@ RATE_MAX = int(os.environ.get("RATE_MAX", 30))
 RATE_WINDOW = int(os.environ.get("RATE_WINDOW", 60))
 _hits = deque()
 
-
 def _rate_limited():
     now = time.time()
     while _hits and now - _hits[0] > RATE_WINDOW:
@@ -110,7 +108,6 @@ def _rate_limited():
     _hits.append(now)
     return False
 
-
 def _guard():
     length = request.content_length or 0
     if length > MAX_BODY_BYTES:
@@ -118,7 +115,6 @@ def _guard():
     if _rate_limited():
         return 429, "Too many requests — slow down and try again shortly."
     return None
-
 
 SYSTEM_PROMPT = """You are a healthcare directory assistant helping a patient return unused medicines. Be concise and scannable. Use emojis to make it easy to read.
 
@@ -195,7 +191,6 @@ Only list what applies. Skip if nothing applies.
 ---
 *🚫 Do not flush or bin medicines. Call ahead to confirm acceptance before travelling.*"""
 
-
 def build_messages(body):
     language = body.get("preferred_language", "English")
     item = body.get("return_item_details", "") or ""
@@ -239,7 +234,6 @@ def build_messages(body):
     content.append({"text": user_text})
     return [{"role": "user", "content": content}]
 
-
 def generate(body):
     messages = build_messages(body)
     try:
@@ -257,7 +251,6 @@ def generate(body):
                     yield text
     except Exception as exc:  # noqa: BLE001
         yield f"\n\n⚠️ Error: {exc}"
-
 
 @app.route("/", methods=["POST", "OPTIONS"])
 def handler():
@@ -278,7 +271,6 @@ def handler():
     for key, value in CORS_HEADERS.items():
         resp.headers[key] = value
     return resp
-
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
