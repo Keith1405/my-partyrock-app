@@ -3,6 +3,8 @@ SmartMed Cycle — Extract from Photo (streaming Flask Lambda).
 
 Streams a Bedrock (Claude Haiku 4.5) response token-by-token over a Lambda
 Function URL using the AWS Lambda Web Adapter in response_stream mode.
+Decodes prescription shorthand (e.g. TT = 2 tablets) using the bundled
+rx_abbreviations.json (MIMS index + common Rx shorthand).
 """
 import json
 import os
@@ -12,8 +14,6 @@ from flask import Flask, Response, request, stream_with_context
 
 app = Flask(__name__)
 
-# Model is configurable via the MODEL_ID env var (set by the SAM template).
-# Default: Claude Haiku 4.5 via the Global cross-Region inference profile.
 MODEL_ID = os.environ.get("MODEL_ID", "global.anthropic.claude-haiku-4-5-20251001-v1:0")
 REGION = os.environ.get("BEDROCK_REGION", "ap-southeast-1")
 
@@ -50,7 +50,33 @@ def _guard():
         return 429, "Too many requests — slow down and try again shortly."
     return None
 
-SYSTEM_PROMPT = """You are a clinical pharmacist assistant. A patient has uploaded a photo or scan of a medicine label. Extract the details and display them field by field so the patient can type each value into the matching input box below.
+_RX_PATH = os.path.join(os.path.dirname(__file__), "rx_abbreviations.json")
+try:
+    with open(_RX_PATH, "r", encoding="utf-8") as _f:
+        RX_ABBR = json.load(_f)
+except Exception:  # noqa: BLE001
+    RX_ABBR = {}
+
+def _rx_reference_text():
+    if not RX_ABBR:
+        return ""
+    lines = ["PRESCRIPTION ABBREVIATION REFERENCE (decode ONLY what is written; never invent):"]
+    note = (RX_ABBR.get("source") or {}).get("note")
+    if note:
+        lines.append(note)
+    for section in ("quantity_per_dose", "frequency", "route", "timing_food", "misc"):
+        mapping = RX_ABBR.get(section) or {}
+        if not mapping:
+            continue
+        pretty = section.replace("_", " ")
+        pairs = "; ".join(f"{k} = {v}" for k, v in mapping.items())
+        lines.append(f"[{pretty}] {pairs}")
+    mi = RX_ABBR.get("mims_index_note")
+    if mi:
+        lines.append(mi)
+    return "\n".join(lines)
+
+SYSTEM_PROMPT = """You are a clinical pharmacist assistant. A patient has uploaded a photo or scan of a medicine label or prescription. Extract the details and display them field by field so the patient can type each value into the matching input box below.
 
 LANGUAGE (highest priority):
 - Respond strictly in the Preferred Language given in the user message, and ONLY that language.
@@ -59,8 +85,14 @@ LANGUAGE (highest priority):
 - If Preferred Language is 中文, respond strictly in 中文 only.
 - Translate ALL field labels, headings, and warnings fully into the Preferred Language. Keep the emojis. (Values copied verbatim from the label stay as written on the label.)
 
+ABBREVIATION DECODING (use the PRESCRIPTION ABBREVIATION REFERENCE provided in the user message):
+- Prescriptions use shorthand. DECODE it faithfully using the reference. Examples: 'T' = 1 tablet, 'TT' = 2 tablets, 'TTT' = 3 tablets; 'bd/bid' = twice daily, 'tds/tid' = three times daily, 'qds/qid' = four times daily; 'prn' = as needed; 'po' = by mouth; 'ac' = before food, 'pc' = after food; 'mane' = morning, 'nocte' = night; 'x 7 days' = for 7 days; '5/7' = 5 days.
+- IMPORTANT: 'TT' means TWO tablets, not one. Read repeated letters carefully (T vs TT vs TTT).
+- When you decode an abbreviation, write the full meaning AND keep the original shorthand in brackets, e.g. 'Take 2 tablets (TT)'.
+- Decoding is NOT inventing: only decode shorthand that is actually written. If a token is genuinely ambiguous or illegible, write 'Not readable' and do not guess a number.
+
 RULES:
-- Extract only what is explicitly and clearly visible on the label. Do not infer or calculate missing fields.
+- Extract only what is explicitly and clearly visible on the label/prescription. Do not infer or calculate missing fields (decoding written shorthand is allowed and encouraged).
 - If a field is not visible or not readable, write: Not readable
 - Do not identify unlabelled pills from appearance. If no readable label is visible, write: No readable label found — please fill in the fields manually.
 - Do not diagnose, prescribe, or recommend dose changes.
@@ -99,8 +131,10 @@ def build_messages(body):
 
     language = body.get("preferred_language", "English")
     user_text = (
-        f"Preferred Language: {language}\n"
-        "Uploaded photo or document is attached above (if any). Extract the label details."
+        f"Preferred Language: {language}\n\n"
+        f"{_rx_reference_text()}\n\n"
+        "Uploaded photo or document is attached above (if any). Extract the label details, "
+        "decoding any prescription shorthand (e.g. TT = 2 tablets) using the reference above."
     )
     content.append({"text": user_text})
 
@@ -122,7 +156,6 @@ def generate(body):
             modelId=MODEL_ID,
             messages=messages,
             system=[{"text": SYSTEM_PROMPT}],
-            # Claude Haiku 4.5 rejects temperature + topP together; send only temperature.
             inferenceConfig={"temperature": 0, "maxTokens": 2000},
         )
         for event in response["stream"]:
