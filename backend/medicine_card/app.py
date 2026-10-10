@@ -1,7 +1,14 @@
 """
 SmartMed Cycle — Medicine Card (streaming Flask Lambda).
-LASA-safe; verifies identity via RxNorm/RxNav + MedlinePlus (refdata.py);
-bundled versioned LASA reference (lasa_reference.json).
+
+Builds a plain-language Medicine Card from typed details, an AI-extracted draft,
+and/or an uploaded label photo. Streams the Bedrock response token-by-token.
+
+Safety design follows the MOH Malaysia "Guide on Handling Look Alike, Sound
+Alike Medications" (2012), bundled as lasa_reference.json. Medicine identity is
+verified with live, free NLM services (RxNorm/RxNav + MedlinePlus Connect) via
+refdata.py — the model may only present a medicine as identified when retrieval
+confirms it, and may only cite sources that were actually returned.
 """
 import base64
 import json
@@ -15,6 +22,8 @@ import refdata
 
 app = Flask(__name__)
 
+# Model is configurable via the MODEL_ID env var (set by the SAM template).
+# Default: Claude Haiku 4.5 via the Global cross-Region inference profile.
 MODEL_ID = os.environ.get("MODEL_ID", "global.anthropic.claude-haiku-4-5-20251001-v1:0")
 REGION = os.environ.get("BEDROCK_REGION", "ap-southeast-1")
 bedrock = boto3.client("bedrock-runtime", region_name=REGION)
@@ -25,6 +34,9 @@ CORS_HEADERS = {
     "Access-Control-Allow-Methods": "POST,OPTIONS",
 }
 
+# ---------------------------------------------------------------------------
+# Lightweight abuse guards (per-instance; best-effort, not a substitute for WAF)
+# ---------------------------------------------------------------------------
 import time
 from collections import deque
 
@@ -32,6 +44,7 @@ MAX_BODY_BYTES = int(os.environ.get("MAX_BODY_BYTES", 8 * 1024 * 1024))
 RATE_MAX = int(os.environ.get("RATE_MAX", 30))
 RATE_WINDOW = int(os.environ.get("RATE_WINDOW", 60))
 _hits = deque()
+
 
 def _rate_limited():
     now = time.time()
@@ -42,6 +55,7 @@ def _rate_limited():
     _hits.append(now)
     return False
 
+
 def _guard():
     length = request.content_length or 0
     if length > MAX_BODY_BYTES:
@@ -50,12 +64,17 @@ def _guard():
         return 429, "Too many requests — slow down and try again shortly."
     return None
 
+
+# ---------------------------------------------------------------------------
+# Versioned LASA reference (bundled; do not rely on the model's memory)
+# ---------------------------------------------------------------------------
 _LASA_PATH = os.path.join(os.path.dirname(__file__), "lasa_reference.json")
 try:
     with open(_LASA_PATH, "r", encoding="utf-8") as _f:
         LASA = json.load(_f)
-except Exception:  # noqa: BLE001
+except Exception:  # noqa: BLE001 — reference is advisory; never crash the request
     LASA = {"source": {}, "lasa_pairs": [], "tall_man": []}
+
 
 def _lasa_summary():
     src = LASA.get("source", {})
@@ -74,10 +93,20 @@ def _lasa_summary():
         + tall
     )
 
+
+# ---------------------------------------------------------------------------
+# Candidate medicine-name extraction (heuristic, conservative)
+# ---------------------------------------------------------------------------
+# We only need plausible NAME tokens to send to RxNorm for verification. We do
+# NOT parse dose/schedule here — that stays with the label/model. Splitting on
+# separators lets a patient enter multiple medicines.
 _SPLIT = re.compile(r"[\n;]+|(?:,\s)")
+# A leading alphabetic word (brand/ingredient) optionally hyphenated.
 _NAME_HEAD = re.compile(r"[A-Za-z][A-Za-z\-]{2,}")
 
+
 def _candidate_names(typed, extracted):
+    """Return up to 4 distinct candidate medicine-name strings to verify."""
     names = []
     seen = set()
     for chunk in _SPLIT.split((typed or "") + "\n" + (extracted or "")):
@@ -91,6 +120,7 @@ def _candidate_names(typed, extracted):
         key = head.lower()
         if key in seen:
             continue
+        # skip obvious non-drug words
         if key in {"take", "tablet", "capsule", "once", "twice", "daily", "the", "and", "with", "after", "before"}:
             continue
         seen.add(key)
@@ -99,16 +129,23 @@ def _candidate_names(typed, extracted):
             break
     return names
 
+
 SYSTEM_PROMPT = """You are a careful pharmacist assistant for patients in Malaysia. Be brief, friendly, phone-friendly. Use emojis to make it easy to scan.
 
 LANGUAGE (highest priority):
 - Respond strictly in the Preferred Language given in the user message, and ONLY that language.
 - English -> English only. Bahasa Melayu -> Bahasa Melayu only. 中文 -> 中文 only.
 - Translate ALL field labels, headings, and warnings fully into the Preferred Language. Keep the emojis. Keep medicine names, numbers and units EXACTLY as supplied.
+- Use the correct NATIVE term for unreadable/uncertain text — never leave it in English in another language:
+  * English: "Not readable"
+  * Bahasa Melayu: "Tidak dapat dibaca" (NOT "Not readable")
+  * 中文: "无法识别"
+  Likewise translate "Not provided" (ms: "Tidak diberikan"; zh: "未提供").
 
 LASA MEDICATION SAFETY (Look Alike, Sound Alike — from the bundled MOH Malaysia guide):
 - NEVER guess, autocomplete, or silently correct an incomplete, ambiguous, misspelled, or illegible medicine name.
 - NEVER identify a medicine from colour, shape, packaging appearance, symptoms, expected dose, or likely diagnosis.
+- MEDICINE ENTITY PURITY: Only treat a token as a medicine if it is a real pharmaceutical name or active ingredient actually present in the input. NEVER classify workflow words, directions, section labels, or anatomical words as medicine names — e.g. "Draf"/"Draft", "Ambil"/"Take", "tablet", "capsule", "pagi"/"morning", "malam"/"night", "heart", "RxNorm", "MedlinePlus" are NOT medicines. If such a word appears alone, ignore it; do not create a card or a recheck block for it.
 - Use the RETRIEVED REFERENCE DATA block below as the ONLY basis for stating a medicine's identity and active ingredient(s). The bundled LASA list is illustrative, 2012, and NON-EXHAUSTIVE — never treat it as a complete current drug database.
 - For combination products, list ALL active ingredients returned.
 - Preserve the patient's original typed text and the readable photo text; do not overwrite them.
@@ -127,8 +164,9 @@ TYPED vs PHOTO COMPARISON:
 
 DOSE / INSTRUCTION RULES:
 - Patient-specific dose, strength, form, frequency, food timing and duration come ONLY from the supplied typed text / label. NEVER invent tablet counts, dose amounts, route, food timing, or duration, and never replace a supplied value with a textbook "usual dose".
+- DOSAGE UNIT INTEGRITY: NEVER invent, infer, or assume a missing unit. If the input says "Take 5" with no unit, do NOT turn it into "5 mL", "5 tablets", or "5 mg". Keep the bare number, and flag it under ⚠️ Needs checking as a missing/unclear unit that the patient must confirm with their pharmacist.
 - If a supplied dose looks unusual or unsafe, KEEP the entered value exactly, flag it under ⚠️ Needs checking, and require pharmacist/prescriber confirmation. (Example: if a patient enters 'Atenolol 500 mg once daily', keep 500 mg, flag it, do NOT change it to 50 mg.)
-- Use 'Not provided' for information that was simply not given. Use 'Not readable' ONLY for text that was illegible in a photo.
+- Use 'Not provided' for information that was simply not given. Use 'Not readable' ONLY for text that was illegible in a photo. (Translate both per the LANGUAGE rule.)
 - Do not infer WHY the medicine was prescribed.
 
 SOURCING (honest):
@@ -141,7 +179,7 @@ OUTPUT — create ONE card per CLEARLY IDENTIFIED (verified) medicine, in this f
 *Draft only — compare with your original label.*
 🏷️ Name: [supplied name/brand]
 🧪 Active ingredient: [verified ingredient(s) from retrieved data]
-💪 Strength: [supplied strength, or Not provided / Not readable]
+📏 Strength: [supplied strength, or Not provided / Not readable]
 💉 Form: [supplied form, or Not provided / Not readable]
 
 💬 Plain words:
@@ -151,15 +189,21 @@ OUTPUT — create ONE card per CLEARLY IDENTIFIED (verified) medicine, in this f
 [Brief general use(s).] (General info only — not specific to your prescription.)
 
 ⚠️ Needs checking:
-[Only the relevant missing details, uncertainties, or conflicts. If none: ✅ No issues found.]
+[Only the relevant missing details, uncertainties, conflicts, or safety concerns. List them STRICTLY in this severity order, highest risk first:
+  1. 🔴 CRITICAL — known drug allergies (e.g. a listed penicillin allergy with a penicillin-class medicine) and high-risk interactions (e.g. warfarin + aspirin/ibuprofen). State the risk plainly and that it needs a pharmacist/prescriber now.
+  2. 🟠 WARNING — route conflicts (e.g. instruction to swallow a suppository), missing/unclear dose units, or extreme/unusual doses.
+  3. 🔵 INFO — routine administration timing and food requirements.
+Always put higher-risk items before routine ones. If none: ✅ No issues found.]
 
 Rules: exactly ONE 'Plain words' section per card (a single sentence, NOT a bullet list of amount/frequency/food/duration). Omit administrative clutter and repetitive warnings. For any medicine that is ambiguous/unverified, output the recheck block instead of a card. Do not include implementation notes."""
+
 
 def build_messages(body):
     language = body.get("preferred_language", "English")
     typed = body.get("medicine_details", "") or ""
     extracted = body.get("extract_from_photo", "") or ""
 
+    # Live verification of candidate names (RxNorm + MedlinePlus).
     names = _candidate_names(typed, extracted)
     verifications = [refdata.verify_medicine(n, language) for n in names]
     retrieved = refdata.reference_block(verifications)
@@ -193,6 +237,7 @@ def build_messages(body):
     content.append({"text": user_text})
     return [{"role": "user", "content": content}]
 
+
 def generate(body):
     messages = build_messages(body)
     try:
@@ -200,6 +245,7 @@ def generate(body):
             modelId=MODEL_ID,
             messages=messages,
             system=[{"text": SYSTEM_PROMPT}],
+            # Claude Haiku 4.5 rejects temperature + topP together; send only temperature.
             inferenceConfig={"temperature": 0, "maxTokens": 2000},
         )
         for event in response["stream"]:
@@ -209,6 +255,7 @@ def generate(body):
                     yield text
     except Exception as exc:  # noqa: BLE001
         yield f"\n\n⚠️ Error: {exc}"
+
 
 @app.route("/", methods=["POST", "OPTIONS"])
 def handler():
@@ -229,6 +276,7 @@ def handler():
     for key, value in CORS_HEADERS.items():
         resp.headers[key] = value
     return resp
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
