@@ -779,6 +779,16 @@ document.getElementById('chat_input').addEventListener('keydown', (e) => {
 });
 </script>
 <script>
+// Match anchor spacing to the floating bar, including translated/mobile wrapping.
+const floatingNav = document.querySelector('.topbar');
+if (floatingNav) {
+  const updateNavOffset = () => {
+    document.documentElement.style.setProperty('--nav-offset', `${Math.ceil(floatingNav.getBoundingClientRect().height) + 28}px`);
+  };
+  updateNavOffset();
+  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(updateNavOffset).observe(floatingNav);
+  window.addEventListener('resize', updateNavOffset);
+}
 const menuToggle = document.getElementById('menu_toggle');
 const navigation = document.getElementById('navigation');
 function closeMenu() {
