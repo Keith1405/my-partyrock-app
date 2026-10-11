@@ -15,6 +15,7 @@ import json
 import os
 import re
 
+import patient_safety
 import boto3
 from flask import Flask, Response, request, stream_with_context
 
@@ -164,7 +165,7 @@ TYPED vs PHOTO COMPARISON:
 
 DOSE / INSTRUCTION RULES:
 - Patient-specific dose, strength, form, frequency, food timing and duration come ONLY from the supplied typed text / label. NEVER invent tablet counts, dose amounts, route, food timing, or duration, and never replace a supplied value with a textbook "usual dose".
-- DOSAGE UNIT INTEGRITY: NEVER invent, infer, or assume a missing unit. If the input says "Take 5" with no unit, do NOT turn it into "5 mL", "5 tablets", or "5 mg". Keep the bare number, and flag it under ⚠️ Needs checking as a missing/unclear unit that the patient must confirm with their pharmacist.
+- DOSAGE UNIT INTEGRITY: NEVER invent, infer, or assume a missing unit. If the input says "Take 5" with no unit, do NOT turn it into "5 mL", "5 tablets", or "5 mg". WITHHOLD taking instructions, keep the bare number, and flag it under ⚠️ Needs checking as a missing/unclear unit that the patient must confirm with their pharmacist.
 - If a supplied dose looks unusual or unsafe, KEEP the entered value exactly, flag it under ⚠️ Needs checking, and require pharmacist/prescriber confirmation. (Example: if a patient enters 'Atenolol 500 mg once daily', keep 500 mg, flag it, do NOT change it to 50 mg.)
 - Use 'Not provided' for information that was simply not given. Use 'Not readable' ONLY for text that was illegible in a photo. (Translate both per the LANGUAGE rule.)
 - Do not infer WHY the medicine was prescribed.
@@ -193,7 +194,7 @@ OUTPUT — create ONE card per CLEARLY IDENTIFIED (verified) medicine, in this f
   1. 🔴 CRITICAL — known drug allergies (e.g. a listed penicillin allergy with a penicillin-class medicine) and high-risk interactions (e.g. warfarin + aspirin/ibuprofen). State the risk plainly and that it needs a pharmacist/prescriber now.
   2. 🟠 WARNING — route conflicts (e.g. instruction to swallow a suppository), missing/unclear dose units, or extreme/unusual doses.
   3. 🔵 INFO — routine administration timing and food requirements.
-Always put higher-risk items before routine ones. If none: ✅ No issues found.]
+Always put higher-risk items before routine ones. If none: Label details copied; other medicines and allergies still need checking (translate). Never say No issues found or imply clinical clearance.]
 
 Rules: exactly ONE 'Plain words' section per card (a single sentence, NOT a bullet list of amount/frequency/food/duration). Omit administrative clutter and repetitive warnings. For any medicine that is ambiguous/unverified, output the recheck block instead of a card. Do not include implementation notes."""
 
@@ -204,7 +205,7 @@ def build_messages(body):
     extracted = body.get("extract_from_photo", "") or ""
 
     # Live verification of candidate names (RxNorm + MedlinePlus).
-    names = _candidate_names(typed, extracted)
+    names = patient_safety.candidate_names(typed, extracted)
     verifications = [refdata.verify_medicine(n, language) for n in names]
     retrieved = refdata.reference_block(verifications)
 
@@ -239,8 +240,12 @@ def build_messages(body):
 
 
 def generate(body):
-    messages = build_messages(body)
+    warning = patient_safety.validation(body.get("medicine_details", "") + "\n" + (body.get("extract_from_photo", "") or ""), body.get("preferred_language", "English"))
+    if warning:
+        yield "⚠️ " + warning
+        return
     try:
+        messages = build_messages(body)
         response = bedrock.converse_stream(
             modelId=MODEL_ID,
             messages=messages,
@@ -254,7 +259,8 @@ def generate(body):
                 if text:
                     yield text
     except Exception as exc:  # noqa: BLE001
-        yield f"\n\n⚠️ Error: {exc}"
+        app.logger.exception("Generation failed")
+        yield "\n\n⚠️ " + patient_safety.translated("error", body.get("preferred_language", "English"))
 
 
 @app.route("/", methods=["POST", "OPTIONS"])

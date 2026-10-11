@@ -1,0 +1,5 @@
+{
+  "private": true,
+  "scripts": {"test": "node scripts/frontend_regression.mjs"},
+  "devDependencies": {"linkedom": "^0.18.12"}
+}

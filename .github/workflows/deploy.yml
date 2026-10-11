@@ -25,6 +25,9 @@ jobs:
           python -m pip install --upgrade pip
           for d in backend/*/; do pip install -r "$d/requirements.txt"; done
 
+      - name: Patient input and safety regressions (offline)
+        run: python scripts/patient_regression.py
+
       - name: Smoke test (boot + route + guards)
         # Bedrock calls will fail without creds and stream an inline error — the
         # harness treats a reachable, streaming route as PASS, so this gates on
