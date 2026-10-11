@@ -53,3 +53,18 @@ textarea,select,input[type=text]{background:#fff;border-radius:12px;resize:verti
 .entry-grid>.ai-panel .panel-head button{min-height:28px;padding:2px 12px!important;font-size:12px}
 .entry-grid>.ai-panel .output{height:220px;min-height:220px;max-height:220px;border:1px solid var(--border);border-radius:12px;padding:14px;font-size:14px;overflow-wrap:anywhere}
 @media(max-width:950px){.entry-grid{grid-template-columns:1fr;gap:22px}}
+
+/* Allow longer translated headings and navigation labels to wrap. */
+.navlinks{flex-wrap:wrap;min-width:0}
+.entry-grid>.ai-panel .panel-head{height:auto;min-height:28px;white-space:normal;flex-wrap:wrap;gap:8px}
+.language-notice{margin:12px 0}
+.language-notice[hidden]{display:none}
+
+/* Patient reading: avoid nested scrolling and keep controls easy to select. */
+.output:not(.chat){max-height:none!important;height:auto!important;min-height:120px;overflow:visible;font-size:17px;line-height:1.65}
+.entry-grid>.ai-panel .output{min-height:220px}
+.output a{overflow-wrap:anywhere;text-decoration:underline}
+button{min-height:44px}button:disabled{opacity:.65;cursor:wait}
+textarea,input,select{font-size:16px!important}
+.topbar{position:relative!important;top:auto!important}
+.md-line{overflow-wrap:anywhere}
