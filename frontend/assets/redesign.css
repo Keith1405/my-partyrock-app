@@ -66,5 +66,8 @@ textarea,select,input[type=text]{background:#fff;border-radius:12px;resize:verti
 .output a{overflow-wrap:anywhere;text-decoration:underline}
 button{min-height:44px}button:disabled{opacity:.65;cursor:wait}
 textarea,input,select{font-size:16px!important}
-.topbar{position:relative!important;top:auto!important}
+/* Keep the floating navigation visible; reserve its measured height for anchors. */
+.topbar{position:sticky;top:12px}
+html{scroll-padding-top:var(--nav-offset,140px)}
+.medicine-section{scroll-margin-top:0}
 .md-line{overflow-wrap:anywhere}
