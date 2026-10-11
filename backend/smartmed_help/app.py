@@ -29,6 +29,7 @@ import json
 import os
 import re
 
+import patient_safety
 import boto3
 from flask import Flask, Response, request, stream_with_context
 
@@ -372,7 +373,8 @@ def generate(body):
                 if text:
                     yield text
     except Exception as exc:  # noqa: BLE001
-        yield f"\n\n⚠️ Error: {exc}"
+        app.logger.exception("Generation failed")
+        yield "\n\n⚠️ " + patient_safety.translated("error", body.get("preferred_language", "English"))
 
 
 @app.route("/", methods=["POST", "OPTIONS"])
