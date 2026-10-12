@@ -20,6 +20,7 @@ import boto3
 from flask import Flask, Response, request, stream_with_context
 
 import refdata
+import clinical_refs
 
 app = Flask(__name__)
 
@@ -177,14 +178,14 @@ SCOPE AND REPLY QUALITY:
 - State uncertainties plainly. Use at most 160 words per identified medicine, excluding supplied source links. Do not endorse unusual or conflicting instructions as a confirmed schedule.
 
 SOURCING (honest):
-- You have NO general web access. 'What it is for' may use well-established general knowledge, clearly framed as general info, not specific to this patient.
+- You have NO general web access. 'What it is for' requires exact-ingredient retrieved clinical text. If unavailable/mismatched, state that the general use could not be verified; do not substitute model knowledge.
 - In 📚 Sources, list ONLY the source lines that appear in the RETRIEVED REFERENCE DATA block (NPRA / RxNorm / MedlinePlus pages that were actually returned). NEVER invent a URL or claim a source was checked if it is not in that block. If no sources were retrieved, omit the Sources section.
 
 OUTPUT — create ONE card per CLEARLY IDENTIFIED (verified) medicine, in this format (translate labels to the Preferred Language; keep emojis):
 
 ## 💊 Medicine Card — [medicine name]
 *Draft only — compare with your original label.*
-🏷️ Name: [supplied name/brand]
+🏷️ Name: [supplied generic/chemical or brand name]
 🧪 Active ingredient: [verified ingredient(s) from retrieved data]
 📏 Strength: [supplied strength, or Not provided / Not readable]
 💉 Form: [supplied form, or Not provided / Not readable]
@@ -204,16 +205,36 @@ Always put higher-risk items before routine ones. If none: Label details copied;
 
 Rules: exactly ONE 'Plain words' section per card (a single sentence, NOT a bullet list of amount/frequency/food/duration). Omit administrative clutter and repetitive warnings. For any medicine that is ambiguous/unverified, output the recheck block instead of a card. Do not include implementation notes."""
 
+SYSTEM_PROMPT += """
+ADDITIONAL SOURCE AND INSTRUCTION RULES:
+- Accept either a generic/chemical active-ingredient name OR a brand name. A brand name is never mandatory. Do not demand a brand when a generic name is verified. Preserve the original name and explain its verified ingredient identity. Unclear names still require clarification; accepting either type does not allow guessing.
+- Plain words must identify the instruction origin (typed entry or readable photo label); preserve exact dose, unit, frequency, timing, duration and conditions. Never fill missing details from source usual doses. Do not add a route or 'at the same time each day'. Verified general administration advice, if needed, is separate and explicitly general.
+- Important identity/dose/route/conflict concerns must appear in a warning BEFORE the cards; show conflicting values and origins. Withhold definitive taking instructions until resolved. Keep 500 mg as entered when concerning; never silently change to 50 mg. A patient's confirmation is not professional dose validation.
+- Ambiguous 'twice daily as needed' requires clarification of regular versus as-needed dosing and limits; do not choose an interpretation.
+- General uses require actual text in CLINICAL EVIDENCE for the exact ingredient set, including combination products; no guessed diagnosis, promised cure/timeframe or unsourced knowledge. Keep this short because precautions belong in the Summary.
+- Respect scope/form/population/country limitations in CLINICAL EVIDENCE. Do not apply mismatched formulation advice. Missing scope calls for clarification, not inference.
+- Use only exact retrieved page links for claims they support. Identity references support identity only. If clinical retrieval fails, say it could not be verified and ask a pharmacist.
+- Keep the agreed Medicine Card fields and exactly one Plain words sentence per identified medicine. Keep uncertain medicines in the recheck block, but continue other identified medicines. No new Summary or Missed Dose sections.
+- The server adds licence attribution; do not duplicate it or claim NHS endorsement.
+"""
 
-def build_messages(body):
+
+
+def prepare(body):
+    typed=body.get("medicine_details", "") or ""
+    extracted=body.get("extract_from_photo", "") or ""
+    names=patient_safety.candidate_names(typed,extracted,limit=12)
+    verified=refdata.verify_medicines(names,body.get("preferred_language","English"))
+    return verified,clinical_refs.retrieve(verified,typed+"\n"+extracted,body.get("patient_age","Not provided"))
+
+
+def build_messages(body, prepared=None):
     language = body.get("preferred_language", "English")
     typed = body.get("medicine_details", "") or ""
     extracted = body.get("extract_from_photo", "") or ""
 
-    # Live verification of candidate names (RxNorm + MedlinePlus).
-    names = patient_safety.candidate_names(typed, extracted)
-    verifications = refdata.verify_medicines(names, language)
-    retrieved = refdata.reference_block(verifications)
+    verifications,clinical = prepared if prepared is not None else prepare(body)
+    retrieved = refdata.reference_block(verifications)+"\n\n"+clinical_refs.evidence_block(clinical)
 
     content = []
     file_data = body.get("file_data")
@@ -253,7 +274,12 @@ def generate(body):
         yield "⚠️ " + warning
         return
     try:
-        messages = build_messages(body)
+        prepared = prepare(body)
+        for concern in clinical_refs.dose_alerts(prepared[1],(body.get('medicine_details','') or '')+'\n'+(body.get('extract_from_photo','') or ''),body.get('preferred_language','English')):
+            yield '⚠️ '+concern+'\n\n'
+        messages = build_messages(body, prepared)
+        allowed = clinical_refs.urls(prepared[1]) | {source['url'] for v in prepared[0] for source in v.get('sources',[])}
+        gate = clinical_refs.CitationGate(allowed)
         response = bedrock.converse_stream(
             modelId=MODEL_ID,
             messages=messages,
@@ -262,10 +288,14 @@ def generate(body):
             inferenceConfig={"temperature": 0, "maxTokens": 2000},
         )
         for event in response["stream"]:
+            if 'messageStop' in event and event['messageStop'].get('stopReason') not in ('end_turn','stop_sequence'):
+                raise RuntimeError('Generation stopped before a complete answer')
             if "contentBlockDelta" in event:
                 text = event["contentBlockDelta"]["delta"].get("text", "")
                 if text:
-                    yield text
+                    yield from gate.feed(text)
+        yield from gate.finish()
+        if any(p['url'].startswith('https://www.nhs.uk/') for r in prepared[1] for p in r.get('pages',[])): yield "\n\n"+clinical_refs.attribution(body.get("preferred_language","English"))
     except Exception as exc:  # noqa: BLE001
         app.logger.exception("Generation failed")
         yield "\n\n⚠️ " + patient_safety.translated("error", body.get("preferred_language", "English"))
