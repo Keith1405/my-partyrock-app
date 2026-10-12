@@ -1,0 +1,146 @@
+{
+  "source": {
+    "title": "Guide on Handling Look Alike, Sound Alike Medications",
+    "publisher": "Pharmaceutical Services Division, Ministry of Health Malaysia",
+    "edition": "First Edition",
+    "year": 2012,
+    "url": "https://pharmacy.moh.gov.my/sites/default/files/document-upload/guide-handling-lasa.pdf",
+    "note": "This is a 2012 publication. It is NOT a current or complete drug database. The confusable-name pairs and Tall Man list below are illustrative and NON-EXHAUSTIVE. Absence from these lists does NOT mean a name is safe or correctly identified.",
+    "document_sha256": "4803f6c453c9f0a966089931f47e41fcf5e3f17f6865a3d4341acaa74085ae6a",
+    "checked_on": "2026-10-12",
+    "pdf_pages": 24
+  },
+  "lasa_pairs": [
+    [
+      "madopar",
+      "methyldopa"
+    ],
+    [
+      "lovastatin",
+      "loratadine"
+    ],
+    [
+      "chlorpromazine",
+      "carbamazepine"
+    ],
+    [
+      "cotrimoxazole",
+      "clotrimazole"
+    ],
+    [
+      "carbimazole",
+      "cotrimoxazole"
+    ],
+    [
+      "amlodipine",
+      "felodipine"
+    ],
+    [
+      "Difflam",
+      "Daflon"
+    ],
+    [
+      "enalapril",
+      "perindopril"
+    ],
+    [
+      "Neurobion",
+      "Neurontin"
+    ],
+    [
+      "cycloserine",
+      "cyclosporine"
+    ],
+    [
+      "Glucophage XR",
+      "Glucovance"
+    ],
+    [
+      "gliclazide",
+      "glibenclamide"
+    ],
+    [
+      "imipenem",
+      "meropenem"
+    ],
+    [
+      "lovastatin",
+      "simvastatin"
+    ],
+    [
+      "losartan",
+      "valsartan"
+    ],
+    [
+      "Progyluton",
+      "Progynova"
+    ]
+  ],
+  "tall_man": [
+    "ATRAcurium",
+    "BISOprolol",
+    "BUPIvacaine",
+    "carBAMAZepine",
+    "carBIMazole",
+    "cefOTAXime",
+    "cefTAZIDime",
+    "cefTRIAXone",
+    "chlorproMAZINE",
+    "chlorproPAMIDE",
+    "COzaar",
+    "DAUNOrubicin",
+    "DOBUTamine",
+    "DOXOrubicin",
+    "DOPamine",
+    "DuphASTON",
+    "DuspaTALIN",
+    "ENALApril",
+    "ESOMEprazole",
+    "FORTzaar",
+    "gliBENclamide",
+    "gliCLAzide",
+    "LANSOprazole",
+    "LIGNOcaine",
+    "LOsartan",
+    "LOVAstatin",
+    "metFORMIN",
+    "METOprolol",
+    "NEostigmine",
+    "NeuroBION",
+    "NeuroNTIN",
+    "niFEDipine",
+    "niMODipine",
+    "nitroGLYCERINe",
+    "nitroPRUSSIDe",
+    "PANcuronium",
+    "PANTOprazole",
+    "PERINDOpril",
+    "ProgyLUTON",
+    "ProgyNOVA",
+    "ProSCAR",
+    "PROzac",
+    "ROcuronium",
+    "ROPIvacaine",
+    "SETRAline",
+    "STELLAzine",
+    "VEcuronium",
+    "vinBLAStine",
+    "vinCRIStine",
+    "XalaTAN",
+    "XalaCOM"
+  ],
+  "verbatim_principles": [
+    {
+      "pdf_page": 12,
+      "text": "Identify medicines based on its name and strength and not by its appearance or location."
+    },
+    {
+      "pdf_page": 12,
+      "text": "Prescription should clearly specify name of medication, dosage form, dose and complete direction for use."
+    },
+    {
+      "pdf_page": 14,
+      "text": "Encourage patients and their caregivers to learn the names of their medications."
+    }
+  ]
+}

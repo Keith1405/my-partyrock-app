@@ -1,0 +1,232 @@
+{
+  "schema_version": "1.0",
+  "maintainer": "SmartMed Cycle repository maintainers",
+  "checked_on": "2026-10-12",
+  "policy": "Exact ingredient set only. No class substitution. Unsupported products fail closed. Live fetch cached 24 hours, never stale on failure. Scope must be checked before clinical claims.",
+  "license": "Open Government Licence v3.0; adaptations/translations are not NHS-approved",
+  "terms": "https://www.nhs.uk/our-policies/terms-and-conditions/",
+  "entries": [
+    {
+      "ingredients": [
+        "atorvastatin"
+      ],
+      "aliases": {
+        "atorvastatin calcium": "atorvastatin",
+        "atorvastatin calcium trihydrate": "atorvastatin",
+        "atorvastatin calcium propylene glycol solvate": "atorvastatin",
+        "atorvastatin calcium anhydrous": "atorvastatin"
+      },
+      "url": "https://www.nhs.uk/medicines/atorvastatin/",
+      "title_token": "atorvastatin",
+      "forms": [
+        "tablet",
+        "capsule"
+      ],
+      "population": "adults",
+      "country": "UK",
+      "reviewed_on": "2026-10-12"
+    },
+    {
+      "ingredients": [
+        "rosuvastatin"
+      ],
+      "aliases": {
+        "rosuvastatin calcium": "rosuvastatin"
+      },
+      "url": "https://www.nhs.uk/medicines/rosuvastatin/",
+      "title_token": "rosuvastatin",
+      "forms": [
+        "tablet",
+        "capsule"
+      ],
+      "population": "adults",
+      "country": "UK",
+      "reviewed_on": "2026-10-12"
+    },
+    {
+      "ingredients": [
+        "simvastatin"
+      ],
+      "aliases": {},
+      "url": "https://www.nhs.uk/medicines/simvastatin/",
+      "title_token": "simvastatin",
+      "forms": [
+        "tablet",
+        "capsule"
+      ],
+      "population": "adults",
+      "country": "UK",
+      "reviewed_on": "2026-10-12"
+    },
+    {
+      "ingredients": [
+        "atenolol"
+      ],
+      "aliases": {},
+      "url": "https://www.nhs.uk/medicines/atenolol/",
+      "title_token": "atenolol",
+      "forms": [
+        "tablet",
+        "capsule",
+        "liquid"
+      ],
+      "population": "adults",
+      "country": "UK",
+      "reviewed_on": "2026-10-12",
+      "dose_url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=2ee7b7da-303d-4a57-a1eb-25e8923660c0"
+    },
+    {
+      "ingredients": [
+        "amlodipine"
+      ],
+      "aliases": {
+        "amlodipine besylate": "amlodipine",
+        "amlodipine besilate": "amlodipine"
+      },
+      "url": "https://www.nhs.uk/medicines/amlodipine/",
+      "title_token": "amlodipine",
+      "forms": [
+        "tablet",
+        "capsule"
+      ],
+      "population": "adults",
+      "country": "UK",
+      "reviewed_on": "2026-10-12"
+    },
+    {
+      "ingredients": [
+        "metformin"
+      ],
+      "aliases": {
+        "metformin hydrochloride": "metformin"
+      },
+      "url": "https://www.nhs.uk/medicines/metformin/",
+      "title_token": "metformin",
+      "forms": [
+        "tablet",
+        "capsule",
+        "liquid"
+      ],
+      "population": "adults",
+      "country": "UK",
+      "reviewed_on": "2026-10-12"
+    },
+    {
+      "ingredients": [
+        "paracetamol"
+      ],
+      "aliases": {
+        "acetaminophen": "paracetamol"
+      },
+      "url": "https://www.nhs.uk/medicines/paracetamol-for-adults/",
+      "title_token": "paracetamol",
+      "forms": [
+        "tablet",
+        "capsule",
+        "liquid"
+      ],
+      "population": "adults",
+      "country": "UK",
+      "reviewed_on": "2026-10-12"
+    },
+    {
+      "ingredients": [
+        "ibuprofen"
+      ],
+      "aliases": {},
+      "url": "https://www.nhs.uk/medicines/ibuprofen-for-adults/",
+      "title_token": "ibuprofen",
+      "forms": [
+        "tablet",
+        "capsule",
+        "liquid"
+      ],
+      "population": "adults",
+      "country": "UK",
+      "reviewed_on": "2026-10-12"
+    },
+    {
+      "ingredients": [
+        "amoxicillin"
+      ],
+      "aliases": {
+        "amoxicillin trihydrate": "amoxicillin"
+      },
+      "url": "https://www.nhs.uk/medicines/amoxicillin/about-amoxicillin/",
+      "title_token": "amoxicillin",
+      "forms": [
+        "tablet",
+        "capsule",
+        "liquid"
+      ],
+      "population": "adults",
+      "country": "UK",
+      "reviewed_on": "2026-10-12",
+      "additional_urls": [
+        "https://www.nhs.uk/medicines/amoxicillin/side-effects-of-amoxicillin/",
+        "https://www.nhs.uk/medicines/amoxicillin/common-questions-about-amoxicillin/"
+      ]
+    },
+    {
+      "ingredients": [
+        "warfarin"
+      ],
+      "aliases": {
+        "warfarin sodium": "warfarin"
+      },
+      "url": "https://www.nhs.uk/medicines/warfarin/",
+      "title_token": "warfarin",
+      "forms": [
+        "tablet",
+        "capsule"
+      ],
+      "population": "adults",
+      "country": "UK",
+      "reviewed_on": "2026-10-12"
+    },
+    {
+      "ingredients": [
+        "amoxicillin",
+        "clavulanic acid"
+      ],
+      "aliases": {
+        "amoxicillin trihydrate": "amoxicillin",
+        "potassium clavulanate": "clavulanic acid",
+        "clavulanate potassium": "clavulanic acid"
+      },
+      "url": "https://www.nhs.uk/medicines/co-amoxiclav/",
+      "title_token": "co-amoxiclav",
+      "forms": [
+        "tablet",
+        "liquid"
+      ],
+      "population": "adults",
+      "country": "UK",
+      "reviewed_on": "2026-10-12"
+    },
+    {
+      "ingredients": [
+        "paracetamol",
+        "codeine"
+      ],
+      "aliases": {
+        "acetaminophen": "paracetamol",
+        "codeine phosphate": "codeine",
+        "codeine phosphate hemihydrate": "codeine"
+      },
+      "url": "https://www.nhs.uk/medicines/co-codamol-for-adults/about-co-codamol-for-adults/",
+      "title_token": "co-codamol",
+      "forms": [
+        "tablet",
+        "capsule"
+      ],
+      "population": "adults",
+      "country": "UK",
+      "reviewed_on": "2026-10-12",
+      "additional_urls": [
+        "https://www.nhs.uk/medicines/co-codamol-for-adults/side-effects-of-co-codamol-for-adults/",
+        "https://www.nhs.uk/medicines/co-codamol-for-adults/common-questions-about-co-codamol-for-adults/"
+      ]
+    }
+  ]
+}
