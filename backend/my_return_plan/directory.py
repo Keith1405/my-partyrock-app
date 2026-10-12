@@ -36,24 +36,3 @@ def nearest(location, limit=3):
     if not origin: return None, []
     points=sorted((dict(p, distance_km=distance(origin,p)) for p in DIRECTORY["locations"]),key=lambda p:p["distance_km"])
     return origin, points[:limit]
-
-
-def listed_in_area(location):
-    """Find listed SS neighbourhood centres in PJ, without pretending to use GPS.
-    Directory order is retained; these are area matches, not distance rankings.
-    """
-    text=str(location or "")
-    if not re.search(r"\b(?:pj|petaling\s+jaya)\b",text,re.I): return []
-    area=re.search(r"\bss\s*(\d{1,2})(?:/(\d{1,2}))?\b",text,re.I)
-    if not area: return []
-    token=area.group(1)
-    street=area.group(2)
-    # Refuse extra or contradictory location words instead of guessing.
-    rest=re.sub(r"\bss\s*\d{1,2}(?:/\d{1,2})?\b|\b(?:pj|petaling\s+jaya|selangor|malaysia)\b|\b\d{5}\b", "", text, flags=re.I)
-    if re.search(r"[A-Za-z0-9]",rest): return []
-    codes=re.findall(r"\b\d{5}\b",text)
-    if len(set(codes))>1: return []
-    pattern=r"\bSS\s*"+re.escape(token)+(r"/"+re.escape(street) if street else "")+r"(?=$|[\s/,.-])"
-    points=[p for p in DIRECTORY["locations"] if "petaling jaya" in p["description"].casefold() and re.search(pattern,p["description"],re.I)]
-    if codes and any(codes[0] not in p["description"] for p in points): return []
-    return points

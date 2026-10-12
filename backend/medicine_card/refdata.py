@@ -273,15 +273,14 @@ def verify_medicine(name, language="English"):
     key="npra:"+name.casefold()
     cached=_cache_get(key)
     if cached is not None: return cached
-    generic=_generic_query(name)
-    # Accept exact database ingredient names/synonyms beyond the clinical catalogue.
-    # Clinical-reference coverage remains independent and intentionally bounded.
-    ingredient=_exact_ingredient(generic)
-    if ingredient is not None:
-        ingredient['query']=name
-        _CACHE[key]=(time.time()+1800,ingredient)
-        return ingredient
     result=_npra(name)
+    if result["status"]=="unverified" and result["note"].startswith("No NPRA"):
+        generic=re.split(r"\s+\d",name,1)[0].strip()
+        nlm=_verify_nlm(generic,language)
+        if nlm["status"]=="verified" and generic.casefold() in {i.casefold() for i in nlm["ingredients"]}:
+            result=nlm
+            result["query"]=name
+            result["note"]="Generic ingredient identity from RxNorm; not confirmation of a Malaysian brand or supplied formulation."
     # An empty or offline Malaysian lookup never authorizes a US brand substitution.
     # Explicit generic ingredient input can still be discussed as supplied input.
     _CACHE[key]=(time.time()+(1800 if result["status"]!="unverified" else 60),result)
@@ -291,36 +290,4 @@ def verify_medicine(name, language="English"):
 def verify_medicines(names, language="English"):
     from concurrent.futures import ThreadPoolExecutor
     with ThreadPoolExecutor(max_workers=4) as pool:
-        return list(pool.map(lambda name: verify_medicine(name,language), names[:12]))
-
-def _exact_ingredient(name):
-    """Exact active IN/PIN/MIN concepts only; a US brand is not a Malaysian product.
-    Exact search accepts database synonyms but never normalized/fuzzy corrections.
-    """
-    try:
-        data=_get_json('https://rxnav.nlm.nih.gov/REST/rxcui.json?name='+urllib.parse.quote(name)+'&search=0')
-        ids=list(dict.fromkeys((data.get('idGroup') or {}).get('rxnormId') or []))
-        if len(ids)!=1: return None
-        concept=(_get_json('https://rxnav.nlm.nih.gov/REST/rxcui/'+urllib.parse.quote(str(ids[0]))+'/properties.json').get('properties') or {})
-        tty=concept.get('tty')
-        if tty not in ('IN','PIN','MIN') or concept.get('suppress')!='N' or not concept.get('name'): return None
-        ingredients=[concept['name']]
-        if tty=='MIN':
-            related=_get_json('https://rxnav.nlm.nih.gov/REST/rxcui/'+urllib.parse.quote(str(ids[0]))+'/related.json?tty=IN')
-            ingredients=list(dict.fromkeys(c['name'] for g in (related.get('relatedGroup') or {}).get('conceptGroup',[]) if g.get('tty')=='IN' for c in g.get('conceptProperties',[]) if c.get('name')))
-            if len(ingredients)<2: return None
-        return {'query':name,'status':'verified','rxcui':ids[0],'matched_name':concept['name'],'ingredients':ingredients,'candidates':[],
-                'sources':[{'title':'RxNorm — exact ingredient identity','url':'https://rxnav.nlm.nih.gov/REST/rxcui/'+str(ids[0])+'/properties.json'}],
-                'note':'Verified generic/chemical ingredient identity only; supplied strength/form/dose and Malaysian product are not clinically verified.'}
-    except Exception:
-        return None
-
-
-def _generic_query(name):
-    # Remove a single strength/form suffix, never a second named ingredient.
-    strength=re.search(r'\s+\d+(?:[.,]\d+)?\s*(?:mg|mcg|g|ml|units?|iu)\b',name,re.I)
-    if not strength: return name.strip()
-    tail=name[strength.end():]
-    remainder=re.sub(r'\d+(?:[.,]\d+)?|\b(?:mg|mcg|g|ml|units?|iu|tablets?|capsules?|caps?|tabs?|caplets?|suspension|solution|liquid|suppositories|suppository|cream|ointment|drops?)\b','',tail,flags=re.I)
-    if re.search(r'[A-Za-z\u4e00-\u9fff]',remainder): return name.strip()
-    return name[:strength.start()].strip()
+        return list(pool.map(lambda name: verify_medicine(name,language), names[:4]))
