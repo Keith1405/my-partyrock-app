@@ -1,0 +1,89 @@
+{
+  "baseline_commit": "c46077a8338208792e823f1d7d071946092e1536",
+  "files": [
+    {
+      "path": "backend/extract_from_photo/patient_safety.py",
+      "sha256": "8a81d7f1fdd6ad022c044821cb39e016c56d7fcdea1f3caab6cc983296ae76f0"
+    },
+    {
+      "path": "backend/medicine_card/app.py",
+      "sha256": "ecf5dd97f3e3d54321f13cb5a25736a7d2cff8e77e807fd5d5d13b925ab7d8ec"
+    },
+    {
+      "path": "backend/medicine_card/patient_safety.py",
+      "sha256": "8a81d7f1fdd6ad022c044821cb39e016c56d7fcdea1f3caab6cc983296ae76f0"
+    },
+    {
+      "path": "backend/medicine_card/refdata.py",
+      "sha256": "ac8b82fd0b2d5a8f23cb7b74e9923b48dc941fd8560fe89f037b0f8104e91692"
+    },
+    {
+      "path": "backend/my_medicine_summary/app.py",
+      "sha256": "4ad014c76ceefb18333dc86354cf0712ffa2aca59e868cee74c488ee6fc580ee"
+    },
+    {
+      "path": "backend/my_medicine_summary/patient_safety.py",
+      "sha256": "8a81d7f1fdd6ad022c044821cb39e016c56d7fcdea1f3caab6cc983296ae76f0"
+    },
+    {
+      "path": "backend/my_medicine_summary/refdata.py",
+      "sha256": "ac8b82fd0b2d5a8f23cb7b74e9923b48dc941fd8560fe89f037b0f8104e91692"
+    },
+    {
+      "path": "backend/my_return_plan/app.py",
+      "sha256": "e4371af5c96106012290bff7bdea8a57f9302bb861f3255cac727deccbe3e01e"
+    },
+    {
+      "path": "backend/my_return_plan/collection_points.json",
+      "sha256": "9d7f9bf17042f923193ab6a910099381b4478a1acee9e346ef8fa6aa2a832ba2"
+    },
+    {
+      "path": "backend/my_return_plan/directory.py",
+      "sha256": "ae9165d509854ea85ef5b56674416001f14badf5457631274b4f2729aec3a550"
+    },
+    {
+      "path": "backend/my_return_plan/patient_safety.py",
+      "sha256": "8a81d7f1fdd6ad022c044821cb39e016c56d7fcdea1f3caab6cc983296ae76f0"
+    },
+    {
+      "path": "backend/my_return_plan/postal_coordinates.json",
+      "sha256": "5e7ea6b87022111625c4452f6a9d0d45aed6af53268cd7807c8ee52835c6c879"
+    },
+    {
+      "path": "backend/smartmed_help/app.py",
+      "sha256": "9ce728c7ff702f134f00f6d156cdabedbda2a1e5a33349ea0cabbc3d6e663299"
+    },
+    {
+      "path": "backend/smartmed_help/patient_safety.py",
+      "sha256": "8a81d7f1fdd6ad022c044821cb39e016c56d7fcdea1f3caab6cc983296ae76f0"
+    },
+    {
+      "path": "backend/smartmed_help/refdata.py",
+      "sha256": "c4114eac2d281f996e48d7ca1f67f2867dbd71486860160b554f86f7a5215d0b"
+    },
+    {
+      "path": "frontend/assets/i18n.js",
+      "sha256": "8d24217344a6ba3600a4fb1fbcc1cdba5c7c47bf1be7e7c14d9f0cb245c29376"
+    },
+    {
+      "path": "frontend/assets/redesign.css",
+      "sha256": "23cc15372f3f2f1d17f9f1f781eb7eac95e32379c2916a438551c892d771584d"
+    },
+    {
+      "path": "frontend/index.html",
+      "sha256": "467ad2793aa06c9c5539eab00f0dc729c78ae3729334d22dfe26c91ba288cd64"
+    },
+    {
+      "path": "scripts/brand_location_regression.py",
+      "sha256": "fffddb8ad9ed92eaf9a832634d858c196d7b49f217158e59d997c4c70d4e6778"
+    },
+    {
+      "path": "scripts/patient_regression.py",
+      "sha256": "aeee2b2c1c61623fcdfc24845a7934ad3f8477f278e328f04aaf39354e27f844"
+    },
+    {
+      "path": "scripts/refresh_return_directory.py",
+      "sha256": "09d23efdab7c85c36e227d6b802ed2ca532949f6a2ab14941ac2e1acdba6b7eb"
+    }
+  ]
+}

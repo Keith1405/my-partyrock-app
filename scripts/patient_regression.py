@@ -28,9 +28,14 @@ def load(folder):
     safety = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(safety)
     sys.modules['patient_safety'] = safety
+    if folder == 'my_return_plan':
+        ds = importlib.util.spec_from_file_location('directory', directory / 'directory.py')
+        dm = importlib.util.module_from_spec(ds); ds.loader.exec_module(dm)
+        sys.modules['directory'] = dm
     verified = []
     ref = types.SimpleNamespace(
         verify_medicine=lambda name, lang: verified.append(name) or {'status':'verified', 'query':name},
+        verify_medicines=lambda names, lang: [verified.append(name) or {'status':'verified', 'query':name} for name in names],
         reference_block=lambda data: 'MOCK IDENTITY ONLY',
     )
     model = Model()
@@ -64,10 +69,29 @@ class PatientRegressions(unittest.TestCase):
     def test_summary_does_not_verify_prose(self):
         summary, _, _, names = load('my_medicine_summary')
         summary.build_messages({'medicine_details':'Amoxicillin 500 mg capsules', 'medicine_card':'Draf only\nAmbil 1 tablet\nheart health\nRxNorm 500 mg', 'other_medicines':'Aspirin 100 mg daily'})
-        self.assertEqual(names,['Amoxicillin','Aspirin'])
+        self.assertEqual(names,['Amoxicillin 500 mg capsules','Aspirin 100 mg'])
+
+    def test_summary_uses_original_label_without_generated_card(self):
+        summary, _, model, _ = load('my_medicine_summary')
+        body = {'medicine_details':'Metformin 500 mg tablets. Take 1 tablet daily.', 'medicine_card':''}
+        text = summary.build_messages(body)[0]['content'][0]['text']
+        self.assertIn(body['medicine_details'], text)
+        self.assertNotIn('reply exactly: No medicine details found', text)
+        self.assertNotIn('INTERACTION REVIEW COMPLETE:', text)
+        self.assertIn('NOT a complete clinical review', text)
+        self.assertIn('Complete response', ''.join(summary.generate(body)))
+        self.assertEqual(model.calls, 1)
+
+    def test_summary_marks_absent_identity_as_incomplete(self):
+        summary, _, _, _ = load('my_medicine_summary')
+        text = summary.build_messages({'medicine_details':'unknown medicine'})[0]['content'][0]['text']
+        self.assertIn('IDENTITY CHECK: incomplete', text)
+        self.assertNotIn('all queried names verified', text)
+        self.assertNotIn('six sections', summary.SYSTEM_PROMPT)
+        self.assertNotIn('SYSTEM_PROMPT +=', Path(summary.__file__).read_text(encoding='utf-8'))
 
     def test_bilingual_original_label(self):
-        self.assertEqual(self.safety.candidate_names('二甲双胍 Metformin 500 mg tablets'),['Metformin'])
+        self.assertEqual(self.safety.candidate_names('二甲双胍 Metformin 500 mg tablets'),['Metformin 500 mg tablets'])
 
     def test_both_warfarin_pairs_before_model_response(self):
         summary, _, _, _ = load('my_medicine_summary')

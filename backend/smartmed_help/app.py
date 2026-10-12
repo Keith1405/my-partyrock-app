@@ -310,13 +310,10 @@ def build_request(body):
     precautions = body.get("my_medicine_summary", "") or "(not provided)"
     new_message = body.get("message", "") or ""
 
-    # The Medicine Card and Summary are already-finished, trusted context from
-    # the other sections — do NOT re-scan them for "medicine names" here. Doing
-    # so picks up words like "RxNorm", "MedlinePlus" or "Draft" from the summary
-    # text and wrongly flags them as unidentified medicines. Only verify a name
-    # if the PATIENT explicitly names one in THIS question.
-    names = _candidate_names(new_message)
-    verifications = [refdata.verify_medicine(n, language) for n in names]
+    # Verify raw label queries and the patient's current input. Never extract
+    # product names from generated explanations or regard a card as source data.
+    names = patient_safety.candidate_names(body.get("medicine_details", ""), body.get("extract_from_photo", ""), new_message)
+    verifications = refdata.verify_medicines(names, language)
     retrieved = refdata.reference_block(verifications)
 
     # Match curated, patient-ready FAQs to the question (plus the question's own
