@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'scripts'))
-from patient_regression import load
+from patient_regression import load, missing_reference_files
 
 class SummaryTests(unittest.TestCase):
     def setUp(self):
@@ -16,6 +16,11 @@ class SummaryTests(unittest.TestCase):
         return {'status':'verified','query':query,'ingredients':ingredients,'matched_name':query,'sources':[]}
     def page(self,url='https://www.nhs.uk/medicines/atorvastatin/'):
         return {'url':url,'title':'Atorvastatin','text':'Synthetic test evidence. Limit large amounts of grapefruit juice. Alcohol can increase liver-related side effects.','country':'UK','population':'adults','retrieved_at':'test'}
+    def test_preflight_reports_all_missing_reference_paths(self):
+        with patch('pathlib.Path.is_file',return_value=False): missing=missing_reference_files()
+        self.assertEqual(len(missing),4)
+        self.assertIn('backend/medicine_card/clinical_refs.py',missing)
+        self.assertIn('backend/my_medicine_summary/clinical_catalog.json',missing)
     def test_four_sections_and_no_repeated_sections(self):
         prompt=self.summary.SYSTEM_PROMPT
         headings=['# 💊 Your Medicine Summary','## 👀 Watch Out For','## 🍽️ Food and Drink','## ❓ Ask Your Pharmacist','## 📚 Sources']
@@ -113,22 +118,58 @@ class SummaryTests(unittest.TestCase):
         spec=importlib.util.spec_from_file_location('identity_test',ROOT/'backend/my_medicine_summary/refdata.py')
         ref=importlib.util.module_from_spec(spec);spec.loader.exec_module(ref)
         good={'status':'verified','query':'atenolol','ingredients':['atenolol'],'sources':[]}
-        with patch.object(ref,'_verify_nlm',return_value=good),patch.object(ref,'_npra') as npra:
+        with patch.object(ref,'_exact_ingredient',return_value=good),patch.object(ref,'_npra') as npra:
             result=ref.verify_medicine('Atenolol 500 mg tablets')
-        npra.assert_not_called();self.assertIn('strength/form/dose',result['note']);self.assertEqual(result['query'],'Atenolol 500 mg tablets')
+        npra.assert_not_called();self.assertEqual(result['ingredients'],['atenolol']);self.assertEqual(result['query'],'Atenolol 500 mg tablets')
     def test_generic_related_salts_are_not_combination_ingredients(self):
         spec=importlib.util.spec_from_file_location('identity_test',ROOT/'backend/my_medicine_summary/refdata.py')
         ref=importlib.util.module_from_spec(spec);spec.loader.exec_module(ref)
-        good={'status':'verified','query':'atorvastatin','ingredients':['atorvastatin','atorvastatin calcium','atorvastatin calcium anhydrous','atorvastatin calcium propylene glycol solvate'],'sources':[]}
-        with patch.object(ref,'_verify_nlm',return_value=good): result=ref.verify_medicine('Atorvastatin 20 mg tablets')
+        good={'status':'verified','query':'atorvastatin','ingredients':['atorvastatin'],'sources':[]}
+        with patch.object(ref,'_exact_ingredient',return_value=good): result=ref.verify_medicine('Atorvastatin 20 mg tablets')
         self.assertEqual(result['ingredients'],['atorvastatin'])
+    def identity_module(self):
+        spec=importlib.util.spec_from_file_location('identity_test',ROOT/'backend/my_medicine_summary/refdata.py')
+        ref=importlib.util.module_from_spec(spec);spec.loader.exec_module(ref);return ref
+    def test_generic_outside_clinical_catalogue_accepted(self):
+        ref=self.identity_module()
+        with patch.object(ref,'_get_json',side_effect=[{'idGroup':{'rxnormId':['29046']}},{'properties':{'tty':'IN','name':'lisinopril','suppress':'N'}}]):
+            result=ref._exact_ingredient('lisinopril')
+        self.assertEqual(result['status'],'verified');self.assertEqual(result['ingredients'],['lisinopril'])
+        self.assertIsNone(self.refs._entry(result))  # identity is independent of clinical coverage
+    def test_chemical_salt_is_not_a_brand(self):
+        ref=self.identity_module()
+        with patch.object(ref,'_get_json',side_effect=[{'idGroup':{'rxnormId':['salt']}},{'properties':{'tty':'PIN','name':'metformin hydrochloride','suppress':'N'}}]):
+            result=ref._exact_ingredient('metformin hydrochloride')
+        self.assertEqual(result['ingredients'],['metformin hydrochloride'])
+    def test_brand_cannot_use_us_generic_path(self):
+        ref=self.identity_module()
+        with patch.object(ref,'_get_json',side_effect=[{'idGroup':{'rxnormId':['brand']}},{'properties':{'tty':'BN','name':'Panadol','suppress':'N'}}]):
+            self.assertIsNone(ref._exact_ingredient('Panadol'))
+    def test_multiple_exact_concepts_not_auto_selected(self):
+        ref=self.identity_module()
+        with patch.object(ref,'_get_json',return_value={'idGroup':{'rxnormId':['1','2']}}):self.assertIsNone(ref._exact_ingredient('ambiguous'))
+    def test_exact_search_never_fuzzy(self):
+        ref=self.identity_module()
+        with patch.object(ref,'_get_json',return_value={'idGroup':{}}) as read:
+            self.assertIsNone(ref._exact_ingredient('atenlol'))
+        self.assertIn('search=0',read.call_args.args[0])
+    def test_mixed_named_strengths_not_truncated(self):
+        ref=self.identity_module()
+        text='Amoxicillin 500 mg / clavulanic acid 125 mg'
+        self.assertEqual(ref._generic_query(text),text)
+        self.assertEqual(ref._generic_query('Paracetamol 500 mg tablets'),'Paracetamol')
+    def test_generic_combination_keeps_all_ingredients(self):
+        ref=self.identity_module()
+        with patch.object(ref,'_get_json',side_effect=[{'idGroup':{'rxnormId':['combo']}},{'properties':{'tty':'MIN','name':'amoxicillin / clavulanate','suppress':'N'}},{'relatedGroup':{'conceptGroup':[{'tty':'IN','conceptProperties':[{'name':'amoxicillin'},{'name':'clavulanate'}]}]}}]):
+            result=ref._exact_ingredient('amoxicillin / clavulanate')
+        self.assertEqual(result['ingredients'],['amoxicillin','clavulanate'])
     def test_misspelling_not_autocorrected_by_generic_layer(self):
         spec=importlib.util.spec_from_file_location('identity_test',ROOT/'backend/my_medicine_summary/refdata.py')
         ref=importlib.util.module_from_spec(spec);spec.loader.exec_module(ref)
         bad={'status':'unverified','query':'atenlol','ingredients':[],'sources':[],'note':'Unavailable'}
-        with patch.object(ref,'_verify_nlm') as nlm,patch.object(ref,'_npra',return_value=bad):
+        with patch.object(ref,'_exact_ingredient',return_value=None) as nlm,patch.object(ref,'_npra',return_value=bad):
             result=ref.verify_medicine('Atenlol 500 mg')
-        nlm.assert_not_called();self.assertEqual(result['status'],'unverified')
+        nlm.assert_called_once_with('Atenlol');self.assertEqual(result['status'],'unverified')
     def test_expired_reference_is_not_reused_when_fetch_fails(self):
         entry=next(e for e in self.refs.CATALOG['entries'] if e['ingredients']==['atorvastatin'])
         self.refs._CACHE[entry['url']]={'expires':0,'record':self.page()}

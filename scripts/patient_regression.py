@@ -161,4 +161,15 @@ class PatientRegressions(unittest.TestCase):
         contents=[(ROOT/'backend'/folder/'patient_safety.py').read_bytes() for folder in ('medicine_card','my_medicine_summary','my_return_plan','extract_from_photo','smartmed_help')]
         self.assertTrue(all(c==contents[0] for c in contents))
 
-if __name__=='__main__': unittest.main()
+def missing_reference_files(root=ROOT):
+    required=[f'backend/{folder}/{name}' for folder in ('medicine_card','my_medicine_summary') for name in ('clinical_refs.py','clinical_catalog.json')]
+    return [name for name in required if not (Path(root)/name).is_file()]
+
+if __name__=='__main__':
+    missing=missing_reference_files()
+    if missing:
+        print('Missing required reference files. Upload these at their exact repository paths:',file=sys.stderr)
+        for name in missing: print('  '+name,file=sys.stderr)
+        print('Apply the complete Card/Summary update; do not skip reference safety checks.',file=sys.stderr)
+        sys.exit(1)
+    unittest.main()
