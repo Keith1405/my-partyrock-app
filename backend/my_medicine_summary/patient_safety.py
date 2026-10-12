@@ -22,7 +22,7 @@ def validation(text, language):
             return translated("dose", language)
     return ""
 
-def candidate_names(*texts):
+def candidate_names(*texts, limit=4):
     """Extract label name lines, including brand-only and MAL registration input.
     These are search queries, not identified medicines. Never trust rendered cards.
     """
@@ -40,7 +40,7 @@ def candidate_names(*texts):
                 if not candidate or stop.search(candidate) or len(candidate)>100: continue
                 if not re.fullmatch(r"[A-Za-z][A-Za-z0-9 +'’()/.,%-]*",candidate): continue
             if candidate.casefold() not in {n.casefold() for n in names}: names.append(candidate)
-    return names[:4]
+    return names[:limit]
 
 def clinical_alerts(raw, other, allergies, language):
     text = (raw + "\n" + other).lower()
