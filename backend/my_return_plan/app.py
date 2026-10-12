@@ -10,8 +10,6 @@ import os
 import re
 
 import patient_safety
-import directory
-import urllib.parse
 from flask import Flask, Response, request, stream_with_context
 
 app = Flask(__name__)
@@ -108,31 +106,27 @@ def generate(body):
     if warning:
         yield "⚠️ " + warning
         return
-    labels = {
-        "English": ["Nearby listed collection points", "Approximate straight-line distances from the town/postcode centre, not your exact position.", "Map", "Directions", "Directory checked", "Enter a valid town or postcode (for example 50480). Check that the town and postcode agree.", "Call before travelling to confirm opening hours and acceptance."],
-        "Bahasa Melayu": ["Pusat pengumpulan yang disenaraikan berdekatan", "Jarak garis lurus anggaran dari pusat bandar/poskod, bukan lokasi tepat anda.", "Peta", "Arah perjalanan", "Direktori disemak", "Masukkan bandar atau poskod yang sah (contoh 50480). Pastikan bandar dan poskod sepadan.", "Telefon sebelum pergi untuk mengesahkan waktu operasi dan penerimaan."],
-        "中文": ["附近列出的回收点", "距离是从城市或邮编中心估算的直线距离，不是您的准确位置。", "地图", "路线", "目录核对日期", "请输入有效城市或邮编（例如 50480），并确认城市与邮编一致。", "出发前致电确认营业时间及是否接受您的物品。"],
-    }.get(language)
-    if labels is None: labels=["Nearby listed collection points", "Approximate straight-line distances from the town/postcode centre.", "Map", "Directions", "Directory checked", c[9], c[3]]
-    origin, points=directory.nearest(location)
-    if points:
-        yield "## ♻️ "+labels[0]+"\n"+c[8]+": "+origin["label"]+"\n"+labels[1]+"\n\n"
-        for i, point in enumerate(points,1):
-            pin=str(point["latitude"])+","+str(point["longitude"])
-            # Escape source text before handing it to the Markdown renderer.
-            plain=lambda value: re.sub(r"[\[\]<>*`_]", "", str(value)).replace("\n"," ")
-            yield "### "+str(i)+". "+plain(point["name"])+" — "+format(point["distance_km"],".1f")+" km\n"
-            yield plain(point["description"])+"\n"
-            if point["phone"]: yield plain(point["phone"])+"\n"
-            yield "["+labels[2]+"](https://www.google.com/maps/search/?api=1&query="+urllib.parse.quote(pin)+") | ["+labels[3]+"](https://www.google.com/maps/dir/?api=1&destination="+urllib.parse.quote(pin)+")\n\n"
-        yield labels[6]+"\n"
+    yield "⚠️ " + c[7] + "\n\n"
+    yield "## ♻️ " + c[0] + "\n" + c[1] + "\n"
+    loc = resolve_location(location)
+    if loc["found"]:
+        yield c[8] + ": " + loc["place"] + "\n"
     else:
-        yield "⚠️ "+labels[5]+"\n"+c[2]+"\n"
-    yield "\n"+c[4]+"\n"+c[7]+"\n"
-    if re.search(r"needle|sharps|jarum|inhaler|针|吸入",item,re.I): yield c[6]+"\n"
-    if body.get("file_data"): yield c[10]+"\n"
-    yield "\n[MyMediSAFE](https://www.mymedisafe.org.my/index.html) — "+labels[4]+": "+directory.DIRECTORY["checked_on"]+"\n"
-    yield "[GeoNames](https://www.geonames.org/) · CC BY 4.0"
+        # A supplied town remains useful even if a postcode is wrong/missing.
+        # A broad state/village still needs a district; do not invent geography.
+        towns = {part.strip() for place in POSTCODES.values() for part in str(place).split(",")[:-1]}
+        town = next((t for t in sorted(towns, key=lambda t: (-len(t), t)) if t and re.search(r"(?<!\w)" + re.escape(t) + r"(?!\w)", location, re.I)), None)
+        if town:
+            yield c[8] + ": " + town + "\n"
+            if _POSTCODE_RE.search(location): yield "⚠️ " + c[9] + "\n"
+        else:
+            yield "⚠️ " + c[9] + "\n"
+    yield "1. " + c[2] + " [MyMediSAFE](https://www.mymedisafe.org.my/index.html)\n"
+    yield "2. " + c[3] + "\n3. " + c[4] + "\n\n" + c[5] + "\n"
+    yield c[6] + "\n"
+    if body.get("file_data"):
+        yield c[10] + "\n"
+    yield "[" + c[11] + "](https://www.mymedisafe.org.my/faq.html)"
 
 @app.route("/", methods=["POST", "OPTIONS"])
 def handler():

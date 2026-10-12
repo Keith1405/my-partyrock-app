@@ -302,7 +302,7 @@
     </ol>
     <div class="medicine-workspace">
       <div class="section-intro"><div><span class="eyebrow">01 / UNDERSTAND</span><h2>Your medicine, in plain language.</h2></div></div>
-      <p class="sec-desc">Enter the medicine name, or upload a readable label photo. Brand names are welcome.</p>
+      <p class="sec-desc">Type medicine details or upload a readable label photo — either is enough. If you use both, the Medicine Card compares them and flags conflicts. The medicine name, strength, and instructions must be readable. Cover personal details if you wish.</p>
       <div class="notice-red">Always compare the Medicine Card with your original label before continuing to precautions.</div>
       <div class="ai-panel"><div class="panel-head">Medicine Card <button class="secondary" data-run="medicine_card">Generate</button></div><div class="output auto" id="out_medicine_card" aria-live="polite"><span class="placeholder">Your medicine card will appear here.</span></div></div>
     </div>
@@ -312,18 +312,19 @@
   <section class="sec" id="precautions">
     <h2>02 / Check my precautions</h2>
     <div class="sec-desc">
-      Add your other medicines and allergies to check what needs a pharmacist’s advice. Blank means not provided.
-      <blockquote>After changing your label details, regenerate these results.</blockquote>
+      Add other medicines and allergy history below, if known. Blank means not provided — it does not mean none.
+      Generate this section to get a list of points to discuss with your pharmacist.
+      <blockquote>If you updated Section 1, regenerate the Medicine Card first, then regenerate this section.</blockquote>
     </div>
 
     <div class="grid">
       <div class="field">
         <label for="other_medicines">Other Medicines and Supplements <span class="opt">Optional</span></label>
-          <textarea id="other_medicines" class="hinted" placeholder="Other medicine or supplement names; doses if known."></textarea>
+          <textarea id="other_medicines" class="hinted" placeholder=" Other medicines you are currently taking.&#10; Add names and doses if known.&#10;&#10; Example: Atorvastatin 20 mg once daily; Aspirin 100 mg once daily."></textarea>
       </div>
       <div class="field">
         <label for="allergies">Medicine Allergies and Reactions <span class="opt">Optional</span></label>
-          <textarea id="allergies" class="hinted" placeholder="Allergies and reactions. Write ‘None known’ or ‘Not sure’ if applicable."></textarea>
+          <textarea id="allergies" class="hinted" placeholder=" Any known medicine or food allergies, and what reaction happened.&#10;&#10; Example: Penicillin — rash and swelling. Write 'None known' or 'Not sure' if applicable.&#10; Also note any supplements or herbal products you take."></textarea>
       </div>
     </div>
 
@@ -339,7 +340,8 @@
   <section class="sec" id="ask">
     <h2>03 / Ask about my medicines</h2>
     <div class="sec-desc">
-      Ask a question, or type “Prepare my pharmacist summary”.
+      Ask anything about your medicine, precautions, or what to tell your pharmacist.<br/>
+       <strong>Try:</strong> <em>"Prepare my pharmacist summary"</em> — get a ready-to-share summary with your medicine details, uncertainties, and questions to ask.
     </div>
 
     <div class="notice emergency" style="margin-bottom:16px">
@@ -362,7 +364,8 @@
   <section class="sec" id="returns">
     <h2>04 / Return unused medicines</h2>
     <div class="sec-desc">
-       Enter your town or postcode to see nearby listed collection points and map links.
+       You can return <strong>any</strong> unwanted medicine — prescription medicines, over-the-counter products, vitamins, supplements, or medicines found at home.<br/>
+       Enter the medicine details and your location below and we'll help you find a verified drop-off point near you!
     </div>
 
     <div class="notice-red"><strong>Not sure if you should stop taking a medicine?</strong> Check with your pharmacist or prescriber <strong>before</strong> returning it.</div>
@@ -370,20 +373,22 @@
 
     <div class="field">
       <label for="your_location">Your Location <span class="opt">Optional</span></label>
-          <input type="text" id="your_location" placeholder="Enter your town or postcode (e.g. 50480 or Petaling Jaya)." />
+          <input type="text" id="your_location" placeholder=" Enter your area, city, or postcode (e.g. 50480 Kuala Lumpur, Petaling Jaya, Johor Bahru) — use the official locator to check participating centres." />
     </div>
 
     <div class="grid-sec1">
       <div class="cell fill-cell">
         <div class="field">
           <label for="return_item_details">Return Item Details <span class="opt">Optional</span></label>
-          <textarea id="return_item_details" class="hinted" placeholder="Medicine name, form and amount left, if known. Why are you returning it?"></textarea>
+          <textarea id="return_item_details" class="hinted" placeholder=" Medicine name and form (e.g. Paracetamol 500 mg tablets)&#10; Prescription or over-the-counter (if known)&#10; Quantity remaining (e.g. 14 tablets — leave blank if unsure)&#10; Item type if special: liquid / inhaler / cream / drops / needles or sharps&#10; Reason: expired / no longer needed / course completed / found at home / unsure"></textarea>
         </div>
       </div>
       <div class="cell fill-cell">
         <div class="field">
           <label>Return Item Photo <span class="opt">Optional</span></label>
-          <div class="dropzone" id="dz_ret" data-input="file_ret"><span class="arrow">⬆</span> Optional: upload a readable photo of the labelled pack. Loose pills cannot be identified by appearance.
+          <div class="dropzone" id="dz_ret" data-input="file_ret"><span class="arrow">⬆</span> Optional. Upload a clear photo of the labelled packaging.
+ The label must be visible and readable.
+ Unlabelled pills with no readable label will not be identified from appearance.
 <span class="filename" id="fn_ret"></span></div>
           <button type="button" class="remove-photo" id="rm_ret" hidden>✕ Remove photo</button>
           <input type="file" id="file_ret" accept="image/jpeg,image/png,image/webp" hidden />

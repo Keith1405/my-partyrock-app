@@ -71,15 +71,3 @@ textarea,input,select{font-size:16px!important}
 html{scroll-padding-top:var(--nav-offset,140px)}
 .medicine-section{scroll-margin-top:0}
 .md-line{overflow-wrap:anywhere}
-
-/* Requested readability changes only; navigation and hero styling stay original. */
-.sec-desc, .field label, .entry-grid .field label, .panel-head,
-.entry-grid>.ai-panel .panel-head, .output, .bubble {font-size:20px;line-height:1.55;}
-textarea,input,select {font-size:20px!important;line-height:1.55;}
-#preferred_language {font-size:16px!important;line-height:normal;}
-.entry-grid>.ai-panel .output {font-size:20px!important;}
-.notice,.notice-red,.field .opt,.status-line,.compact-upload strong,
-.compact-upload>span:not(.filename),.steps p,.steps strong {font-size:18px;line-height:1.55;}
-button {font-size:18px;}
-.menu-toggle {font-size:inherit;}
-.entry-grid>.ai-panel .panel-head button {font-size:18px;}
