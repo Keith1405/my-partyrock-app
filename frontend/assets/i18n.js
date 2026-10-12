@@ -1,6 +1,13 @@
 // Translate interface copy only. Never rewrite entered medicine names or doses.
 (() => {
   const copy = [
+    ["Type medicine details or upload a clear label photo. Show the name, strength and instructions. You may cover personal details.", "Taip butiran ubat atau muat naik foto label yang jelas. Pastikan nama, kekuatan dan arahan kelihatan. Anda boleh menutup maklumat peribadi.", "输入药物详情或上传清晰的标签照片。请显示名称、规格和用药说明。可以遮盖个人资料。"],
+    ["Add other medicines and allergies, if known. Blank means not provided. Generate key precautions and pharmacist questions.", "Masukkan ubat lain dan alahan, jika diketahui. Ruang kosong bermaksud belum diberikan. Jana langkah berjaga-jaga dan soalan untuk ahli farmasi.", "如知道，请填写其他药物和过敏信息。留空表示未提供。生成注意事项和药剂师问题。"],
+    ["Ask about your medicines or precautions.", "Tanya tentang ubat atau langkah berjaga-jaga.", "询问药物或注意事项。"],
+    ["— a summary to share with your pharmacist.", "— ringkasan untuk dikongsi dengan ahli farmasi.", "— 可分享给药剂师的摘要。"],
+    ["Have unwanted medicines, vitamins or supplements?", "Ada ubat, vitamin atau suplemen yang tidak diperlukan?", "有不需要的药物、维生素或补充剂？"],
+    ["Add their details and your town or postcode to find a listed collection point. Call to confirm acceptance.", "Masukkan butirannya serta bandar atau poskod untuk mencari pusat pengumpulan yang disenaraikan. Telefon untuk mengesahkan penerimaan.", "填写详情及城市或邮政编码，查找列出的回收点。请致电确认是否接受。"],
+
     ['SmartMed Cycle — Know your medicine', 'SmartMed Cycle — Kenali ubat anda', 'SmartMed Cycle — 了解您的药物'],
     ['Skip to medicine details', 'Langkau ke butiran ubat', '跳至药物详情'],
     ['Main navigation', 'Navigasi utama', '主导航'],

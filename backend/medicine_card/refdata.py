@@ -120,7 +120,7 @@ def _medlineplus_by_rxcui(rxcui, language="English"):
     except Exception:
         return None
 
-def verify_medicine(name, language="English"):
+def _verify_nlm(name, language="English"):
     name = (name or "").strip()
     result = {
         "query": name,
@@ -176,7 +176,7 @@ def verify_medicine(name, language="English"):
     return result
 
 def reference_block(verifications):
-    lines = ["RETRIEVED REFERENCE DATA (RxNorm + MedlinePlus, live this request):"]
+    lines = ["RETRIEVED REFERENCE DATA (identity records; results may be cached):"]
     if not verifications:
         lines.append("- (no medicine names were extracted to verify)")
         return "\n".join(lines)
@@ -189,9 +189,138 @@ def reference_block(verifications):
         if v["ingredients"]:
             lines.append(f"  active_ingredients: {', '.join(v['ingredients'])}")
         if v["candidates"]:
-            cand = "; ".join(f"{c['name']} (score {c['score']})" for c in v["candidates"])
+            cand = "; ".join(f"{c['name']} ({c.get('registration', c.get('score', 'candidate'))})" for c in v["candidates"])
             lines.append(f"  approximate_candidates: {cand}")
         if v["sources"]:
             for s in v["sources"]:
                 lines.append(f"  source: {s['title']} — {s['url']}")
     return "\n".join(lines)
+
+from html.parser import HTMLParser
+import re
+from datetime import datetime, timezone
+
+_QUEST = "https://quest3plus.bpfk.gov.my/pmo2/"
+class _Rows(HTMLParser):
+    def __init__(self):
+        super().__init__(); self.rows=[]; self.row=None; self.cell=None
+    def handle_starttag(self, tag, attrs):
+        if tag == "tr": self.row=[]
+        if tag in ("td", "th") and self.row is not None: self.cell=[]
+    def handle_data(self, data):
+        if self.cell is not None: self.cell.append(data)
+    def handle_endtag(self, tag):
+        if tag in ("td", "th") and self.cell is not None:
+            self.row.append(" ".join(" ".join(self.cell).split())); self.cell=None
+        if tag == "tr" and self.row is not None:
+            self.rows.append(self.row); self.row=None
+
+def _quest_read(path, fields=None):
+    url=urllib.parse.urljoin(_QUEST, path)
+    if not url.startswith(_QUEST): raise ValueError("unexpected NPRA URL")
+    data=urllib.parse.urlencode(fields).encode() if fields else None
+    req=urllib.request.Request(url, data=data, headers={"User-Agent":"Mozilla/5.0 SmartMedCycle/1.0", "Referer":_QUEST+"index.php"})
+    with urllib.request.urlopen(req, timeout=_TIMEOUT) as response:
+        if not response.geturl().startswith(_QUEST): raise ValueError("unexpected redirect")
+        text=response.read(2_000_001)
+        if len(text)>2_000_000: raise ValueError("response too large")
+        return text.decode("utf-8", "replace")
+
+def _npra(name):
+    result={"query":name,"status":"unverified","rxcui":None,"matched_name":None,"ingredients":[],"candidates":[],"sources":[],"note":""}
+    registration=bool(re.fullmatch(r"MAL[0-9A-Za-z]+",name,re.I))
+    try:
+        html=_quest_read("content.php", {"func":"search","searchBy":"2" if registration else "1","searchTxt":name,"cat":"1"})
+        if "searchTable" not in html: raise ValueError("NPRA search format unavailable")
+        parser=_Rows(); parser.feed(html)
+        records=[]
+        for row in parser.rows:
+            if len(row)>=3 and re.fullmatch(r"MAL[0-9A-Za-z]+",row[1],re.I):
+                records.append({"registration":row[1],"name":row[2]})
+        if not records and re.search(r"\d", name) and not registration:
+            broad=re.split(r"\s+\d",name,1)[0].strip()
+            if broad and broad!=name:
+                html=_quest_read("content.php", {"func":"search","searchBy":"1","searchTxt":broad,"cat":"1"})
+                parser=_Rows(); parser.feed(html)
+                records=[{"registration":row[1],"name":row[2]} for row in parser.rows if len(row)>=3 and re.fullmatch(r"MAL[0-9A-Za-z]+",row[1],re.I)]
+        exact=[r for r in records if r["registration"].casefold()==name.casefold() or r["name"].casefold()==name.casefold()]
+        chosen=exact[0] if len(exact)==1 else None
+        if not chosen:
+            result.update(status="ambiguous" if records else "unverified", candidates=records[:6], note="NPRA Malaysia: select the exact product name, strength and form (or enter its MAL registration number)." if records else "No NPRA pharmaceutical record returned. Recheck the packaging; do not guess the ingredient.")
+        else:
+            path=_quest_read("content.php",{"func":"detail","reg":chosen["registration"],"cat":"1"}).strip()
+            if not re.fullmatch(r"detail\.php\?type=product&id=[A-Za-z0-9]+",path): raise ValueError("NPRA detail format unavailable")
+            detail=_quest_read(path)
+            if chosen["registration"] not in detail: raise ValueError("registration mismatch")
+            table=re.search(r'<table\b[^>]*id=["\']tab1["\'][^>]*>(.*?)</table>', detail,re.S|re.I)
+            if not table: raise ValueError("ingredient table unavailable")
+            ingredients=_Rows(); ingredients.feed(table.group(0))
+            names=[row[1] for row in ingredients.rows if len(row)==2 and row[0].isdigit() and row[1]]
+            if not names: raise ValueError("no active ingredients returned")
+            result.update(status="verified",matched_name=chosen["name"],ingredients=names,note="Exact NPRA Malaysian product record; identity only, not a dose or safety approval.")
+            result["sources"]=[{"title":"NPRA QUEST3+ — "+chosen["registration"],"url":_QUEST+path}]
+        result["checked_at"]=datetime.now(timezone.utc).isoformat()
+        return result
+    except Exception:
+        result["note"]="NPRA lookup unavailable. Product identity has not been confirmed; retry or ask a pharmacist."
+        return result
+
+
+def verify_medicine(name, language="English"):
+    name=(name or "").strip()
+    if not name or len(name)>150:
+        return {"query":name,"status":"unverified","rxcui":None,"matched_name":None,"ingredients":[],"candidates":[],"sources":[],"note":"Enter the product name as printed, not a long question."}
+    key="npra:"+name.casefold()
+    cached=_cache_get(key)
+    if cached is not None: return cached
+    generic=_generic_query(name)
+    # Accept exact database ingredient names/synonyms beyond the clinical catalogue.
+    # Clinical-reference coverage remains independent and intentionally bounded.
+    ingredient=_exact_ingredient(generic)
+    if ingredient is not None:
+        ingredient['query']=name
+        _CACHE[key]=(time.time()+1800,ingredient)
+        return ingredient
+    result=_npra(name)
+    # An empty or offline Malaysian lookup never authorizes a US brand substitution.
+    # Explicit generic ingredient input can still be discussed as supplied input.
+    _CACHE[key]=(time.time()+(1800 if result["status"]!="unverified" else 60),result)
+    return result
+
+
+def verify_medicines(names, language="English"):
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        return list(pool.map(lambda name: verify_medicine(name,language), names[:12]))
+
+def _exact_ingredient(name):
+    """Exact active IN/PIN/MIN concepts only; a US brand is not a Malaysian product.
+    Exact search accepts database synonyms but never normalized/fuzzy corrections.
+    """
+    try:
+        data=_get_json('https://rxnav.nlm.nih.gov/REST/rxcui.json?name='+urllib.parse.quote(name)+'&search=0')
+        ids=list(dict.fromkeys((data.get('idGroup') or {}).get('rxnormId') or []))
+        if len(ids)!=1: return None
+        concept=(_get_json('https://rxnav.nlm.nih.gov/REST/rxcui/'+urllib.parse.quote(str(ids[0]))+'/properties.json').get('properties') or {})
+        tty=concept.get('tty')
+        if tty not in ('IN','PIN','MIN') or concept.get('suppress')!='N' or not concept.get('name'): return None
+        ingredients=[concept['name']]
+        if tty=='MIN':
+            related=_get_json('https://rxnav.nlm.nih.gov/REST/rxcui/'+urllib.parse.quote(str(ids[0]))+'/related.json?tty=IN')
+            ingredients=list(dict.fromkeys(c['name'] for g in (related.get('relatedGroup') or {}).get('conceptGroup',[]) if g.get('tty')=='IN' for c in g.get('conceptProperties',[]) if c.get('name')))
+            if len(ingredients)<2: return None
+        return {'query':name,'status':'verified','rxcui':ids[0],'matched_name':concept['name'],'ingredients':ingredients,'candidates':[],
+                'sources':[{'title':'RxNorm — exact ingredient identity','url':'https://rxnav.nlm.nih.gov/REST/rxcui/'+str(ids[0])+'/properties.json'}],
+                'note':'Verified generic/chemical ingredient identity only; supplied strength/form/dose and Malaysian product are not clinically verified.'}
+    except Exception:
+        return None
+
+
+def _generic_query(name):
+    # Remove a single strength/form suffix, never a second named ingredient.
+    strength=re.search(r'\s+\d+(?:[.,]\d+)?\s*(?:mg|mcg|g|ml|units?|iu)\b',name,re.I)
+    if not strength: return name.strip()
+    tail=name[strength.end():]
+    remainder=re.sub(r'\d+(?:[.,]\d+)?|\b(?:mg|mcg|g|ml|units?|iu|tablets?|capsules?|caps?|tabs?|caplets?|suspension|solution|liquid|suppositories|suppository|cream|ointment|drops?)\b','',tail,flags=re.I)
+    if re.search(r'[A-Za-z\u4e00-\u9fff]',remainder): return name.strip()
+    return name[:strength.start()].strip()

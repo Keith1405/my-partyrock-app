@@ -71,3 +71,7 @@ textarea,input,select{font-size:16px!important}
 html{scroll-padding-top:var(--nav-offset,140px)}
 .medicine-section{scroll-margin-top:0}
 .md-line{overflow-wrap:anywhere}
+
+/* Requested section-heading increase: +2 px on desktop and small screens. */
+.section-intro h2, section.sec>h2{font-size:34px}
+@media(max-width:600px){.section-intro h2, section.sec>h2{font-size:28px}}

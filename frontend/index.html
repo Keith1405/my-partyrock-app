@@ -302,7 +302,7 @@
     </ol>
     <div class="medicine-workspace">
       <div class="section-intro"><div><span class="eyebrow">01 / UNDERSTAND</span><h2>Your medicine, in plain language.</h2></div></div>
-      <p class="sec-desc">Type medicine details or upload a readable label photo — either is enough. If you use both, the Medicine Card compares them and flags conflicts. The medicine name, strength, and instructions must be readable. Cover personal details if you wish.</p>
+      <p class="sec-desc">Type medicine details or upload a clear label photo. Show the name, strength and instructions. You may cover personal details.</p>
       <div class="notice-red">Always compare the Medicine Card with your original label before continuing to precautions.</div>
       <div class="ai-panel"><div class="panel-head">Medicine Card <button class="secondary" data-run="medicine_card">Generate</button></div><div class="output auto" id="out_medicine_card" aria-live="polite"><span class="placeholder">Your medicine card will appear here.</span></div></div>
     </div>
@@ -312,8 +312,7 @@
   <section class="sec" id="precautions">
     <h2>02 / Check my precautions</h2>
     <div class="sec-desc">
-      Add other medicines and allergy history below, if known. Blank means not provided — it does not mean none.
-      Generate this section to get a list of points to discuss with your pharmacist.
+      Add other medicines and allergies, if known. Blank means not provided. Generate key precautions and pharmacist questions.
       <blockquote>If you updated Section 1, regenerate the Medicine Card first, then regenerate this section.</blockquote>
     </div>
 
@@ -340,8 +339,8 @@
   <section class="sec" id="ask">
     <h2>03 / Ask about my medicines</h2>
     <div class="sec-desc">
-      Ask anything about your medicine, precautions, or what to tell your pharmacist.<br/>
-       <strong>Try:</strong> <em>"Prepare my pharmacist summary"</em> — get a ready-to-share summary with your medicine details, uncertainties, and questions to ask.
+      Ask about your medicines or precautions.<br/>
+       <strong>Try:</strong> <em>"Prepare my pharmacist summary"</em> — a summary to share with your pharmacist.
     </div>
 
     <div class="notice emergency" style="margin-bottom:16px">
@@ -364,8 +363,8 @@
   <section class="sec" id="returns">
     <h2>04 / Return unused medicines</h2>
     <div class="sec-desc">
-       You can return <strong>any</strong> unwanted medicine — prescription medicines, over-the-counter products, vitamins, supplements, or medicines found at home.<br/>
-       Enter the medicine details and your location below and we'll help you find a verified drop-off point near you!
+       Have unwanted medicines, vitamins or supplements?<br/>
+       Add their details and your town or postcode to find a listed collection point. Call to confirm acceptance.
     </div>
 
     <div class="notice-red"><strong>Not sure if you should stop taking a medicine?</strong> Check with your pharmacist or prescriber <strong>before</strong> returning it.</div>
@@ -530,6 +529,10 @@ function makeLine(raw) {
   const span = document.createElement('span');
   span.className = 'md-line';
   let t = raw;
+  if (/^(?:\s|&(?:#x20|#32|nbsp);)*$/i.test(t)) {
+    span.classList.add('md-empty'); span.innerHTML = '&nbsp;'; return span;
+  }
+  if (/^\s*(?:[-*]\s+)?(?:\*\*)?(?:🏷️?|🧪|📏|💉)/u.test(t)) span.classList.add('med-field');
   if (/^\s*---\s*$/.test(t)) { span.classList.add('hr'); return span; }
   if (t.startsWith('### ')) { span.classList.add('h3'); span.innerHTML = inlineMd(t.slice(4)); return span; }
   if (t.startsWith('## '))  { span.classList.add('h2'); span.innerHTML = inlineMd(t.slice(3)); return span; }
@@ -592,7 +595,17 @@ async function streamInto(url, payload, outEl) {
       if (activeRequests.get(outEl) !== controller) return;
       if (!started) { outEl.innerHTML = ''; outEl.appendChild(cursor); started = true; }
       if (cursor.parentNode !== outEl) outEl.appendChild(cursor);
-      outEl.insertBefore(makeLine(line), cursor);
+      const node = makeLine(line);
+      // Only collapse blank lines between the four Medicine Card identity fields.
+      if (outEl.id === 'out_medicine_card' && node.classList.contains('med-field')) {
+        const blanks = [];
+        let previous = cursor.previousElementSibling;
+        while (previous?.classList.contains('md-empty')) {
+          blanks.push(previous); previous = previous.previousElementSibling;
+        }
+        if (previous?.classList.contains('med-field')) blanks.forEach(blank => blank.remove());
+      }
+      outEl.insertBefore(node, cursor);
       outEl.scrollTop = outEl.scrollHeight;
     };
 

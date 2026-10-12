@@ -171,3 +171,40 @@ await chat;
 assert.equal(document.getElementById('chat_send').disabled,false);
 assert.equal(vm.runInContext('chatHistory.length',context),2);
 console.log('PASS: duplicate Run and chat requests; cancelled-stream ownership; stale label and photo context; localized recoverable errors; safe labelled links.');
+
+// Summary output uses the existing renderer; no UI styling changes.
+for (const heading of ['👀 Watch Out For','🍽️ Food and Drink','❓ Ask Your Pharmacist','📚 Sources','注意事项','Makanan dan Minuman']) {
+  context.summaryHeading=heading;
+  const node=vm.runInContext('makeLine("## "+summaryHeading)',context);
+  assert.equal(node.textContent,heading);
+  assert.equal(node.classList.contains('h2'),true);
+}
+const important=vm.runInContext('makeLine("- **Check with your pharmacist** before changing a dose.")',context);
+assert.equal(important.querySelector('strong').textContent,'Check with your pharmacist');
+assert.equal(important.classList.contains('li'),true);
+console.log('PASS: summary headings, translated labels and bold bullet actions render without UI changes.');
+
+// Blank/HTML-space-only lines are collapsed only between streamed card identity fields.
+const compactCard = '🏷️ Name: Pantoprazole 40 mg capsules\n\n&#x20;\n🧪 Active ingredient: Pantoprazole\n\n📏 Strength: 40 mg\n&nbsp;\n💉 Form: Capsule\n\n💬 Plain words:\nKeep this section separate.\n';
+for (const panel of ['out_medicine_card', 'out_my_medicine_summary']) {
+  let offset=0;
+  const bytes=new TextEncoder().encode(compactCard);
+  context.fetch=async()=>({ok:true,body:{getReader:()=>({read:async()=>{
+    if(offset>=bytes.length)return {done:true};
+    const value=bytes.slice(offset,offset+7);offset+=7;return {done:false,value};
+  }})}});
+  context.targetPanel=panel;
+  await vm.runInContext("streamInto('https://mock.invalid/compact',{preferred_language:'English'},document.getElementById(targetPanel))",context);
+  const output=document.getElementById(panel);
+  assert.equal(output.querySelectorAll('.med-field').length,4);
+  assert.match(output.textContent,/40 mg/);
+  if(panel==='out_medicine_card') {
+    assert.equal(output.querySelectorAll('.md-empty').length,1);
+    for(const field of [...output.querySelectorAll('.med-field')].slice(0,3))assert.ok(field.nextElementSibling.classList.contains('med-field'));
+  } else assert.equal(output.querySelectorAll('.md-empty').length,5);
+}
+for(const [language,expected] of [['English','Type medicine details'],['Bahasa Melayu','Taip butiran ubat'],['中文','输入药物详情']]) {
+  choose(language);
+  assert.ok(document.querySelector('.medicine-workspace .sec-desc').textContent.startsWith(expected));
+}
+console.log('PASS: compact card streaming preserves names/doses and section spacing; short descriptions translate in all three languages.');

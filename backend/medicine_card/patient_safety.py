@@ -22,19 +22,25 @@ def validation(text, language):
             return translated("dose", language)
     return ""
 
-def candidate_names(*texts):
-    """Only raw label segments with explicit strength, never rendered cards.
-
-    Recall is deliberately conservative: unknown/brand-only text remains in
-    patient input for clarification rather than fabricating a drug identity.
+def candidate_names(*texts, limit=4):
+    """Extract label name lines, including brand-only and MAL registration input.
+    These are search queries, not identified medicines. Never trust rendered cards.
     """
-    names = []
+    names=[]
+    stop=re.compile(r"^(?:take|ambil|makan|dose|dos|quantity|jumlah|allerg|none|not sure|unknown|draf|draft|heart|form|strength|instruction|route|frequency|morning|evening|tablet|capsule|liquid|suspension|suppository|no known)\b", re.I)
     for text in texts:
-        for match in re.finditer(r"\b([A-Za-z][A-Za-z-]{2,})\s+(?:\d+(?:[.,]\d+)?)\s*(?:mg|mcg|g|ml|units?|iu)\b", text or "", re.I):
-            name = match.group(1)
-            stop = {"strength", "dose", "amount", "quantity", "take", "ambil", "makan", "kekuatan", "dos", "jumlah", "heart", "draf", "draft", "not", "name", "form"}
-            if name.lower() not in stop and name.lower() not in {n.lower() for n in names}: names.append(name)
-    return names[:12]
+        for line in re.split(r"[\n;]+", text or ""):
+            line=line.strip()
+            mal=re.search(r"\bMAL[0-9]{8}[A-Za-z]+\b",line,re.I)
+            if mal: candidate=mal.group(0)
+            else:
+                line=re.sub(r"^(?:medicine(?: name)?|brand(?: name)?|nama ubat)\s*:\s*", "",line,flags=re.I)
+                line=re.sub(r"^[^A-Za-z]+(?=[A-Za-z])", "", line)
+                candidate=re.split(r"(?:\.\s|\s[-—]\s|\b(?:take|ambil|makan|once|twice|daily|sehari)\b)",line,1,flags=re.I)[0].strip(' .,:')
+                if not candidate or stop.search(candidate) or len(candidate)>100: continue
+                if not re.fullmatch(r"[A-Za-z][A-Za-z0-9 +'’()/.,%-]*",candidate): continue
+            if candidate.casefold() not in {n.casefold() for n in names}: names.append(candidate)
+    return names[:limit]
 
 def clinical_alerts(raw, other, allergies, language):
     text = (raw + "\n" + other).lower()

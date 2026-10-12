@@ -72,6 +72,31 @@ class FrameTests(unittest.TestCase):
         text=self.result("<script>alert(1)</script> [medicine](https://evil.example), 20 tablets, expired")
         self.assertNotIn("<script>",text)
         self.assertNotIn("](https://evil.example)",text)
+    def test_dose_not_remaining_stock(self):
+        data=app._return_details("Paracetamol 500 mg. Take 2 tablets daily. 20 tablets left.")
+        self.assertEqual(data["amount"],"20 tablets")
+        self.assertEqual(app._return_details("Paracetamol 500 mg. Take 2 tablets daily.")["amount"],"")
+    def test_decimal_stock_preserved(self):
+        self.assertEqual(app._return_details("Paracetamol 500 mg, 1.5 tablets left, expired")["amount"],"1.5 tablets")
+    def test_expiry_negation_and_uncertainty(self):
+        for reason in ("not yet expired", "unsure if expired", "is it expired?", "expired? not sure", "not actually expired", "没有过期", "没过期", "是否过期", "不确定是否过期", "belum tamat tempoh", "mungkin tamat tempoh"):
+            with self.subTest(reason=reason):
+                self.assertIsNone(app._return_details("Paracetamol 500 mg, 20 tablets, "+reason)["reason"])
+    def test_amount_field_ends_before_reason(self):
+        self.assertEqual(app._return_details("Paracetamol 500 mg, Quantity: 20 tablets, reason: expired")["amount"],"20 tablets")
+    def test_other_medicine_strength_not_paracetamol_warning(self):
+        self.assertFalse(app._unusual_paracetamol("Paracetamol 500 mg; Amoxicillin 2000 mg"))
+        self.assertTrue(app._unusual_paracetamol("Paracetamol 5 g, 20 tablets, expired"))
+    def test_two_ambiguous_quantities_not_selected(self):
+        self.assertEqual(app._return_details("Paracetamol 500 mg, 10 tablets or 20 tablets, expired")["amount"],"")
+    def test_non_object_json_rejected(self):
+        app._hits.clear()
+        client=app.app.test_client()
+        for value in ([1,2],"bad",None,5):
+            with self.subTest(value=value):
+                response=client.post("/",json=value)
+                self.assertEqual(response.status_code,400)
+                self.assertEqual(response.headers.get("Access-Control-Allow-Origin"),"*")
     def test_postcode_selection_has_uncertainty(self):
         text=self.result(location="50480 Kuala Lumpur")
         self.assertIn("approximate town/postcode coordinates",text)
