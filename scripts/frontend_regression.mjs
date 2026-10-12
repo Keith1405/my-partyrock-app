@@ -171,3 +171,15 @@ await chat;
 assert.equal(document.getElementById('chat_send').disabled,false);
 assert.equal(vm.runInContext('chatHistory.length',context),2);
 console.log('PASS: duplicate Run and chat requests; cancelled-stream ownership; stale label and photo context; localized recoverable errors; safe labelled links.');
+
+// Summary output uses the existing renderer; no UI styling changes.
+for (const heading of ['👀 Watch Out For','🍽️ Food and Drink','❓ Ask Your Pharmacist','📚 Sources','注意事项','Makanan dan Minuman']) {
+  context.summaryHeading=heading;
+  const node=vm.runInContext('makeLine("## "+summaryHeading)',context);
+  assert.equal(node.textContent,heading);
+  assert.equal(node.classList.contains('h2'),true);
+}
+const important=vm.runInContext('makeLine("- **Check with your pharmacist** before changing a dose.")',context);
+assert.equal(important.querySelector('strong').textContent,'Check with your pharmacist');
+assert.equal(important.classList.contains('li'),true);
+console.log('PASS: summary headings, translated labels and bold bullet actions render without UI changes.');

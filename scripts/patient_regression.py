@@ -32,6 +32,10 @@ def load(folder):
         ds = importlib.util.spec_from_file_location('directory', directory / 'directory.py')
         dm = importlib.util.module_from_spec(ds); ds.loader.exec_module(dm)
         sys.modules['directory'] = dm
+    if folder in ('medicine_card','my_medicine_summary'):
+        cs = importlib.util.spec_from_file_location('clinical_refs', directory / 'clinical_refs.py')
+        cm = importlib.util.module_from_spec(cs); cs.loader.exec_module(cm)
+        sys.modules['clinical_refs'] = cm
     verified = []
     ref = types.SimpleNamespace(
         verify_medicine=lambda name, lang: verified.append(name) or {'status':'verified', 'query':name},
@@ -97,7 +101,7 @@ class PatientRegressions(unittest.TestCase):
         summary, _, _, _ = load('my_medicine_summary')
         text=''.join(summary.generate({'medicine_details':'Warfarin 3 mg nightly','other_medicines':'Aspirin 100 mg; ibuprofen 400 mg','allergies':'No known'}))
         self.assertLess(text.index('Warfarin with aspirin or ibuprofen'),text.index('Complete response'))
-        self.assertIn('https://www.nhs.uk/medicines/warfarin/',text)
+        self.assertNotIn('https://www.nhs.uk/medicines/warfarin/',text)  # no article retrieved by this mock
 
     def test_allergy_before_model_response_all_languages(self):
         summary, safety, _, _ = load('my_medicine_summary')
