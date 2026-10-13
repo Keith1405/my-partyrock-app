@@ -10,6 +10,7 @@ from pathlib import Path
 import json
 import re
 import time
+import urllib.parse
 import urllib.request
 
 CATALOG = json.loads(Path(__file__).with_name('clinical_catalog.json').read_text(encoding='utf-8'))
@@ -127,11 +128,18 @@ def evidence_block(records):
 class CitationGate:
     """Line-streaming citation allowlist, including links split across model chunks."""
     def __init__(self, allowed): self.allowed=set(allowed); self.buffer=''
+    def _is_allowed(self, url):
+        if url in self.allowed: return True
+        try:
+            domain = urllib.parse.urlsplit(url).netloc.lower()
+            return domain in ('www.drugs.com','drugs.com','www.mayoclinic.org','mayoclinic.org','medlineplus.gov') or domain.endswith('.drugs.com') or domain.endswith('.mayoclinic.org')
+        except Exception:
+            return False
     def _clean(self, line):
         def link(match):
-            return match.group(0) if match.group(2) in self.allowed else ''
+            return match.group(0) if self._is_allowed(match.group(2)) else ''
         line = re.sub(r'\[([^\]]*)\]\((https?://[^)\s]+)\)',link,line)
-        return re.sub(r'https?://[^\s)\]<>]+',lambda m:m.group(0) if m.group(0) in self.allowed else '',line)
+        return re.sub(r'https?://[^\s)\]<>]+',lambda m:m.group(0) if self._is_allowed(m.group(0)) else '',line)
     def feed(self, chunk):
         self.buffer += chunk
         while '\n' in self.buffer:

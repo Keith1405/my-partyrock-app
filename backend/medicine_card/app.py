@@ -18,6 +18,7 @@ import re
 import boto3
 from flask import Flask, Response, request, stream_with_context
 
+import patient_safety
 import refdata
 
 app = Flask(__name__)
@@ -242,6 +243,14 @@ def build_messages(body):
 
 
 def generate(body):
+    warning = patient_safety.validation(
+        (body.get("medicine_details", "") or "") + "\n" + (body.get("extract_from_photo", "") or ""),
+        body.get("preferred_language", "English"),
+    )
+    if warning:
+        yield "⚠️ " + warning
+        return
+
     messages = build_messages(body)
     try:
         response = bedrock.converse_stream(
@@ -257,7 +266,8 @@ def generate(body):
                 if text:
                     yield text
     except Exception as exc:  # noqa: BLE001
-        yield f"\n\n⚠️ Error: {exc}"
+        app.logger.exception("Generation failed")
+        yield "\n\n⚠️ " + patient_safety.translated("error", body.get("preferred_language", "English"))
 
 
 @app.route("/", methods=["POST", "OPTIONS"])
