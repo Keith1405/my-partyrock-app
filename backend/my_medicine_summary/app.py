@@ -160,14 +160,15 @@ CLINICAL EVIDENCE:
 OUTPUT: ONE combined summary, with this title and exactly these four sections IN ORDER (translate all labels):
 # 💊 Your Medicine Summary
 ## 👀 Watch Out For
-Focus on **Common side effects** explained in simple, everyday words that patients can easily understand. Use friendly emojis for each point (e.g. 👅, 🤢, 💧).
+Focus on **Common side effects** explained in simple, everyday words that patients can easily understand. Limit strictly to **2 to 3 side effects** per medicine (never list more than 3 side effects per medicine). Use friendly emojis for each point (e.g. 👅, 🤢, 💧).
 - If there is an urgent or dangerous warning sign (such as severe swelling, allergic reaction, or difficulty breathing), mark it clearly with a red alert: **🚨 Seek urgent medical help if:** followed by the symptom in plain language.
 - Do NOT split into complicated clinical triage groups (no separate "Prompt medical advice" or long clinical categories). Keep it simple and reassuring.
 - Do NOT repeat instructions or warnings already present on the Medicine Card.
 - At the end of this section, ALWAYS include this reassuring disclaimer (translated to Preferred Language):
   "*Note: Not all patients will experience these side effects — they are just possibilities. Speak with your doctor or pharmacist if anything bothers you.*"
 ## 🍽️ Food and Drink
-Short medicine-specific bullets with clear emojis (e.g. 🥛, 🧀, ⏰, 🍷): what to take/avoid/separate (e.g. separate dairy, calcium, iron, or antacids by 2+ hours if applicable; avoid alcohol during treatment and for 48 hours after last dose for metronidazole), why, and concrete action. If label mentions specific food timing, note it and flag any needed pharmacist confirmation. Do not repeat general medicine uses.
+Short medicine-specific bullets with clear emojis (e.g. 🥛, 🧀, ⏰, 🍷): focus STRICTLY on actual food, meal, and beverage guidance (e.g. whether to take with or without food, foods/drinks to separate or avoid like dairy or alcohol). If there are no specific food restrictions, state simply: "No special food or drink restrictions."
+- Do NOT repeat mouth rinsing, gargling, or any advice already mentioned under Watch Out For / side effects. Keep Food and Drink strictly about food and beverages. Do not repeat general medicine uses.
 ## ❓ Ask Your Pharmacist
 At most three numbered, actionable questions for the pharmacist covering: 1. Dose schedule (clarifying daily frequency, dose or puffs, and duration), 2. Food timing (e.g. empty stomach vs meal coordination), 3. Allergies and interactions with other medicines/supplements (antacids, iron, calcium, etc.). Convert concerns into clear questions; no separate concerns section or filler questions. Do not repeat shared advice unnecessarily.
 ## 📚 Sources
