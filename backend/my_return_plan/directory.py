@@ -5,7 +5,10 @@ BASE=Path(__file__).parent
 with (BASE/"collection_points.json").open(encoding="utf-8") as f: DIRECTORY=json.load(f)
 with (BASE/"postal_coordinates.json").open(encoding="utf-8") as f: POSTAL=json.load(f)
 
-def _normal(text): return " ".join(re.findall(r"[a-z0-9]+", text.casefold()))
+def _normal(text):
+    cleaned = re.sub(r"\([^)]*\)", "", str(text or ""))
+    cleaned = re.sub(r"\b[uUsS]\b", "", cleaned)
+    return " ".join(re.findall(r"[a-z0-9]+", cleaned.casefold()))
 def locate(text):
     text=str(text or ""); norm=_normal(text)
     codes=re.findall(r"\b\d{5}\b",text)
