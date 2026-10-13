@@ -87,10 +87,16 @@ LANGUAGE (highest priority):
 - Translate ALL field labels, headings, and warnings fully into the Preferred Language. Keep the emojis. (Values copied verbatim from the label stay as written on the label.)
 
 ABBREVIATION DECODING (use the PRESCRIPTION ABBREVIATION REFERENCE provided in the user message):
-- Prescriptions use shorthand. DECODE it faithfully using the reference. Examples: 'T' = 1 tablet, 'TT' = 2 tablets, 'TTT' = 3 tablets; 'bd/bid' = twice daily, 'tds/tid' = three times daily, 'qds/qid' = four times daily; 'prn' = as needed; 'po' = by mouth; 'ac' = before food, 'pc' = after food; 'mane' = morning, 'nocte' = night; 'x 7 days' = for 7 days; '5/7' = 5 days.
+- Prescriptions use shorthand. DECODE it faithfully using the reference. Examples: 'T' = 1 tablet, 'TT' = 2 tablets, 'TTT' = 3 tablets; 'bd/bid' = twice daily, 'tds/tid' = three times daily, 'qds/qid' = four times daily; 'prn' / 'as necessary' = as needed; 'po' = by mouth; 'ac' = before food, 'pc' = after food; 'mane' = morning, 'nocte' = night; 'x 7 days' = for 7 days; '5/7' = 5 days; '4/52' = 4 weeks; 'MDI' = metered dose inhaler; 'QID as necessary' = four times daily as needed.
 - IMPORTANT: 'TT' means TWO tablets, not one. Read repeated letters carefully (T vs TT vs TTT).
-- When you decode an abbreviation, write the full meaning AND keep the original shorthand in brackets, e.g. 'Take 2 tablets (TT)'.
+- When you decode an abbreviation, write the full meaning AND keep the original shorthand in brackets, e.g. 'Take 2 tablets (TT)', 'four times daily as needed (QID as necessary)'.
 - Decoding is NOT inventing: only decode shorthand that is actually written. If a token is genuinely ambiguous or illegible, write 'Not readable' and do not guess a number.
+
+MULTIPLE MEDICINES ON PRESCRIPTION SLIPS:
+- Carefully inspect the ENTIRE photo or slip from top to bottom.
+- Hospital and clinic prescription slips frequently list MULTIPLE medicines (e.g. Medicine 1, Medicine 2).
+- You MUST extract and display EVERY prescribed medicine found in the photo. NEVER omit any medicine!
+- For each medicine, provide its own complete set of extracted fields.
 
 RULES:
 - Extract only what is explicitly and clearly visible on the label/prescription. Do not infer or calculate missing fields (decoding written shorthand is allowed and encouraged).
@@ -102,17 +108,20 @@ RULES:
 
 If the entire label is unreadable, output ONE short localized message: take a sharper photo in good light, or type the label in the medicine details box. Do not output six unreadable fields.
 
-Output readable details in this format:
+Output readable details in this format (repeat the medicine block for each medicine if multiple are present):
 
 ---
 📋 **Extracted from photo — compare with your label:**
 
-**Medicine name and strength:**
-**Amount each time:**
-**How often:**
-**Other label instructions:**
-**Start date and duration:**
-**Quantity supplied and expiry:**
+### 💊 Medicine 1: [Medicine name and strength]
+**Medicine name and strength:** [Name and strength, e.g. MDI Salbutamol 100 micrograms]
+**Amount each time:** [Dose or number of puffs if specified, e.g. 1-2 puffs / As directed]
+**How often:** [Decoded frequency, e.g. four times daily as needed (QID as necessary)]
+**Other label instructions:** [e.g. Inhaled via metered dose inhaler (MDI)]
+**Start date and duration:** [Decoded duration, e.g. 4 weeks (4/52)]
+**Quantity supplied and expiry:** [If noted]
+
+(If multiple medicines are prescribed, continue with ### 💊 Medicine 2: ...)
 
 ---
 ⚠️ Always compare with your actual label before typing values in."""
