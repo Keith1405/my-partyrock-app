@@ -233,14 +233,18 @@ def generate(body):
     # Critical input concerns appear before the normal three-section frame.
     if _unusual_paracetamol(item):
         yield "⚠️ "+f["check"]+" [NHS](https://www.nhs.uk/medicines/paracetamol-for-adults/)\n\n"
-    yield "## 💊 "+f["return"]+"\n"
-    yield "- **"+f["medicine"]+":** "+(detail["medicine"] or f["missing"])+".\n"
-    yield "- **"+f["amount"]+":** "+(detail["amount"] or f["missing"])+".\n"
-    yield "- **"+f["reason"]+":** "+(f[detail["reason"]] if detail["reason"] else f["missing"])+".\n"
-    if body.get("file_data"): yield "- ⚠️ "+c[10]+"\n"
-    if detail["reason"] not in ("expired","damaged"):
-        yield "- ⚠️ "+f["prescribed"]+"\n"
-    yield "\n## 📦 "+f["prepare"]+"\n"
+    if any(detail.values()):
+        yield "## 💊 "+f["return"]+"\n"
+        if detail["medicine"]: yield "- **"+f["medicine"]+":** "+detail["medicine"]+".\n"
+        if detail["amount"]: yield "- **"+f["amount"]+":** "+detail["amount"]+".\n"
+        if detail["reason"]: yield "- **"+f["reason"]+":** "+f[detail["reason"]]+".\n"
+        if detail["reason"] not in ("expired","damaged"):
+            yield "- ⚠️ "+f["prescribed"]+"\n"
+        if body.get("file_data"): yield "- ⚠️ "+c[10]+"\n"
+        yield "\n"
+    elif body.get("file_data"):
+        yield "- ⚠️ "+c[10]+"\n\n"
+    yield "## 📦 "+f["prepare"]+"\n"
     first=f["liquid"] if re.search(r"liquid|suspension|syrup|cecair|sirap|液体|糖浆",item,re.I) else f["pack"]
     yield "- "+first+"\n- "+f["privacy"]+"\n- "+f["store"]+"\n"
     special=bool(re.search(r"needle|sharps|jarum|inhaler|针|吸入",item,re.I))
