@@ -106,12 +106,13 @@ FRAME = {
         "return":"Your return", "medicine":"Medicine", "amount":"Amount", "reason":"Reason", "missing":"Not provided",
         "expired":"Expired — **do not take them**", "damaged":"Damaged — **do not use them**", "unwanted":"No longer needed", "completed":"Course completed",
         "prepare":"Prepare and keep safely", "point":"Listed collection point", "address":"Address", "directions":"Directions", "call":"**Call before going** to confirm opening hours and acceptance.",
-        "pack":"Keep medicines in their **original pack** and follow its storage instructions.",
-        "privacy":"**Cross out personal details**; keep the medicine name visible.",
-        "store":"Store separately from medicines you use, **away from children and pets**.",
-        "waste":"**Do not put medicines in rubbish, the toilet or sink**.",
+        "pack":"Keep medicines in their **original pack/blister** (do not remove pills from blisters) and follow storage instructions.",
+        "privacy":"**Cross out personal details** and remove/scratch the FarmaTag hologram; keep the medicine name visible.",
+        "store":"Store separately from medicines you use, **away from children and pets** to prevent accidental ingestion.",
+        "waste":"**Do not put medicines in rubbish, the toilet or sink** — this protects water supplies and aquatic life.",
         "liquid":"Keep medicines in their **original pack**; close liquid bottles tightly and follow the storage instructions.",
         "sharps":"Keep needles in a **suitable sharps container**, away from medicines; **call to check acceptance**. Do not puncture inhalers.",
+        "scan":"**Scan the QR code** on the MyMediSAFE collection box when dropping off your items.",
         "check":"**Check the label:** the entered paracetamol amount is unusual. Confirm whether it is the strength or a total amount; do not guess. If this is an amount already taken, **seek urgent medical help**, even if you feel well.",
         "prescribed":"**Check with your pharmacist** before returning medicine still prescribed to you.",
         "location":"Enter a valid **town or postcode**. Check that any town and postcode agree.",
@@ -122,12 +123,13 @@ FRAME = {
         "return":"Ubat untuk dipulangkan", "medicine":"Ubat", "amount":"Kuantiti", "reason":"Sebab", "missing":"Belum diberi",
         "expired":"Tamat tempoh — **jangan ambil ubat ini**", "damaged":"Rosak — **jangan gunakan ubat ini**", "unwanted":"Tidak diperlukan lagi", "completed":"Rawatan selesai",
         "prepare":"Sediakan dan simpan dengan selamat", "point":"Pusat pengumpulan yang disenaraikan", "address":"Alamat", "directions":"Arah perjalanan", "call":"**Telefon sebelum pergi** untuk mengesahkan waktu operasi dan penerimaan.",
-        "pack":"Simpan ubat dalam **pek asal** dan ikut arahan penyimpanannya.",
-        "privacy":"**Padam maklumat peribadi**; pastikan nama ubat masih kelihatan.",
-        "store":"Asingkan daripada ubat yang masih digunakan, **jauh daripada kanak-kanak dan haiwan peliharaan**.",
-        "waste":"**Jangan buang ubat ke tong sampah, tandas atau sinki**.",
+        "pack":"Simpan ubat dalam **pek/lepuh asal** (jangan keluarkan pil daripada lepuh) dan ikut arahan penyimpanannya.",
+        "privacy":"**Padam maklumat peribadi** dan tanggalkan/padam pelekat keselamatan FarmaTag; pastikan nama ubat masih kelihatan.",
+        "store":"Asingkan daripada ubat yang masih digunakan, **jauh daripada kanak-kanak dan haiwan peliharaan** bagi mengelakkan tertelan secara tidak sengaja.",
+        "waste":"**Jangan buang ubat ke tong sampah, tandas atau sinki** — ini melindungi punca air dan hidupan akuatik.",
         "liquid":"Simpan ubat dalam **pek asal**; tutup botol cecair dengan rapat dan ikut arahan penyimpanan.",
         "sharps":"Simpan jarum dalam **bekas benda tajam yang sesuai**, berasingan daripada ubat; **telefon untuk menyemak penerimaan**. Jangan tebuk inhaler.",
+        "scan":"**Imbas kod QR** pada tong pengumpulan MyMediSAFE semasa membuat pelupusan.",
         "check":"**Semak label:** jumlah paracetamol yang dimasukkan luar biasa. Sahkan sama ada kekuatan atau jumlah keseluruhan; jangan teka. Jika jumlah ini sudah diambil, **dapatkan bantuan perubatan segera**, walaupun rasa sihat.",
         "prescribed":"**Semak dengan ahli farmasi** sebelum memulangkan ubat yang masih dipreskripsikan.",
         "location":"Masukkan **bandar atau poskod** yang sah. Pastikan bandar dan poskod sepadan.",
@@ -138,12 +140,13 @@ FRAME = {
         "return":"您的退回药物", "medicine":"药物", "amount":"数量", "reason":"原因", "missing":"未提供",
         "expired":"已过期 — **请勿服用**", "damaged":"已损坏 — **请勿使用**", "unwanted":"不再需要", "completed":"疗程结束",
         "prepare":"准备并安全存放", "point":"列出的回收点", "address":"地址", "directions":"路线", "call":"**出发前致电**确认营业时间及是否接受您的物品。",
-        "pack":"保留药物**原包装**，并遵循包装上的储存说明。",
-        "privacy":"**划去个人资料**，保留可见的药物名称。",
-        "store":"与仍在使用的药物分开存放，**远离儿童和宠物**。",
-        "waste":"**不要将药物放入垃圾、厕所或水槽**。",
+        "pack":"保留药物**原包装/铝箔板**（请勿将药片从包装板中取出），并遵循储存说明。",
+        "privacy":"**划去个人信息**并销毁 FarmaTag 全息安全标识，保留可见的药物名称。",
+        "store":"与仍在使用的药物分开存放，**远离儿童和宠物**以防误食。",
+        "waste":"**不要将药物丢入垃圾、厕所或水槽** — 保护水源免受污染及水生生物免遭危害。",
         "liquid":"保留药物**原包装**；拧紧液体瓶盖，并遵循储存说明。",
         "sharps":"针头应放入**合适的锐器容器**，与药物分开；**致电确认是否接受**。不要刺穿吸入器。",
+        "scan":"在投放药物时**扫描收集箱上的二维码**。",
         "check":"**核对标签：**您输入的 paracetamol 数量异常。请确认是规格还是总量，不要猜测。如果已经服用了这个量，**立即寻求医疗帮助**，即使没有不适。",
         "prescribed":"退回仍在处方疗程中的药物前，**先咨询药剂师**。",
         "location":"请输入有效的**城市或邮编**，并确认两者一致。",
@@ -253,11 +256,12 @@ def generate(body):
         link="[🗺️ "+f["directions"]+"](https://www.google.com/maps/dir/?api=1&destination="+urllib.parse.quote(pin)+")"
         yield "- "+("**📞 "+_plain(point["phone"])+"** · " if point["phone"] else "")+link+"\n"
         yield "- "+f["call"]+"\n"
+        yield "- "+f["scan"]+"\n"
         if origin: yield f["approx"]+"\n"
     else:
         yield "- ⚠️ "+f["location"]+" [MyMediSAFE](https://www.mymedisafe.org.my/index.html)\n"
     # A compact footer keeps the main answer short while retaining provenance.
-    yield "\n"+f["sources"]+": [MyMediSAFE](https://www.mymedisafe.org.my/faq.html) · [MOH](https://infosihat.moh.gov.my/images/media_sihat/emagazine/EdisiSept2025/files/basic-html/page31.html)"
+    yield "\n"+f["sources"]+": [MyMediSAFE](https://www.mymedisafe.org.my/faq.html) · [PhAMA Safe Medicine Disposal](https://www.mymedisafe.org.my/) · [MOH](https://infosihat.moh.gov.my/images/media_sihat/emagazine/EdisiSept2025/files/basic-html/page31.html)"
     yield " · ["+f["checked"]+": "+directory.DIRECTORY["checked_on"]+"](https://www.mymedisafe.org.my/index.html) · [GeoNames](https://www.geonames.org/) (CC BY 4.0)"
 
 @app.route("/", methods=["POST", "OPTIONS"])

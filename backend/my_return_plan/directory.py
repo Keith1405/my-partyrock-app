@@ -21,11 +21,21 @@ def locate(text):
         rest=_normal(re.sub(r"\b\d{5}\b","",text))
         if rest and not any(rest in _normal(r["place"]+" "+r["state"]) for r in rows): return None
     else:
-        rows=[r for r in rows if norm==_normal(r["place"]) or norm==_normal(r["place"]+" "+r["state"])] if norm else []
+        rows=[r for r in rows if norm==_normal(r["place"]) or norm==_normal(r["place"]+" "+r["state"]) or norm==_normal(r["state"]+" "+r["place"])] if norm else []
+        if not rows and norm:
+            for p in sorted({r["place"] for r in POSTAL["places"]}, key=len, reverse=True):
+                p_norm = _normal(p)
+                if p_norm and (p_norm == norm or f" {p_norm} " in f" {norm} " or norm in p_norm):
+                    cand = [r for r in POSTAL["places"] if _normal(r["place"]) == p_norm]
+                    cand_state = [r for r in cand if _normal(r["state"]) in norm]
+                    if cand_state:
+                        rows = cand_state; break
+                    elif len({r["state"] for r in cand}) == 1:
+                        rows = cand; break
         if len({r["state"] for r in rows})>1: return None
     if not rows: return None
-    # Never average locations far apart simply because they share a name/code.
-    if max(r["latitude"] for r in rows)-min(r["latitude"] for r in rows)>0.3 or max(r["longitude"] for r in rows)-min(r["longitude"] for r in rows)>0.3: return None
+    # Allow large cities and districts in the same state (up to 4.0 degrees lat/lon).
+    if max(r["latitude"] for r in rows)-min(r["latitude"] for r in rows)>4.0 or max(r["longitude"] for r in rows)-min(r["longitude"] for r in rows)>4.0: return None
     return {"label": (codes[0]+" " if codes else "")+rows[0]["place"]+", "+rows[0]["state"], "latitude":sum(r["latitude"] for r in rows)/len(rows), "longitude":sum(r["longitude"] for r in rows)/len(rows)}
 
 def distance(a,b):
