@@ -238,6 +238,147 @@
   /* Brand logo in the navbar */
   .brand { display:inline-flex; align-items:center; gap:12px; }
   .brand-logo { height:40px; width:auto; display:block; }
+
+  /* Collapsible Safe Medicine Disposal Guide */
+  .guide-collapsible {
+    background: #ffffff;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    margin: 18px 0 24px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+  }
+  .guide-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 22px;
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+    background: #ffffff;
+    transition: background 0.15s ease;
+  }
+  .guide-summary::-webkit-details-marker { display: none; }
+  .guide-summary:hover { background: #fcfcfd; }
+  .guide-summary-left { display: flex; align-items: center; gap: 14px; }
+  .guide-summary-icon { font-size: 24px; line-height: 1; }
+  .guide-summary-title { font-size: 17px; font-weight: 700; color: #111418; margin: 0; }
+  .guide-summary-desc { font-size: 13px; color: var(--text-dim); margin: 2px 0 0; }
+  .guide-summary-right { display: flex; align-items: center; gap: 12px; }
+  .guide-badge-medisafe {
+    background: #e8f8e8;
+    color: #1a7f37;
+    border: 1px solid #b4e6b4;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 99px;
+    white-space: nowrap;
+  }
+  .guide-chevron {
+    font-size: 12px;
+    color: #888b94;
+    transition: transform 0.25s ease;
+    display: inline-block;
+  }
+  details[open].guide-collapsible .guide-chevron {
+    transform: rotate(180deg);
+  }
+  .guide-body {
+    padding: 8px 20px 22px;
+    border-top: 1px solid #f0edf0;
+    background: #fafbfc;
+  }
+  .guide-grid {
+    display: grid;
+    grid-template-columns: 1.8fr 1.2fr;
+    gap: 18px;
+    margin-top: 12px;
+  }
+  @media (max-width: 950px) {
+    .guide-grid { grid-template-columns: 1fr; }
+  }
+  .guide-column-can {
+    background: #f6fcf8;
+    border: 1.5px solid #a3e4d7;
+    border-radius: 16px;
+    padding: 18px;
+  }
+  .guide-column-cannot {
+    background: #fef5f5;
+    border: 1.5px solid #f5b7b1;
+    border-radius: 16px;
+    padding: 18px;
+  }
+  .guide-col-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .guide-col-badge-green {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #1e8449;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+  }
+  .guide-col-badge-red {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #b03a2e;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+  }
+  .guide-col-title-green { font-size: 16px; font-weight: 800; color: #145a32; margin: 0; }
+  .guide-col-title-red { font-size: 16px; font-weight: 800; color: #78281f; margin: 0; }
+  .guide-col-sub { font-size: 13px; color: #555; margin: 0 0 14px; line-height: 1.4; }
+  .guide-items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px;
+  }
+  .guide-item-card {
+    background: #ffffff;
+    border: 1px solid #d5ece2;
+    border-radius: 12px;
+    padding: 10px 8px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  }
+  .guide-item-card-red {
+    background: #ffffff;
+    border: 1px solid #fadbd8;
+    border-radius: 12px;
+    padding: 12px 10px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  }
+  .guide-item-icon { font-size: 22px; margin-bottom: 4px; }
+  .guide-item-name { font-size: 13px; font-weight: 700; color: #111; line-height: 1.3; }
+  .guide-item-sub { font-size: 11px; color: #777a82; margin-top: 2px; line-height: 1.25; }
+  .guide-item-name-red { font-size: 13px; font-weight: 700; color: #922b21; line-height: 1.3; }
+  .guide-item-sub-red { font-size: 11px; color: #b03a2e; margin-top: 2px; line-height: 1.25; }
+  .guide-env-note {
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: #fde8e8;
+    border-radius: 10px;
+    font-size: 12px;
+    color: #78281f;
+    line-height: 1.4;
+  }
 </style>
 <link rel="stylesheet" href="assets/redesign.css" />
 </head>
@@ -375,25 +516,129 @@
           <input type="text" id="your_location" placeholder=" Enter your area, city, or postcode (e.g. 50480 Kuala Lumpur, Petaling Jaya, Johor Bahru) — use the official locator to check participating centres." />
     </div>
 
-    <div class="grid-sec1">
-      <div class="cell fill-cell">
-        <div class="field">
-          <label for="return_item_details">Return Item Details <span class="opt">Optional</span></label>
-          <textarea id="return_item_details" class="hinted" placeholder=" Medicine name and form (e.g. Paracetamol 500 mg tablets)&#10; Prescription or over-the-counter (if known)&#10; Quantity remaining (e.g. 14 tablets — leave blank if unsure)&#10; Item type if special: liquid / inhaler / cream / drops / needles or sharps&#10; Reason: expired / no longer needed / course completed / found at home / unsure"></textarea>
+    <details class="guide-collapsible" open>
+      <summary class="guide-summary">
+        <div class="guide-summary-left">
+          <span class="guide-summary-icon">📋</span>
+          <div>
+            <h3 class="guide-summary-title">Disposal Guide: What Can & Cannot Be Returned</h3>
+            <p class="guide-summary-desc">Click to collapse</p>
+          </div>
+        </div>
+        <div class="guide-summary-right">
+          <span class="guide-badge-medisafe">myMediSAFE</span>
+          <span class="guide-chevron">▼</span>
+        </div>
+      </summary>
+
+      <div class="guide-body">
+        <div class="guide-grid">
+          
+          <div class="guide-column-can">
+            <div class="guide-col-head">
+              <span class="guide-col-badge-green">✓</span>
+              <h4 class="guide-col-title-green">What can be disposed of in collection bins?</h4>
+            </div>
+            <p class="guide-col-sub">The following medicines are safely accepted at all participating collection boxes:</p>
+            
+            <div class="guide-items-grid">
+              <div class="guide-item-card">
+                <div class="guide-item-icon">💊</div>
+                <div class="guide-item-name">Tablets</div>
+                <div class="guide-item-sub">Oral pills</div>
+              </div>
+              <div class="guide-item-card">
+                <div class="guide-item-icon">💊</div>
+                <div class="guide-item-name">Capsules</div>
+                <div class="guide-item-sub">Hard & softgel</div>
+              </div>
+              <div class="guide-item-card">
+                <div class="guide-item-icon">🫁</div>
+                <div class="guide-item-name">Inhalers</div>
+                <div class="guide-item-sub">Puffers, disks</div>
+              </div>
+              <div class="guide-item-card">
+                <div class="guide-item-icon">🧴</div>
+                <div class="guide-item-name">Liquid Meds</div>
+                <div class="guide-item-sub">Syrups (tightly sealed)</div>
+              </div>
+              <div class="guide-item-card">
+                <div class="guide-item-icon">👁️</div>
+                <div class="guide-item-name">Eye Drops</div>
+                <div class="guide-item-sub">Bottles / ampoules</div>
+              </div>
+              <div class="guide-item-card">
+                <div class="guide-item-icon">👃</div>
+                <div class="guide-item-name">Nasal Sprays</div>
+                <div class="guide-item-sub">Nasal pumps</div>
+              </div>
+              <div class="guide-item-card">
+                <div class="guide-item-icon">🕯️</div>
+                <div class="guide-item-name">Suppositories</div>
+                <div class="guide-item-sub">& Pessaries</div>
+              </div>
+              <div class="guide-item-card">
+                <div class="guide-item-icon">💉</div>
+                <div class="guide-item-name">Insulin Pens</div>
+                <div class="guide-item-sub">Pens & cartridges</div>
+              </div>
+              <div class="guide-item-card">
+                <div class="guide-item-icon">🩹</div>
+                <div class="guide-item-name">Patches</div>
+                <div class="guide-item-sub">Transdermal patches</div>
+              </div>
+              <div class="guide-item-card">
+                <div class="guide-item-icon">✉️</div>
+                <div class="guide-item-name">Sachets</div>
+                <div class="guide-item-sub">Powders & ORS</div>
+              </div>
+              <div class="guide-item-card" style="grid-column: span 2;">
+                <div class="guide-item-icon">🧴</div>
+                <div class="guide-item-name">Topical Preparations</div>
+                <div class="guide-item-sub">Creams, gels & ointments</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-column-cannot">
+            <div class="guide-col-head">
+              <span class="guide-col-badge-red">✕</span>
+              <h4 class="guide-col-title-red">What cannot be disposed?</h4>
+            </div>
+            <p class="guide-col-sub">Do not drop these into collection boxes:</p>
+
+            <div class="guide-items-grid" style="grid-template-columns: 1fr 1fr;">
+              <div class="guide-item-card-red">
+                <div class="guide-item-icon">✂️</div>
+                <div class="guide-item-name-red">Sharp Materials</div>
+                <div class="guide-item-sub-red">Needles & lancets (Use sharps bin)</div>
+              </div>
+              <div class="guide-item-card-red">
+                <div class="guide-item-icon">📟</div>
+                <div class="guide-item-name-red">Medical Devices</div>
+                <div class="guide-item-sub-red">Glucometers & BP meters</div>
+              </div>
+              <div class="guide-item-card-red">
+                <div class="guide-item-icon">🩹</div>
+                <div class="guide-item-name-red">Clinical Wastes</div>
+                <div class="guide-item-sub-red">Used gauze, diapers, IV sets</div>
+              </div>
+              <div class="guide-item-card-red">
+                <div class="guide-item-icon">🦿</div>
+                <div class="guide-item-name-red">Prosthetics</div>
+                <div class="guide-item-sub-red">Artificial limbs & braces</div>
+              </div>
+            </div>
+
+            <div class="guide-env-note">
+              <strong>Environmental Note:</strong> Never flush medicines down the toilet or throw them into household trash.
+            </div>
+          </div>
+
         </div>
       </div>
-      <div class="cell fill-cell">
-        <div class="field">
-          <label>Return Item Photo <span class="opt">Optional</span></label>
-          <div class="dropzone" id="dz_ret" data-input="file_ret"><span class="arrow">⬆</span> Optional. Upload a clear photo of the labelled packaging.
- The label must be visible and readable.
- Unlabelled pills with no readable label will not be identified from appearance.
-<span class="filename" id="fn_ret"></span></div>
-          <button type="button" class="remove-photo" id="rm_ret" hidden>✕ Remove photo</button>
-          <input type="file" id="file_ret" accept="image/jpeg,image/png,image/webp" hidden />
-        </div>
-      </div>
-    </div>
+    </details>
+    <input type="hidden" id="return_item_details" value="" />
 
     <div class="ai-panel">
       <div class="panel-head">My Return Plan
@@ -442,6 +687,7 @@ const uploads = { file_med: null, file_ret: null };
 function wireDropzone(dzId, inputId, filenameId) {
   const dz = document.getElementById(dzId);
   const input = document.getElementById(inputId);
+  if (!dz || !input) return;
   const fn = document.getElementById(filenameId);
 
   dz.addEventListener('click', () => input.click());
