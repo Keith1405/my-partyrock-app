@@ -318,9 +318,9 @@ def _exact_ingredient(name):
 
 def _generic_query(name):
     # Remove a single strength/form suffix, never a second named ingredient.
-    strength=re.search(r'\s+\d+(?:[.,]\d+)?\s*(?:mg|mcg|g|ml|units?|iu)\b',name,re.I)
+    strength=re.search(r'\s+\d+(?:[.,]\d+)?\s*(?:micrograms?|microgram|mcgs?|mcg|ug|μg|mgs?|mg|grams?|g|mls?|ml|puffs?|units?|ius?|iu)\b',name,re.I)
     if not strength: return name.strip()
     tail=name[strength.end():]
-    remainder=re.sub(r'\d+(?:[.,]\d+)?|\b(?:mg|mcg|g|ml|units?|iu|tablets?|capsules?|caps?|tabs?|caplets?|suspension|solution|liquid|suppositories|suppository|cream|ointment|drops?)\b','',tail,flags=re.I)
+    remainder=re.sub(r'\d+(?:[.,]\d+)?|\b(?:micrograms?|microgram|mcgs?|mcg|ug|μg|mgs?|mg|grams?|g|mls?|ml|puffs?|inhaler|inhalation|aerosol|spray|powder|units?|ius?|iu|tablets?|capsules?|caps?|tabs?|caplets?|suspension|solution|liquid|suppositories|suppository|cream|ointment|drops?)\b','',tail,flags=re.I)
     if re.search(r'[A-Za-z\u4e00-\u9fff]',remainder): return name.strip()
     return name[:strength.start()].strip()
