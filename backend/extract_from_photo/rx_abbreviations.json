@@ -16,7 +16,19 @@
     "ii": "2 (two)",
     "iii": "3 (three)",
     "ss": "half",
-    "½": "half"
+    "½": "half",
+    "tsp": "1 teaspoon (5 mL)",
+    "tsp.": "1 teaspoon (5 mL)",
+    "tbsp": "1 tablespoon (15 mL)",
+    "tbsp.": "1 tablespoon (15 mL)",
+    "dsp": "1 dessertspoon (10 mL)",
+    "dsp.": "1 dessertspoon (10 mL)",
+    "gtt": "drops (guttae)",
+    "gtt.": "drops (guttae)",
+    "gtts": "drops (guttae)",
+    "c. parv.": "1 teaspoon (5 mL)",
+    "c. med.": "1 dessertspoon (10 mL)",
+    "c. mag.": "1 tablespoon (15 mL)"
   },
   "frequency": {
     "od": "once daily",
