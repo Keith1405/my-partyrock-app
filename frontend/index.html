@@ -510,13 +510,13 @@
 
     <div class="notice-red"><strong>Not sure if you should stop taking a medicine?</strong> Check with your pharmacist or prescriber <strong>before</strong> returning it.</div>
 
-    <details class="guide-collapsible" open>
+    <details class="guide-collapsible">
       <summary class="guide-summary">
         <div class="guide-summary-left">
           <span class="guide-summary-icon">📋</span>
           <div>
             <h3 class="guide-summary-title">Disposal Guide: What Can & Cannot Be Returned</h3>
-            <p class="guide-summary-desc">Click to collapse</p>
+            <p class="guide-summary-desc" data-ui-copy="Click to expand">Click to expand</p>
           </div>
         </div>
         <div class="guide-summary-right">
@@ -1065,6 +1065,16 @@ if (menuToggle && navigation) {
   navigation.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMenu));
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
   document.addEventListener('click', e => { if (!e.target.closest('.topbar')) closeMenu(); });
+}
+
+const guideDetails = document.querySelector('.guide-collapsible');
+const guideDesc = document.querySelector('.guide-summary-desc');
+if (guideDetails && guideDesc) {
+  guideDetails.addEventListener('toggle', () => {
+    const key = guideDetails.open ? 'Click to collapse' : 'Click to expand';
+    guideDesc.textContent = t(key);
+    guideDesc.dataset.uiCopy = key;
+  });
 }
 </script>
 </body>
