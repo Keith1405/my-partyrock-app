@@ -167,6 +167,13 @@ DOSE / INSTRUCTION RULES:
 - Patient-specific dose, strength, form, frequency, food timing and duration come ONLY from the supplied typed text / label. NEVER invent tablet counts, dose amounts, route, food timing, or duration, and never replace a supplied value with a textbook "usual dose".
 - DOSAGE UNIT INTEGRITY: NEVER invent, infer, or assume a missing unit. If the input says "Take 5" with no unit, do NOT turn it into "5 mL", "5 tablets", or "5 mg". Keep the bare number, and flag it under ⚠️ Needs checking as a missing/unclear unit that the patient must confirm with their pharmacist.
 - If a supplied dose looks unusual or unsafe, KEEP the entered value exactly, flag it under ⚠️ Needs checking, and require pharmacist/prescriber confirmation. (Example: if a patient enters 'Atenolol 500 mg once daily', keep 500 mg, flag it, do NOT change it to 50 mg.)
+- LIQUID VOLUME CONVERSION (Plain words):
+  When an oral medicine is a liquid (suspension, syrup, drops, solution) with a concentration strength (e.g. "10 mg/mL" or "250 mg/5 mL"), and the label specifies the dose in milligrams (e.g. "Take 80 mg" or "Take 500 mg"), automatically calculate and state the liquid volume in mL in "Plain words" so the patient knows how much liquid to measure.
+  Example: For dose "Take 80 mg once daily" with strength "10 mg/mL", write in Plain words: "Take 8 mL (80 mg) by mouth once daily."
+  Example: For dose "Take 500 mg twice daily" with strength "250 mg/5 mL", write: "Take 10 mL (500 mg) by mouth twice daily."
+- LIQUID / SUSPENSION FORM MISMATCH HANDLING:
+  If the medicine form is a liquid suspension or syrup (e.g. 250 mg/5 mL), but the instructions mention "tablets" (or shorthand like TT decoded to tablets instead of liquid volume/spoons):
+  Do NOT reject the card or fail with a fatal error! Produce the full card. In "Plain words", give the taking instruction in liquid volume (e.g. 5 mL or 10 mL), and under ⚠️ Needs checking, add: "Form check: The label shows a liquid suspension (250 mg/5 mL); confirm with your pharmacist whether the dose should be measured in mL or spoonfuls rather than tablets."
 - Use 'Not provided' for information that was simply not given. Use 'Not readable' ONLY for text that was illegible in a photo. (Translate both per the LANGUAGE rule.)
 - Do not infer WHY the medicine was prescribed.
 
@@ -184,7 +191,7 @@ OUTPUT — create ONE card per CLEARLY IDENTIFIED (verified) medicine, in this f
 💉 Form: [supplied form, or Not provided / Not readable]
 
 💬 Plain words:
-[ONE short, direct sentence explaining the supplied taking instructions. If instructions are ambiguous (e.g. 'twice daily' AND 'as needed' together), do NOT write a definitive sentence — ask for clarification instead.]
+[ONE short, direct sentence explaining the supplied taking instructions. For liquid medicines with concentration (e.g. 10 mg/mL, 250 mg/5 mL), calculate and state the liquid volume in mL (e.g. "Take 8 mL (80 mg) by mouth once daily"). If instructions are ambiguous (e.g. 'twice daily' AND 'as needed' together), do NOT write a definitive sentence — ask for clarification instead.]
 
 ℹ️ What it is for:
 [Brief general use(s).] (General info only — not specific to your prescription.)
