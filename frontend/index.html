@@ -520,7 +520,7 @@
           </div>
         </div>
         <div class="guide-summary-right">
-          <span class="guide-badge-medisafe">myMediSAFE</span>
+          <span class="guide-badge-medisafe">MyMediSAFE</span>
           <span class="guide-chevron">▼</span>
         </div>
       </summary>
@@ -713,6 +713,8 @@ function handleFile(file, inputId, fn, dz) {
       const extracted = document.getElementById('out_extract_from_photo');
       activeRequests.get(extracted)?.abort(); completedResults.delete(extracted);
       placeholder(extracted, 'Your label details will appear here.');
+      reloadSmartMedHelp();
+      reloadMyReturnPlan();
     }
     const dataUrl = reader.result;
     const base64 = dataUrl.split(',')[1];
@@ -736,11 +738,13 @@ const removeBtns = { file_med: document.getElementById('rm_med'), file_ret: docu
 function clearUpload(inputId, dzId, fnId) {
   uploads[inputId] = null;
   if (inputId === 'file_med') {
-      invalidateMedicineResults();
+    invalidateMedicineResults();
     const extracted = document.getElementById('out_extract_from_photo');
     activeRequests.get(extracted)?.abort();
     completedResults.delete(extracted);
     placeholder(extracted, 'Your label details will appear here.');
+    reloadSmartMedHelp();
+    reloadMyReturnPlan();
   }
   const input = document.getElementById(inputId);
   if (input) input.value = '';
@@ -926,19 +930,6 @@ function lastText(outId) {
   return result.text;
 }
 
-async function runWidget(key) {
-  const out = document.getElementById('out_' + key);
-  if (activeRequests.has(out)) return;
-  const buttons = [...document.querySelectorAll('[data-run="' + key + '"]')];
-  buttons.forEach(btn => { btn.disabled = true; btn.setAttribute('aria-busy', 'true'); });
-  try { await streamInto(STREAM_URLS[key], payloadFor(key), out); }
-  finally { buttons.forEach(btn => { btn.disabled = false; btn.removeAttribute('aria-busy'); }); }
-}
-
-document.querySelectorAll('[data-run]').forEach((btn) => {
-  btn.addEventListener('click', () => runWidget(btn.dataset.run));
-});
-
 const chatHistory = [];
 const chatLog = document.getElementById('chat_log');
 
@@ -952,7 +943,11 @@ function addBubble(role, text) {
   return b;
 }
 
-uiCopy(addBubble('bot', ''),
+let returnPlanRan = false;
+function reloadSmartMedHelp() {
+  chatHistory.length = 0;
+  chatLog.replaceChildren();
+  uiCopy(addBubble('bot', ''),
 `Hi! 👋 I'm SmartMed Help. Ask me anything about your medicine.
 
 Try:
@@ -962,6 +957,46 @@ Try:
 - 🧠 Quiz me on my medicine
 
 🚨 Medical emergency? Call 999 (Malaysia) or your local emergency number now.`);
+}
+
+function reloadMyReturnPlan() {
+  const out = document.getElementById('out_my_return_plan');
+  if (!out) return;
+  activeRequests.get(out)?.abort();
+  activeRequests.delete(out);
+  completedResults.delete(out);
+  if (returnPlanRan || val('your_location')) {
+    runWidget('my_return_plan');
+  } else {
+    placeholder(out, "You're all set to Run");
+  }
+}
+
+async function runWidget(key) {
+  const out = document.getElementById('out_' + key);
+  if (activeRequests.has(out)) return;
+  if (key === 'my_return_plan') returnPlanRan = true;
+  if (key === 'extract_from_photo') {
+    reloadSmartMedHelp();
+    reloadMyReturnPlan();
+  }
+  const buttons = [...document.querySelectorAll('[data-run="' + key + '"]')];
+  buttons.forEach(btn => { btn.disabled = true; btn.setAttribute('aria-busy', 'true'); });
+  try {
+    await streamInto(STREAM_URLS[key], payloadFor(key), out);
+    if (key === 'extract_from_photo') {
+      reloadSmartMedHelp();
+      reloadMyReturnPlan();
+    }
+  }
+  finally { buttons.forEach(btn => { btn.disabled = false; btn.removeAttribute('aria-busy'); }); }
+}
+
+document.querySelectorAll('[data-run]').forEach((btn) => {
+  btn.addEventListener('click', () => runWidget(btn.dataset.run));
+});
+
+reloadSmartMedHelp();
 
 let chatBusy = false;
 async function sendChat() {
