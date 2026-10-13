@@ -1,38 +1,20 @@
 """
 SmartMed Cycle — reference-data retrieval helpers (free NLM services).
 
-Implements a small, honest retrieval layer used to VERIFY a medicine name and
-resolve its active ingredient(s). It never invents data: every function either
-returns a real result from a live call or signals that verification failed.
-
-Services (all free, no auth, no licence):
-  - RxNorm / RxNav REST API      https://rxnav.nlm.nih.gov/REST/
-      * findRxcuiByString  — exact normalized name -> RxCUI
-      * approximateTerm    — spell-tolerant candidate match
-      * rxcui/{id}/related — active ingredient(s) (TTY = IN, PIN)
-  - MedlinePlus Connect          https://connect.medlineplus.gov/service
-      * patient-friendly drug page by RXCUI (attribution + caching required)
-
-Design rules (aligned with the MOH LASA guide and the task spec):
-  - Short timeouts; any network/parse failure degrades to "could not verify",
-    never to a guess.
-  - Results are cached in-process (per warm Lambda) to respect MedlinePlus's
-    acceptable-use policy (<=100 req/min/IP; cache 12-24h recommended).
-  - We expose RxNorm/MedlinePlus pages as sources ONLY when a call actually
-    returned them, so citations are never fabricated.
+RxNorm/RxNav (exact + approximate match, ingredient resolution) and
+MedlinePlus Connect (patient drug page). All free, no auth, no licence.
+Never invents data: returns a real result or signals verification failed.
 """
 import json
 import time
 import urllib.parse
 import urllib.request
 
-_TIMEOUT = 4  # seconds per call — keep the Lambda responsive
+_TIMEOUT = 4
 _UA = "SmartMedCycle/1.0 (patient medicine-prep tool)"
 
-# Simple in-process cache: key -> (expiry_epoch, value)
 _CACHE = {}
-_CACHE_TTL = 12 * 60 * 60  # 12 hours, per MedlinePlus guidance
-
+_CACHE_TTL = 12 * 60 * 60
 
 def _cache_get(key):
     hit = _CACHE.get(key)
@@ -40,26 +22,19 @@ def _cache_get(key):
         return hit[1]
     return None
 
-
 def _cache_put(key, value):
     _CACHE[key] = (time.time() + _CACHE_TTL, value)
-
 
 def _get_json(url):
     req = urllib.request.Request(url, headers={"User-Agent": _UA, "Accept": "application/json"})
     with urllib.request.urlopen(req, timeout=_TIMEOUT) as resp:
         return json.loads(resp.read().decode("utf-8", "replace"))
 
-
-# ---------------------------------------------------------------------------
-# RxNorm
-# ---------------------------------------------------------------------------
 def _rxcui_exact(name):
-    """Return an RxCUI for an exact (normalized) name match, or None."""
     url = (
         "https://rxnav.nlm.nih.gov/REST/rxcui.json?name="
         + urllib.parse.quote(name)
-        + "&search=2"  # 2 = normalized match
+        + "&search=2"
     )
     try:
         data = _get_json(url)
@@ -68,10 +43,7 @@ def _rxcui_exact(name):
     except Exception:
         return None
 
-
 def _rxcui_approx(name):
-    """Spell-tolerant approximate match. Returns a list of candidate dicts
-    [{rxcui, name, score}], highest score first, or []."""
     url = (
         "https://rxnav.nlm.nih.gov/REST/approximateTerm.json?term="
         + urllib.parse.quote(name)
@@ -94,9 +66,7 @@ def _rxcui_approx(name):
     except Exception:
         return []
 
-
 def _ingredients(rxcui):
-    """Return a list of active-ingredient names for an RxCUI (TTY IN + PIN)."""
     url = (
         "https://rxnav.nlm.nih.gov/REST/rxcui/"
         + urllib.parse.quote(str(rxcui))
@@ -115,7 +85,6 @@ def _ingredients(rxcui):
     except Exception:
         return []
 
-
 def _rxcui_name(rxcui):
     url = "https://rxnav.nlm.nih.gov/REST/rxcui/" + urllib.parse.quote(str(rxcui)) + "/property.json?propName=RxNorm%20Name"
     try:
@@ -125,21 +94,11 @@ def _rxcui_name(rxcui):
     except Exception:
         return None
 
-
-# ---------------------------------------------------------------------------
-# MedlinePlus Connect (patient drug page by RXCUI)
-# ---------------------------------------------------------------------------
-_LANG_MAP = {"English": "en", "Bahasa Melayu": "en", "中文": "en"}  # Connect supports en/es only
-
-
 def _medlineplus_by_rxcui(rxcui, language="English"):
-    """Return {title, url} for a MedlinePlus drug page, or None.
-    MedlinePlus Connect supports English/Spanish only; we always request English
-    (the patient-facing language is handled by the model, this is just a source link)."""
     lang = "en"
     url = (
         "https://connect.medlineplus.gov/service"
-        "?mainSearchCriteria.v.cs=2.16.840.1.113883.6.88"  # RXCUI code system OID
+        "?mainSearchCriteria.v.cs=2.16.840.1.113883.6.88"
         "&mainSearchCriteria.v.c=" + urllib.parse.quote(str(rxcui))
         + "&knowledgeResponseType=application/json"
         + "&informationRecipient.languageCode.c=" + lang
@@ -161,30 +120,7 @@ def _medlineplus_by_rxcui(rxcui, language="English"):
     except Exception:
         return None
 
-
-# ---------------------------------------------------------------------------
-# Public: verify a single medicine name
-# ---------------------------------------------------------------------------
 def _verify_nlm(name, language="English"):
-    """
-    Verify a medicine NAME against RxNorm and (if found) fetch a MedlinePlus page.
-
-    Returns a dict the prompt can trust:
-      {
-        "query": <original text>,
-        "status": "verified" | "ambiguous" | "unverified",
-        "rxcui": <str or None>,
-        "matched_name": <RxNorm name or None>,
-        "ingredients": [<ingredient names>],
-        "candidates": [{name, score}, ...]   # only when ambiguous
-        "sources": [{title, url}, ...]        # only pages actually retrieved
-        "note": <short machine note>
-      }
-    status meanings:
-      verified   — exact normalized RxNorm match found; ingredients resolved.
-      ambiguous  — only approximate/multiple candidates; DO NOT identify.
-      unverified — nothing usable returned (empty, offline, or no match).
-    """
     name = (name or "").strip()
     result = {
         "query": name,
@@ -205,7 +141,6 @@ def _verify_nlm(name, language="English"):
     if cached is not None:
         return cached
 
-    # 1) Exact normalized match
     rxcui = _rxcui_exact(name)
     if rxcui:
         ingredients = _ingredients(rxcui)
@@ -217,19 +152,17 @@ def _verify_nlm(name, language="English"):
             ingredients=ingredients,
             note="exact RxNorm match",
         )
-        src = {"title": "RxNorm (US NLM) — " + matched, "url": "https://rxnav.nlm.nih.gov/REST/rxcui/%s" % rxcui}
-        result["sources"].append(src)
+        result["sources"].append(
+            {"title": "RxNorm (US NLM) — " + matched, "url": "https://rxnav.nlm.nih.gov/REST/rxcui/%s" % rxcui}
+        )
         mp = _medlineplus_by_rxcui(rxcui, language)
         if mp:
             result["sources"].append({"title": "MedlinePlus — " + mp["title"], "url": mp["url"]})
         _cache_put(cache_key, result)
         return result
 
-    # 2) Approximate (spell-tolerant) — treat as AMBIGUOUS, never auto-identify
     cands = _rxcui_approx(name)
     if cands:
-        # If the single top candidate is an extremely strong, unique match we
-        # still return it as ambiguous: identity must be confirmed by the user.
         result.update(
             status="ambiguous",
             candidates=[{"name": c["name"], "score": c["score"]} for c in cands[:5]],
@@ -238,16 +171,11 @@ def _verify_nlm(name, language="English"):
         _cache_put(cache_key, result)
         return result
 
-    # 3) Nothing
     result["note"] = "no RxNorm match (may be a Malaysia-only brand, misspelling, or offline)"
     _cache_put(cache_key, result)
     return result
 
-
 def reference_block(verifications):
-    """Render a compact, machine-readable block for the model prompt describing
-    what retrieval actually returned for each queried name. The model must base
-    its 'verified' claims and source lines ONLY on this block."""
     lines = ["RETRIEVED REFERENCE DATA (identity records; results may be cached):"]
     if not verifications:
         lines.append("- (no medicine names were extracted to verify)")
@@ -345,14 +273,15 @@ def verify_medicine(name, language="English"):
     key="npra:"+name.casefold()
     cached=_cache_get(key)
     if cached is not None: return cached
+    generic=_generic_query(name)
+    # Accept exact database ingredient names/synonyms beyond the clinical catalogue.
+    # Clinical-reference coverage remains independent and intentionally bounded.
+    ingredient=_exact_ingredient(generic)
+    if ingredient is not None:
+        ingredient['query']=name
+        _CACHE[key]=(time.time()+1800,ingredient)
+        return ingredient
     result=_npra(name)
-    if result["status"]=="unverified" and result["note"].startswith("No NPRA"):
-        generic=re.split(r"\s+\d",name,1)[0].strip()
-        nlm=_verify_nlm(generic,language)
-        if nlm["status"]=="verified" and generic.casefold() in {i.casefold() for i in nlm["ingredients"]}:
-            result=nlm
-            result["query"]=name
-            result["note"]="Generic ingredient identity from RxNorm; not confirmation of a Malaysian brand or supplied formulation."
     # An empty or offline Malaysian lookup never authorizes a US brand substitution.
     # Explicit generic ingredient input can still be discussed as supplied input.
     _CACHE[key]=(time.time()+(1800 if result["status"]!="unverified" else 60),result)
@@ -362,4 +291,36 @@ def verify_medicine(name, language="English"):
 def verify_medicines(names, language="English"):
     from concurrent.futures import ThreadPoolExecutor
     with ThreadPoolExecutor(max_workers=4) as pool:
-        return list(pool.map(lambda name: verify_medicine(name,language), names[:4]))
+        return list(pool.map(lambda name: verify_medicine(name,language), names[:12]))
+
+def _exact_ingredient(name):
+    """Exact active IN/PIN/MIN concepts only; a US brand is not a Malaysian product.
+    Exact search accepts database synonyms but never normalized/fuzzy corrections.
+    """
+    try:
+        data=_get_json('https://rxnav.nlm.nih.gov/REST/rxcui.json?name='+urllib.parse.quote(name)+'&search=0')
+        ids=list(dict.fromkeys((data.get('idGroup') or {}).get('rxnormId') or []))
+        if len(ids)!=1: return None
+        concept=(_get_json('https://rxnav.nlm.nih.gov/REST/rxcui/'+urllib.parse.quote(str(ids[0]))+'/properties.json').get('properties') or {})
+        tty=concept.get('tty')
+        if tty not in ('IN','PIN','MIN') or concept.get('suppress')!='N' or not concept.get('name'): return None
+        ingredients=[concept['name']]
+        if tty=='MIN':
+            related=_get_json('https://rxnav.nlm.nih.gov/REST/rxcui/'+urllib.parse.quote(str(ids[0]))+'/related.json?tty=IN')
+            ingredients=list(dict.fromkeys(c['name'] for g in (related.get('relatedGroup') or {}).get('conceptGroup',[]) if g.get('tty')=='IN' for c in g.get('conceptProperties',[]) if c.get('name')))
+            if len(ingredients)<2: return None
+        return {'query':name,'status':'verified','rxcui':ids[0],'matched_name':concept['name'],'ingredients':ingredients,'candidates':[],
+                'sources':[{'title':'RxNorm — exact ingredient identity','url':'https://rxnav.nlm.nih.gov/REST/rxcui/'+str(ids[0])+'/properties.json'}],
+                'note':'Verified generic/chemical ingredient identity only; supplied strength/form/dose and Malaysian product are not clinically verified.'}
+    except Exception:
+        return None
+
+
+def _generic_query(name):
+    # Remove a single strength/form suffix, never a second named ingredient.
+    strength=re.search(r'\s+\d+(?:[.,]\d+)?\s*(?:micrograms?|microgram|mcgs?|mcg|ug|μg|mgs?|mg|grams?|g|mls?|ml|puffs?|units?|ius?|iu)\b',name,re.I)
+    if not strength: return name.strip()
+    tail=name[strength.end():]
+    remainder=re.sub(r'\d+(?:[.,]\d+)?|\b(?:micrograms?|microgram|mcgs?|mcg|ug|μg|mgs?|mg|grams?|g|mls?|ml|puffs?|inhaler|inhalation|aerosol|spray|powder|units?|ius?|iu|tablets?|capsules?|caps?|tabs?|caplets?|suspension|solution|liquid|suppositories|suppository|cream|ointment|drops?)\b','',tail,flags=re.I)
+    if re.search(r'[A-Za-z\u4e00-\u9fff]',remainder): return name.strip()
+    return name[:strength.start()].strip()
