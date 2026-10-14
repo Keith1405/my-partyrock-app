@@ -159,6 +159,37 @@ Resources:
             Action: s3:GetObject
             Resource: !Sub arn:aws:s3:::${FrontendBucket}/*
 
+  # ---------------------------------------------------------------------------
+  # Production Monitoring: CloudWatch Alarms (Error rate & Latency)
+  # ---------------------------------------------------------------------------
+  LambdaErrorRateAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: SmartMedCycle-Lambda-HighErrorRate
+      AlarmDescription: Triggers if Lambda functions experience sustained 5xx errors
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  LambdaLatencyAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: SmartMedCycle-Lambda-HighLatency
+      AlarmDescription: Triggers if average Lambda streaming duration exceeds 15 seconds
+      MetricName: Duration
+      Namespace: AWS/Lambda
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 15000
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+
 Outputs:
   ExtractfromPhotoUrl:
     Value: !GetAtt ExtractfromPhotoFunctionUrl.FunctionUrl
