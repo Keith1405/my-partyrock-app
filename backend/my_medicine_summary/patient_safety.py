@@ -27,7 +27,7 @@ def candidate_names(*texts, limit=4):
     These are search queries, not identified medicines. Never trust rendered cards.
     """
     names=[]
-    stop=re.compile(r"^(?:take|ambil|makan|dose|dos|quantity|jumlah|allerg|none|not sure|unknown|draf|draft|heart|form|strength|instruction|route|frequency|morning|evening|tablet|capsule|liquid|suspension|suppository|no known)\b", re.I)
+    stop=re.compile(r"^(?:take|ambil|makan|dose|dos|quantity|jumlah|allerg|none|not sure|unknown|draf|draft|heart|form|strength|instruction|route|frequency|morning|evening|tablet|capsule|liquid|suspension|suppository|no known|mitte|sig)\b", re.I)
     for text in texts:
         for line in re.split(r"[\n;]+", text or ""):
             line=line.strip()
