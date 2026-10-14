@@ -163,7 +163,8 @@
     "R": "take (recipe)",
     "Rx": "take (recipe)",
     "NP": "proper name",
-    "n.p.": "proper name"
+    "n.p.": "proper name",
+    "mitte": "send / total quantity to dispense"
   },
   "mims_index_note": "The full MIMS Abbreviation Index (bd/bid=twice daily, tds/tid=three times daily, qds/qid=four times daily, prn, po, SR/XR/ER=extended-release, EC=enteric-coated, cap=capsule, tab=tablet, susp=suspension, soln=solution, inj=injection, mcg=microgram, etc.) also applies when decoding product/form abbreviations on the label."
 }
