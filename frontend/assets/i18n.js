@@ -99,6 +99,7 @@
     ['Language changed. Regenerate existing results for this language; earlier responses keep their original wording.', 'Bahasa telah ditukar. Jana semula keputusan sedia ada dalam bahasa ini; respons terdahulu kekal dalam bahasa asal.', '语言已更改。请重新生成结果以使用此语言；先前的回复保留原文。'],
     ["Hi! 👋 I'm SmartMed Help. Ask me anything about your medicine.\n\nTry:\n- 💬 Explain this instruction simply\n- ⏰ What if I miss a dose?\n- 📋 Prepare my pharmacist summary\n- 🧠 Quiz me on my medicine\n\n🚨 Medical emergency? Call 999 (Malaysia) or your local emergency number now.", 'Hai! 👋 Saya Bantuan SmartMed. Tanya apa-apa tentang ubat anda.\n\nCuba:\n- 💬 Terangkan arahan ini dengan mudah\n- ⏰ Bagaimana jika saya terlepas satu dos?\n- 📋 Sediakan ringkasan untuk ahli farmasi saya\n- 🧠 Uji pengetahuan saya tentang ubat\n\n🚨 Kecemasan perubatan? Hubungi 999 (Malaysia) atau nombor kecemasan tempatan sekarang.', '您好！👋 我是 SmartMed 帮助。您可以询问任何药物相关问题。\n\n试试：\n- 💬 用简单语言解释这条说明\n- ⏰ 如果漏服一次怎么办？\n- 📋 准备给药剂师的摘要\n- 🧠 测试我的药物知识\n\n🚨 医疗紧急情况？请立即拨打 999（马来西亚）或当地急救电话。'],
     ['Disposal Guide: What Can & Cannot Be Returned', 'Panduan Pelupusan: Apa Boleh & Tidak Boleh Dikembalikan', '药物处置指南：哪些可以回收与不可回收'],
+    ['Click to expand', 'Klik untuk buka', '点击展开'],
     ['Click to collapse', 'Klik untuk tutup', '点击折叠'],
     ['What can be disposed of in collection bins?', 'Apa yang boleh dilupuskan dalam tong pengumpulan?', '哪些药物可以投入回收箱？'],
     ['The following medicines are safely accepted at all participating collection boxes:', 'Ubat-ubatan berikut diterima dengan selamat di semua tong pengumpulan yang mengambil bahagian:', '以下药物均可在所有参与计划的回收箱安全处置：'],
@@ -137,9 +138,21 @@
     ['Environmental Note:', 'Nota Alam Sekitar:', '环保提示：'],
     ['Never flush medicines down the toilet or throw them into household trash.', 'Jangan sesekali pam ubat ke dalam tandas atau buang ke dalam tong sampah rumah.', '切勿将药物冲入马桶或随生活垃圾丢弃。'],
   ];
-  copy.push(
     ['The request could not finish. Check your connection and try again.', 'Permintaan tidak dapat diselesaikan. Semak sambungan anda dan cuba lagi.', '请求未能完成。请检查网络连接并重试。'],
-    ['Your label details will appear here.', 'Butiran label anda akan dipaparkan di sini.', '标签详情将显示在这里。']
+    ['Your label details will appear here.', 'Butiran label anda akan dipaparkan di sini.', '标签详情将显示在这里。'],
+    ['Did anything look incorrect or unclear?', 'Ada maklumat yang kelihatan salah atau tidak jelas?', '是否有任何信息不正确或不清晰？'],
+    ['Report issue', 'Laporkan isu', '反馈问题'],
+    ['Report an issue with this output', 'Laporkan isu berkaitan maklumat ini', '反馈此输出的问题'],
+    ['Flag AI Output', 'Laporkan Output AI', '反馈 AI 输出'],
+    ['What seems incorrect or concerning?', 'Apakah yang kelihatan salah atau meragukan?', '您觉得哪项内容存在错误或令人担忧？'],
+    ['Incorrect dose, frequency, or instructions', 'Dos, kekerapan atau arahan salah', '剂量、频次或用药说明错误'],
+    ['Missing safety warning or interaction', 'Amaran keselamatan atau interaksi ubat tiada', '缺少重要的安全警告或药物相互作用'],
+    ['Unclear, confusing, or contradictory wording', 'Ayat mengelirukan atau bercanggah', '用词晦涩、易混淆或前后矛盾'],
+    ['Wrong medicine or active ingredient', 'Nama ubat atau bahan aktif salah', '药物名称或活性成分错误'],
+    ['Other safety concern', 'Kebimbangan keselamatan lain', '其他安全顾虑'],
+    ['Cancel', 'Batal', '取消'],
+    ['Submit Report', 'Hantar Laporan', '提交反馈'],
+    ['Thank you! Your feedback was logged to improve our clinical prompts.', 'Terima kasih! Maklum balas anda telah direkodkan untuk menambah baik ketepatan klinikal.', '感谢您！您的反馈已记录，用于改进临床提示词。']
   );
   const normalize = text => text.replace(/\s+/g, ' ').trim();
   const translations = new Map(copy.map(row => [normalize(row[0]), row]));
