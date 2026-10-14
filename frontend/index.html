@@ -239,6 +239,116 @@
   .brand { display:inline-flex; align-items:center; gap:12px; }
   .brand-logo { height:40px; width:auto; display:block; }
 
+  /* AI Output Feedback System (Production Readiness) */
+  .feedback-bar {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-top: 1px dashed var(--border);
+    border-radius: 0 0 10px 10px;
+    font-size: 0.83rem;
+    color: var(--text-dim);
+  }
+  .feedback-btn {
+    background: #ffffff;
+    color: #475569;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+  }
+  .feedback-btn:hover {
+    background: #fef2f2;
+    color: #dc2626;
+    border-color: #fca5a5;
+  }
+  .feedback-modal-backdrop {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+  }
+  .feedback-modal {
+    background: #ffffff;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 480px;
+    padding: 24px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.18);
+  }
+  .feedback-modal h3 {
+    margin: 0 0 4px;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+  .feedback-modal p.ctx-sub {
+    margin: 0 0 16px;
+    color: #64748b;
+    font-size: 0.85rem;
+  }
+  .feedback-modal label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 6px;
+  }
+  .feedback-modal select, .feedback-modal textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    color: #0f172a;
+    outline: none;
+    margin-bottom: 14px;
+  }
+  .feedback-modal select:focus, .feedback-modal textarea:focus {
+    border-color: #0284c7;
+  }
+  .feedback-modal textarea {
+    min-height: 70px;
+    resize: vertical;
+  }
+  .feedback-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #0f172a;
+    color: #ffffff;
+    padding: 12px 18px;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    z-index: 1100;
+  }
+
   /* Collapsible Safe Medicine Disposal Guide */
   .guide-collapsible {
     background: #ffffff;
@@ -444,8 +554,14 @@
     <div class="medicine-workspace">
       <div class="section-intro"><div><span class="eyebrow">01 / UNDERSTAND</span><h2>Your medicine, in plain language.</h2></div></div>
       <p class="sec-desc">Type medicine details or upload a clear label photo. Show the name, strength and instructions. You may cover personal details.</p>
-      <div class="notice-red">Always compare the Medicine Card with your original label before continuing to precautions.</div>
-      <div class="ai-panel"><div class="panel-head">Medicine Card <button class="secondary" data-run="medicine_card">Generate</button></div><div class="output auto" id="out_medicine_card" aria-live="polite"><span class="placeholder">Your medicine card will appear here.</span></div></div>
+      <div class="ai-panel">
+        <div class="panel-head">Medicine Card <button class="secondary" data-run="medicine_card">Generate</button></div>
+        <div class="output auto" id="out_medicine_card" aria-live="polite"><span class="placeholder">Your medicine card will appear here.</span></div>
+        <div class="feedback-bar" id="fb_medicine_card">
+          <span>Did anything look incorrect or unclear?</span>
+          <button type="button" class="feedback-btn" onclick="openFeedbackModal('Medicine Card')">🚩 Report issue</button>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -473,6 +589,10 @@
         <button class="secondary" style="margin-left:auto;padding:4px 10px" data-run="my_medicine_summary">Run</button>
       </div>
       <div class="output" id="out_my_medicine_summary"><span class="placeholder">You're all set to Run</span></div>
+      <div class="feedback-bar" id="fb_my_medicine_summary">
+        <span>Did anything look incorrect or unclear?</span>
+        <button type="button" class="feedback-btn" onclick="openFeedbackModal('My Medicine Summary')">🚩 Report issue</button>
+      </div>
     </div>
   </section>
 
@@ -645,6 +765,10 @@
         <button class="secondary" style="margin-left:auto;padding:4px 10px" data-run="my_return_plan">Run</button>
       </div>
       <div class="output" id="out_my_return_plan"><span class="placeholder">You're all set to Run</span></div>
+      <div class="feedback-bar" id="fb_my_return_plan">
+        <span>Did anything look incorrect or unclear?</span>
+        <button type="button" class="feedback-btn" onclick="openFeedbackModal('My Return Plan')">🚩 Report issue</button>
+      </div>
     </div>
   </section>
 
@@ -812,6 +936,8 @@ async function streamInto(url, payload, outEl) {
   const controller = new AbortController();
   activeRequests.set(outEl, controller);
   completedResults.delete(outEl);
+  const fbOld = document.getElementById('fb_' + outEl.id.replace('out_', ''));
+  if (fbOld) fbOld.style.display = 'none';
   let full = '';
   const timeout = setTimeout(() => controller.abort(), 65000);
   outEl.innerHTML = '<span class="status-line"><span class="spinner"></span> <span data-ui-copy="Generating…"></span></span>';
@@ -876,7 +1002,11 @@ async function streamInto(url, payload, outEl) {
     cursor.remove();
     if (!started) placeholder(outEl, 'No response.');
     else if (/⚠️.*(?:could not finish|tidak dapat diselesaikan|服务未能完成)/s.test(full)) throw new Error('Service incomplete');
-    else completedResults.set(outEl, {text: full.trim(), inputs: payload.medicine_details, other: payload.other_medicines, allergies: payload.allergies, language: payload.preferred_language});
+    else {
+      completedResults.set(outEl, {text: full.trim(), inputs: payload.medicine_details, other: payload.other_medicines, allergies: payload.allergies, language: payload.preferred_language});
+      const fb = document.getElementById('fb_' + outEl.id.replace('out_', ''));
+      if (fb) fb.style.display = 'flex';
+    }
   } catch (err) {
     if (activeRequests.get(outEl) === controller) requestError(outEl, err);
   } finally {
@@ -1111,6 +1241,76 @@ if (guideDetails && guideDesc) {
     guideDesc.dataset.uiCopy = key;
   });
 }
+
+let activeFbContext = 'Medicine Card';
+function openFeedbackModal(ctx) {
+  activeFbContext = ctx;
+  const ctxLabel = document.getElementById('fb_context_label');
+  if (ctxLabel) ctxLabel.textContent = ctx;
+  const modal = document.getElementById('feedback_modal');
+  if (modal) modal.style.display = 'flex';
+  const notes = document.getElementById('fb_notes');
+  if (notes) notes.value = '';
+}
+function closeFeedbackModal() {
+  const modal = document.getElementById('feedback_modal');
+  if (modal) modal.style.display = 'none';
+}
+function submitFeedback() {
+  const reason = document.getElementById('fb_reason')?.value || 'other';
+  const notes = document.getElementById('fb_notes')?.value || '';
+  const item = {
+    section: activeFbContext,
+    reason: reason,
+    notes: notes,
+    timestamp: new Date().toISOString(),
+  };
+  try {
+    const list = JSON.parse(localStorage.getItem('smartmed_ai_flags') || '[]');
+    list.push(item);
+    localStorage.setItem('smartmed_ai_flags', JSON.stringify(list));
+  } catch(e) {}
+  closeFeedbackModal();
+  const toast = document.getElementById('fb_toast');
+  if (toast) {
+    toast.style.display = 'flex';
+    setTimeout(() => { toast.style.display = 'none'; }, 4000);
+  }
+}
 </script>
+
+<!-- Feedback Modal (Production Readiness) -->
+<div class="feedback-modal-backdrop" id="feedback_modal" style="display:none;" onclick="if(event.target===this)closeFeedbackModal()">
+  <div class="feedback-modal">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <div>
+        <h3>Flag AI Output</h3>
+        <p class="ctx-sub" id="fb_context_label">Section: Medicine Card</p>
+      </div>
+      <button type="button" onclick="closeFeedbackModal()" style="background:none;border:none;font-size:1.4rem;color:#94a3b8;cursor:pointer;line-height:1;padding:0;">✕</button>
+    </div>
+
+    <label for="fb_reason">What seems incorrect or concerning?</label>
+    <select id="fb_reason">
+      <option value="dose_error">Incorrect dose, frequency, or instructions</option>
+      <option value="missing_warning">Missing safety warning or interaction</option>
+      <option value="unclear_wording">Unclear, confusing, or contradictory wording</option>
+      <option value="wrong_ingredient">Wrong medicine or active ingredient</option>
+      <option value="other">Other safety concern</option>
+    </select>
+
+    <label for="fb_notes">Details (optional):</label>
+    <textarea id="fb_notes" placeholder="Describe what looks wrong or what you expected..."></textarea>
+
+    <div class="feedback-actions">
+      <button type="button" class="secondary" onclick="closeFeedbackModal()">Cancel</button>
+      <button type="button" style="background:#dc2626;color:#fff;" onclick="submitFeedback()">Submit Report</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="fb_toast" style="display:none;">
+  <span>✅ Thank you! Your feedback was logged to improve our clinical prompts.</span>
+</div>
 </body>
 </html>
