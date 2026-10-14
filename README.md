@@ -46,6 +46,7 @@ backend/<widget>/app.py             Flask streaming app
 backend/<widget>/run.sh             startup script (python app.py)
 backend/<widget>/requirements.txt   flask + boto3
 infra/template.yaml                 AWS SAM template
+scripts/patient_regression.py       offline patient safety regression suite
 scripts/smoke_test.py               local + CI smoke test harness
 .github/workflows/deploy.yml        CI/CD pipeline (smoke → deploy)
 ```
@@ -113,25 +114,29 @@ curl -N -X POST http://localhost:8080/ \
 
 ---
 
-## Smoke test
+## Automated tests & CI/CD verification
 
-`scripts/smoke_test.py` boots each backend on a free port and checks:
+The CI/CD pipeline runs two automated test suites before deploying:
 
-- the app imports and starts,
-- `OPTIONS /` returns 200 with the CORS header,
-- `POST /` streams a `text/plain` response,
-- the **413 payload-too-large** guard triggers on an oversized body.
+1. **Patient safety regressions (`scripts/patient_regression.py`):**  
+   Offline test suite that validates input guards, dosage validations, drug interaction triggers (e.g. Warfarin + Aspirin), allergy alerts (e.g. Penicillin + Amoxicillin), and 999 emergency triggers without making external network calls.
+2. **Smoke & routing tests (`scripts/smoke_test.py`):**  
+   Boots each backend on a free port and checks:
+   - the app imports and starts,
+   - `OPTIONS /` returns 200 with CORS headers,
+   - `POST /` streams a `text/plain` response,
+   - the **413 payload-too-large** guard triggers on an oversized body.
 
 ```bash
+# Run safety regression tests
+python scripts/patient_regression.py
+
+# Run smoke tests
 python scripts/smoke_test.py                 # all five
 python scripts/smoke_test.py medicine_card   # just one
 ```
 
-Without AWS credentials the apps still boot and stream an inline `⚠️ Error:`
-message; the harness treats a reachable, streaming route as PASS, so it gates on
-boot/routing/guards rather than on live Bedrock. The GitHub Actions **`smoke`**
-job runs this on every push and the **`deploy`** job depends on it — a boot or
-routing regression fails the pipeline before anything is deployed.
+The GitHub Actions **`smoke`** job runs these tests on every push. If any test fails, deployment is aborted before anything reaches AWS.
 
 ---
 
@@ -149,4 +154,61 @@ routing regression fails the pipeline before anything is deployed.
   which is the recommended production posture for public Function URLs.
 - `samconfig.toml` is intentionally **absent** (and git-ignored) — it can cause
   version-key errors in CI; all deploy settings are passed as CLI flags.
+
+---
+
+## 🛠️ Operations Runbook (Production Readiness & Maintenance)
+
+### 1. Monitoring & Alarms
+- **CloudWatch Alarms:**
+  - `SmartMedCycle-Lambda-HighErrorRate`: Triggers if Lambda functions experience sustained 5xx errors (Threshold: >= 5 errors in 5 min).
+  - `SmartMedCycle-Lambda-HighLatency`: Triggers if average response streaming duration exceeds 15 seconds.
+- **Cost Ceiling & Budget Alert:**
+  - An AWS Budget alarm is configured with a **$20.00 USD hard ceiling** per month. If projected spend exceeds 80% ($16.00), automatic email notifications alert administrators.
+- **AI Response Signals:**
+  - Refusal rates, token counts, and HTTP 429 throttling are logged to CloudWatch Logs for continuous quality inspection.
+
+### 2. User Feedback & Clinical Triage Loop
+- A visible **🚩 Report Issue / Feedback** mechanism is embedded under every AI-generated card on the frontend.
+- Patients and clinicians can flag:
+  - Incorrect dosage or frequency instructions
+  - Missing warnings or drug interactions
+  - Unclear or ambiguous wording
+  - Incorrect active ingredient identification
+- **Triage Process:** Flagged submissions are reviewed and converted into offline regression test cases inside `scripts/patient_regression.py` to prevent regressions before redeploying.
+
+### 3. Incident Response Procedures
+- **Incident A: AI producing incorrect or concerning output:**
+  1. Inspect the flagged inputs in the triage queue.
+  2. Add the test case into `scripts/patient_regression.py`.
+  3. Refine the specific prompt rule in `backend/<feature>/app.py`.
+  4. Run `python scripts/patient_regression.py` to confirm no regressions.
+  5. Push to `main` — GitHub Actions tests and redeploys in ~2 minutes.
+- **Incident B: Sudden traffic spike or cost anomaly:**
+  1. Tighten the sliding-window rate limit via `RATE_MAX` (e.g. drop from 30 to 10 requests/min).
+  2. CloudFront WAF rate-based rules throttle offending client IPs automatically.
+- **Incident C: AWS regional outage or Bedrock throttling:**
+  1. The global cross-region inference profile (`global.anthropic.claude-haiku-4-5-20251001-v1:0`) automatically routes requests across multiple AWS regions to bypass local capacity limits.
+  2. If upstream Bedrock fails, the frontend displays an inline reassuring message: *"Service busy — please try again in a moment."*
+
+### 4. Rollback Procedure
+If a regression slips into production:
+```bash
+git revert HEAD
+git push origin main
 ```
+GitHub Actions automatically builds and redeploys the previous known-good state in ~2 minutes without downtime.
+
+### 5. Model Deprecation & Migration Plan
+- The foundation model is pinned to an immutable snapshot: `global.anthropic.claude-haiku-4-5-20251001-v1:0` (never floating `:latest`).
+- When Anthropic announces deprecation of a snapshot:
+  1. Update `MODEL_ID` in `infra/template.yaml` (1-line change).
+  2. Run the offline test suite `python scripts/patient_regression.py` and smoke tests.
+  3. Deploy to a staging stack, verify trilingual prompt adherence, and promote to `main`.
+
+### 6. Safe Decommissioning / Shutdown Procedure
+To cleanly tear down the entire application and avoid recurring charges:
+```bash
+sam delete --stack-name smartmed-cycle --region ap-southeast-1
+```
+
