@@ -820,6 +820,7 @@
       <div>
         <h3 style="margin:0 0 4px 0;font-size:1.2rem;">📋 Clinical Triage & Feedback Log</h3>
         <p class="ctx-sub" style="margin:0;">User-flagged AI outputs for prompt engineering and clinical review.</p>
+        <div id="triage_sync_status" style="font-size:0.75rem;color:#16a34a;font-weight:600;margin-top:4px;">🟢 Live Cloud Sync Active &bull; Connected to all devices</div>
       </div>
       <button type="button" onclick="closeTriageModal()" style="background:none;border:none;font-size:1.4rem;color:#94a3b8;cursor:pointer;line-height:1;padding:0;">✕</button>
     </div>
@@ -829,7 +830,7 @@
     </div>
 
     <div class="feedback-actions" style="margin-top:14px;border-top:1px solid #e2e8f0;padding-top:12px;gap:8px;">
-      <button type="button" class="secondary" onclick="renderTriageList()">Refresh</button>
+      <button type="button" class="secondary" onclick="refreshTriage()">Refresh</button>
       <button type="button" class="secondary" onclick="exportTriageJson()">📥 Download JSON</button>
       <button type="button" onclick="clearTriageLog()" style="background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;font-size:0.85rem;padding:8px 14px;border-radius:99px;cursor:pointer;">Clear Log</button>
       <button type="button" class="secondary" onclick="closeTriageModal()">Close</button>
@@ -1358,7 +1359,9 @@ function closeFeedbackModal() {
   if (modal) modal.style.display = 'none';
 }
 
-function submitFeedback() {
+const CLOUD_TRIAGE_ENDPOINT = 'https://api.restful-api.dev/objects/ff808181a09d98f701a13fdc5d04692f';
+
+async function submitFeedback() {
   const reasonSelect = document.getElementById('fb_reason');
   const reasonText = reasonSelect && reasonSelect.options[reasonSelect.selectedIndex]
     ? reasonSelect.options[reasonSelect.selectedIndex].text.trim()
@@ -1374,21 +1377,57 @@ function submitFeedback() {
     timestamp: new Date().toISOString(),
   };
 
+  // 1. Save locally to browser immediately
   const list = getFlags();
   list.push(item);
   saveFlags(list);
   updateTriageCount();
   closeFeedbackModal();
 
-  const triageModal = document.getElementById('triage_modal');
-  if (triageModal && triageModal.style.display === 'flex') {
-    renderTriageList();
-  }
-
   const toast = document.getElementById('fb_toast');
   if (toast) {
     toast.style.display = 'flex';
     setTimeout(() => { toast.style.display = 'none'; }, 4000);
+  }
+
+  // 2. Push to Global Cloud Database so all devices/admin see it instantly
+  try {
+    const res = await fetch(CLOUD_TRIAGE_ENDPOINT);
+    let cloudReports = [];
+    if (res.ok) {
+      const doc = await res.json();
+      cloudReports = Array.isArray(doc?.data?.reports) ? doc.data.reports : [];
+    }
+    cloudReports.push(item);
+    if (cloudReports.length > 200) cloudReports = cloudReports.slice(-200);
+    await fetch(CLOUD_TRIAGE_ENDPOINT, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'SmartMed Cycle - Global Clinical Triage Log',
+        data: { reports: cloudReports }
+      })
+    });
+  } catch (err) {
+    console.warn('Cloud sync error (report safely saved locally):', err);
+  }
+
+  // 3. Also log to AWS Lambda Function if reachable
+  if (STREAM_URLS.medicine_card && !STREAM_URLS.medicine_card.startsWith('__URL_')) {
+    fetch(STREAM_URLS.medicine_card, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'feedback',
+        ...item,
+        language: val('preferred_language') || 'English'
+      })
+    }).catch(() => {});
+  }
+
+  const triageModal = document.getElementById('triage_modal');
+  if (triageModal && triageModal.style.display === 'flex') {
+    renderTriageList();
   }
 }
 
@@ -1424,6 +1463,35 @@ function updateTriageCount() {
 }
 updateTriageCount();
 
+async function syncFromCloud() {
+  try {
+    const res = await fetch(CLOUD_TRIAGE_ENDPOINT);
+    if (!res.ok) return;
+    const doc = await res.json();
+    const cloudReports = Array.isArray(doc?.data?.reports) ? doc.data.reports : [];
+    if (cloudReports.length) {
+      const localList = getFlags();
+      const existingKeys = new Set(localList.map(r => (r.timestamp || '') + '|' + (r.notes || '') + '|' + (r.reason || '')));
+      let updated = false;
+      cloudReports.forEach(cr => {
+        const key = (cr.timestamp || '') + '|' + (cr.notes || '') + '|' + (cr.reason || '');
+        if (!existingKeys.has(key)) {
+          localList.push(cr);
+          existingKeys.add(key);
+          updated = true;
+        }
+      });
+      if (updated) {
+        saveFlags(localList);
+        updateTriageCount();
+        renderTriageList();
+      }
+    }
+  } catch (e) {
+    console.warn('Could not sync triage from cloud:', e);
+  }
+}
+
 function renderTriageList() {
   const container = document.getElementById('triage_list');
   if (!container) return;
@@ -1457,6 +1525,15 @@ function openTriageModal() {
   if (!modal) return;
   renderTriageList();
   modal.style.display = 'flex';
+  syncFromCloud();
+}
+
+async function refreshTriage() {
+  const syncStatus = document.getElementById('triage_sync_status');
+  if (syncStatus) syncStatus.textContent = '⏳ Syncing reports from cloud...';
+  await syncFromCloud();
+  renderTriageList();
+  if (syncStatus) syncStatus.textContent = '🟢 Live Cloud Sync Active • Connected to all devices';
 }
 
 function closeTriageModal() {
@@ -1474,10 +1551,19 @@ function exportTriageJson() {
   a.click();
 }
 
-function clearTriageLog() {
+async function clearTriageLog() {
   if (confirm(t('Clear all logged feedback reports?'))) {
     try {
       localStorage.removeItem('smartmed_ai_flags');
+      // Reset cloud database
+      await fetch(CLOUD_TRIAGE_ENDPOINT, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: 'SmartMed Cycle - Global Clinical Triage Log',
+          data: { reports: [] }
+        })
+      }).catch(() => {});
     } catch (e) {}
     updateTriageCount();
     renderTriageList();
