@@ -772,6 +772,15 @@
     </div>
   </section>
 
+  <footer style="margin-top:60px;padding:24px 0 10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;font-size:0.85rem;color:#64748b;">
+    <div>SmartMed Cycle &bull; Clinical Safety & AI Verification</div>
+    <div>
+      <button type="button" id="admin_triage_btn" onclick="openTriageModal()" style="display:none;background:#f1f5f9;border:1px solid #cbd5e1;color:#1e293b;border-radius:99px;font-size:0.82rem;font-weight:700;cursor:pointer;align-items:center;gap:6px;padding:6px 14px;">
+        📋 Clinical Triage Log (<span id="triage_count">0</span>)
+      </button>
+    </div>
+  </footer>
+
 </div>
 
 <script src="assets/i18n.js"></script>
@@ -1269,6 +1278,7 @@ function submitFeedback() {
     const list = JSON.parse(localStorage.getItem('smartmed_ai_flags') || '[]');
     list.push(item);
     localStorage.setItem('smartmed_ai_flags', JSON.stringify(list));
+    updateTriageCount();
   } catch(e) {}
   closeFeedbackModal();
   const toast = document.getElementById('fb_toast');
@@ -1277,6 +1287,115 @@ function submitFeedback() {
     setTimeout(() => { toast.style.display = 'none'; }, 4000);
   }
 }
+
+const ADMIN_PIN = '1405';
+
+function checkAdminAccess() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('admin') || sessionStorage.getItem('smartmed_admin_auth') === 'true') {
+    const btn = document.getElementById('admin_triage_btn');
+    if (btn) btn.style.display = 'inline-flex';
+  }
+}
+
+function verifyAdmin() {
+  if (sessionStorage.getItem('smartmed_admin_auth') === 'true') return true;
+  const pin = prompt('Enter Admin Passcode to view Clinical Triage Log:');
+  if (pin === ADMIN_PIN) {
+    sessionStorage.setItem('smartmed_admin_auth', 'true');
+    const btn = document.getElementById('admin_triage_btn');
+    if (btn) btn.style.display = 'inline-flex';
+    return true;
+  }
+  if (pin !== null) alert('Incorrect passcode. Access restricted to clinical administrators.');
+  return false;
+}
+
+function updateTriageCount() {
+  try {
+    const list = JSON.parse(localStorage.getItem('smartmed_ai_flags') || '[]');
+    const countEl = document.getElementById('triage_count');
+    if (countEl) countEl.textContent = list.length;
+  } catch(e) {}
+}
+updateTriageCount();
+
+function openTriageModal() {
+  if (!verifyAdmin()) return;
+  const modal = document.getElementById('triage_modal');
+  const container = document.getElementById('triage_list');
+  if (!modal || !container) return;
+  const list = JSON.parse(localStorage.getItem('smartmed_ai_flags') || '[]');
+  container.innerHTML = '';
+  if (!list.length) {
+    container.innerHTML = '<p style="color:#64748b;font-size:0.9rem;text-align:center;padding:24px 10px;margin:0;">No issues flagged yet.<br><span style="font-size:0.8rem;color:#94a3b8;">When users flag an output with 🚩 Report issue, submissions appear here for clinical triage.</span></p>';
+  } else {
+    list.slice().reverse().forEach((item) => {
+      const card = document.createElement('div');
+      card.style.cssText = 'background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;font-size:0.88rem;';
+      const dateStr = item.timestamp ? new Date(item.timestamp).toLocaleString() : 'N/A';
+      card.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <strong style="color:#0f172a;">${item.section || 'General'}</strong>
+          <span style="font-size:0.75rem;color:#94a3b8;">${dateStr}</span>
+        </div>
+        <div style="margin-bottom:4px;color:#dc2626;font-weight:600;font-size:0.82rem;">⚠️ Reason: ${item.reason}</div>
+        <div style="color:#334155;white-space:pre-wrap;font-size:0.85rem;background:#fff;border:1px solid #f1f5f9;border-radius:6px;padding:6px 8px;">${item.notes || '<em>(No extra notes provided)</em>'}</div>
+      `;
+      container.appendChild(card);
+    });
+  }
+  modal.style.display = 'flex';
+}
+
+function closeTriageModal() {
+  const modal = document.getElementById('triage_modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function exportTriageJson() {
+  const data = localStorage.getItem('smartmed_ai_flags') || '[]';
+  const blob = new Blob([data], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `smartmed_triage_audit_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+
+function clearTriageLog() {
+  if (confirm('Clear all logged feedback reports?')) {
+    localStorage.removeItem('smartmed_ai_flags');
+    updateTriageCount();
+    openTriageModal();
+  }
+}
+
+// Secret keyboard shortcut: Ctrl + Alt + A to trigger Admin Login
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.altKey && (e.key === 'a' || e.key === 'A')) {
+    e.preventDefault();
+    openTriageModal();
+  }
+});
+
+// Secret triple click on the top brand logo to reveal admin panel
+const brandEl = document.querySelector('.brand');
+if (brandEl) {
+  let clickCount = 0;
+  let clickTimer = null;
+  brandEl.addEventListener('click', (e) => {
+    clickCount++;
+    clearTimeout(clickTimer);
+    if (clickCount >= 3) {
+      clickCount = 0;
+      openTriageModal();
+    } else {
+      clickTimer = setTimeout(() => { clickCount = 0; }, 800);
+    }
+  });
+}
+
+checkAdminAccess();
 </script>
 
 <!-- Feedback Modal (Production Readiness) -->
@@ -1305,6 +1424,29 @@ function submitFeedback() {
     <div class="feedback-actions">
       <button type="button" class="secondary" onclick="closeFeedbackModal()">Cancel</button>
       <button type="button" style="background:#dc2626;color:#fff;" onclick="submitFeedback()">Submit Report</button>
+    </div>
+  </div>
+</div>
+
+<!-- Clinical Triage Modal -->
+<div class="feedback-modal-backdrop" id="triage_modal" style="display:none;" onclick="if(event.target===this)closeTriageModal()">
+  <div class="feedback-modal" style="max-width:580px;max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+      <div>
+        <h3 style="margin:0 0 4px 0;font-size:1.2rem;">📋 Clinical Triage & Feedback Log</h3>
+        <p class="ctx-sub" style="margin:0;">User-flagged AI outputs for prompt engineering and clinical review.</p>
+      </div>
+      <button type="button" onclick="closeTriageModal()" style="background:none;border:none;font-size:1.4rem;color:#94a3b8;cursor:pointer;line-height:1;padding:0;">✕</button>
+    </div>
+
+    <div id="triage_list" style="margin:14px 0;display:flex;flex-direction:column;gap:10px;max-height:55vh;overflow-y:auto;">
+      <!-- dynamically populated -->
+    </div>
+
+    <div class="feedback-actions" style="margin-top:14px;border-top:1px solid #e2e8f0;padding-top:12px;gap:8px;">
+      <button type="button" class="secondary" onclick="exportTriageJson()">📥 Download JSON</button>
+      <button type="button" onclick="clearTriageLog()" style="background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;font-size:0.85rem;padding:8px 14px;border-radius:99px;cursor:pointer;">Clear Log</button>
+      <button type="button" class="secondary" onclick="closeTriageModal()">Close</button>
     </div>
   </div>
 </div>
