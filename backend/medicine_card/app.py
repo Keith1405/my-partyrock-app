@@ -255,19 +255,35 @@ def build_messages(body):
     retrieved = refdata.reference_block(verifications)
 
     content = []
-    file_data = body.get("file_data")
-    file_mime = body.get("file_mime")
-    if file_data:
-        raw = base64.b64decode(file_data)
-        if file_mime and file_mime.startswith("image/"):
-            content.append(
-                {"image": {"format": file_mime.split("/", 1)[1], "source": {"bytes": raw}}}
-            )
-        else:
-            fmt = (file_mime or "application/octet-stream").split("/")[-1]
-            content.append(
-                {"document": {"format": fmt, "name": "upload", "source": {"bytes": raw}}}
-            )
+    files = body.get("files") or []
+    if not files and body.get("file_data"):
+        files = [{"file_data": body["file_data"], "file_mime": body.get("file_mime", "image/jpeg")}]
+
+    for f in files:
+        fdata = f.get("file_data")
+        fmime = f.get("file_mime", "image/jpeg")
+        if fdata:
+            raw = base64.b64decode(fdata)
+            if fmime and fmime.startswith("image/"):
+                fmt = fmime.split("/", 1)[1].lower()
+                if fmt in ("jpg", "jpeg"):
+                    fmt = "jpeg"
+                elif fmt == "png":
+                    fmt = "png"
+                elif fmt == "webp":
+                    fmt = "webp"
+                elif fmt == "gif":
+                    fmt = "gif"
+                else:
+                    fmt = "jpeg"
+                content.append(
+                    {"image": {"format": fmt, "source": {"bytes": raw}}}
+                )
+            else:
+                fmt = (fmime or "application/octet-stream").split("/")[-1]
+                content.append(
+                    {"document": {"format": fmt, "name": "upload", "source": {"bytes": raw}}}
+                )
 
     user_text = (
         f"Preferred Language: {language}\n\n"
@@ -312,6 +328,9 @@ def generate(body):
         yield "\n\n⚠️ " + patient_safety.translated("error", body.get("preferred_language", "English"))
 
 
+RECENT_FEEDBACK = []
+
+
 @app.route("/", methods=["POST", "OPTIONS"])
 def handler():
     if request.method == "OPTIONS":
@@ -324,6 +343,53 @@ def handler():
             resp.headers[key] = value
         return resp
     body = request.get_json(silent=True) or {}
+
+    # Centralized CloudWatch Logging for Clinical Triage Reports
+    if body.get("type") == "feedback":
+        item = {
+            "section": body.get("section", "Medicine Card"),
+            "reason": body.get("reason", "N/A"),
+            "reasonCode": body.get("reasonCode", "other"),
+            "notes": body.get("notes", ""),
+            "timestamp": body.get("timestamp") or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "language": body.get("language", "English"),
+            "client_ip": request.headers.get("X-Forwarded-For", request.remote_addr),
+        }
+        RECENT_FEEDBACK.insert(0, item)
+        if len(RECENT_FEEDBACK) > 100:
+            RECENT_FEEDBACK.pop()
+
+        app.logger.warning(
+            "\n" + "=" * 70 + "\n"
+            "[CLINICAL TRIAGE FEEDBACK REPORT]\n"
+            f"Section:    {item['section']}\n"
+            f"Reason:     {item['reason']} ({item['reasonCode']})\n"
+            f"Notes:      {item['notes'] or '(No extra notes)'}\n"
+            f"Timestamp:  {item['timestamp']}\n"
+            f"Language:   {item['language']}\n"
+            f"Client IP:  {item['client_ip']}\n"
+            + "=" * 70
+        )
+        resp = Response(
+            json.dumps({"status": "logged_to_cloudwatch", "item": item}),
+            status=200,
+            content_type="application/json; charset=utf-8",
+        )
+        for key, value in CORS_HEADERS.items():
+            resp.headers[key] = value
+        return resp
+
+    # Endpoint to retrieve recent in-memory feedback for Admin Triage Log
+    if body.get("type") == "get_feedback":
+        resp = Response(
+            json.dumps({"status": "ok", "items": RECENT_FEEDBACK}),
+            status=200,
+            content_type="application/json; charset=utf-8",
+        )
+        for key, value in CORS_HEADERS.items():
+            resp.headers[key] = value
+        return resp
+
     resp = Response(
         stream_with_context(generate(body)),
         content_type="text/plain; charset=utf-8",
