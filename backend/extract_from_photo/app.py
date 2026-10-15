@@ -103,10 +103,11 @@ ABBREVIATION DECODING (use the PRESCRIPTION ABBREVIATION REFERENCE provided in t
 - When you decode an abbreviation, write the full meaning AND keep the original shorthand in brackets, e.g. 'Take 2 tablets (TT)', 'three times daily (TID)', 'four times daily as needed (QID as necessary)'.
 - Decoding is NOT inventing: only decode shorthand that is actually written. If a token is genuinely ambiguous or illegible, write 'Not readable' and do not guess a number.
 
-MULTIPLE MEDICINES ON PRESCRIPTION SLIPS:
+MULTIPLE MEDICINES ON PRESCRIPTION SLIPS & MULTIPLE PHOTOS:
+- If multiple photos are attached (e.g. front and back of a box, multiple packets, or multiple prescription pages), inspect ALL photos and combine their details.
 - Carefully inspect the ENTIRE photo or slip from top to bottom.
 - Hospital and clinic prescription slips frequently list MULTIPLE medicines (e.g. Medicine 1, Medicine 2).
-- You MUST extract and display EVERY prescribed medicine found in the photo. NEVER omit any medicine!
+- You MUST extract and display EVERY prescribed medicine found across ALL photos. NEVER omit any medicine!
 - For each medicine, provide its own complete set of extracted fields.
 
 RULES:
@@ -140,23 +141,40 @@ Output readable details in this format (repeat the medicine block for each medic
 def build_messages(body):
     content = []
 
-    file_data = body.get("file_data")
-    file_mime = body.get("file_mime")
-    if file_data:
-        if file_mime and file_mime.startswith("image/"):
-            fmt = file_mime.split("/", 1)[1]
-            content.append({"image": {"format": fmt, "source": {"bytes": file_data}}})
-        else:
-            fmt = (file_mime or "application/octet-stream").split("/")[-1]
-            content.append(
-                {"document": {"format": fmt, "name": "upload", "source": {"bytes": file_data}}}
-            )
+    files = body.get("files") or []
+    if not files and body.get("file_data"):
+        files = [{"file_data": body["file_data"], "file_mime": body.get("file_mime", "image/jpeg")}]
+
+    for f in files:
+        fdata = f.get("file_data")
+        fmime = f.get("file_mime", "image/jpeg")
+        if fdata:
+            if fmime and fmime.startswith("image/"):
+                fmt = fmime.split("/", 1)[1].lower()
+                if fmt in ("jpg", "jpeg"):
+                    fmt = "jpeg"
+                elif fmt == "png":
+                    fmt = "png"
+                elif fmt == "webp":
+                    fmt = "webp"
+                elif fmt == "gif":
+                    fmt = "gif"
+                else:
+                    fmt = "jpeg"
+                content.append({"image": {"format": fmt, "source": {"bytes": fdata}}})
+            else:
+                fmt = (fmime or "application/octet-stream").split("/")[-1]
+                content.append(
+                    {"document": {"format": fmt, "name": "upload", "source": {"bytes": fdata}}}
+                )
 
     language = body.get("preferred_language", "English")
+    num_photos = len([c for c in content if "image" in c or "document" in c])
+    photo_desc = f"{num_photos} photos or documents are attached above." if num_photos > 1 else "Uploaded photo or document is attached above (if any)."
     user_text = (
         f"Preferred Language: {language}\n\n"
         f"{_rx_reference_text()}\n\n"
-        "Uploaded photo or document is attached above (if any). Extract the label details, "
+        f"{photo_desc} Extract the label details from ALL attached photos, "
         "decoding any prescription shorthand (e.g. TT = 2 tablets) using the reference above."
     )
     content.append({"text": user_text})
