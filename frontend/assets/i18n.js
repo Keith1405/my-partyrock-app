@@ -137,7 +137,6 @@
     ['Artificial limbs & braces', 'Tangan/kaki palsu & pendakap', '假肢与支撑支具'],
     ['Environmental Note:', 'Nota Alam Sekitar:', '环保提示：'],
     ['Never flush medicines down the toilet or throw them into household trash.', 'Jangan sesekali pam ubat ke dalam tandas atau buang ke dalam tong sampah rumah.', '切勿将药物冲入马桶或随生活垃圾丢弃。'],
-  ];
     ['The request could not finish. Check your connection and try again.', 'Permintaan tidak dapat diselesaikan. Semak sambungan anda dan cuba lagi.', '请求未能完成。请检查网络连接并重试。'],
     ['Your label details will appear here.', 'Butiran label anda akan dipaparkan di sini.', '标签详情将显示在这里。'],
     ['Did anything look incorrect or unclear?', 'Ada maklumat yang kelihatan salah atau tidak jelas?', '是否有任何信息不正确或不清晰？'],
@@ -152,8 +151,8 @@
     ['Other safety concern', 'Kebimbangan keselamatan lain', '其他安全顾虑'],
     ['Cancel', 'Batal', '取消'],
     ['Submit Report', 'Hantar Laporan', '提交反馈'],
-    ['Thank you! Your feedback was logged to improve our clinical prompts.', 'Terima kasih! Maklum balas anda telah direkodkan untuk menambah baik ketepatan klinikal.', '感谢您！您的反馈已记录，用于改进临床提示词。']
-  );
+    ['Thank you! Your feedback was logged to improve our clinical prompts.', 'Terima kasih! Maklum balas anda telah direkodkan untuk menambah baik ketepatan klinikal.', '感谢您！您的反馈已记录，用于改进临床提示词。'],
+  ];
   const normalize = text => text.replace(/\s+/g, ' ').trim();
   const translations = new Map(copy.map(row => [normalize(row[0]), row]));
   const languages = { English: { index: 0, tag: 'en' }, 'Bahasa Melayu': { index: 1, tag: 'ms' }, '中文': { index: 2, tag: 'zh-Hans' } };
