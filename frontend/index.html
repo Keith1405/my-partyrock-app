@@ -783,6 +783,64 @@
 
 </div>
 
+<!-- Feedback Modal (Production Readiness) -->
+<div class="feedback-modal-backdrop" id="feedback_modal" style="display:none;" onclick="if(event.target===this)closeFeedbackModal()">
+  <div class="feedback-modal">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <div>
+        <h3>Flag AI Output</h3>
+        <p class="ctx-sub" id="fb_context_label">Section: Medicine Card</p>
+      </div>
+      <button type="button" onclick="closeFeedbackModal()" style="background:none;border:none;font-size:1.4rem;color:#94a3b8;cursor:pointer;line-height:1;padding:0;">✕</button>
+    </div>
+
+    <label for="fb_reason">What seems incorrect or concerning?</label>
+    <select id="fb_reason">
+      <option value="dose_error">Incorrect dose, frequency, or instructions</option>
+      <option value="missing_warning">Missing safety warning or interaction</option>
+      <option value="unclear_wording">Unclear, confusing, or contradictory wording</option>
+      <option value="wrong_ingredient">Wrong medicine or active ingredient</option>
+      <option value="other">Other safety concern</option>
+    </select>
+
+    <label for="fb_notes">Details (optional):</label>
+    <textarea id="fb_notes" placeholder="Describe what looks wrong or what you expected..."></textarea>
+
+    <div class="feedback-actions">
+      <button type="button" class="secondary" onclick="closeFeedbackModal()">Cancel</button>
+      <button type="button" style="background:#dc2626;color:#fff;" onclick="submitFeedback()">Submit Report</button>
+    </div>
+  </div>
+</div>
+
+<!-- Clinical Triage Modal -->
+<div class="feedback-modal-backdrop" id="triage_modal" style="display:none;" onclick="if(event.target===this)closeTriageModal()">
+  <div class="feedback-modal" style="max-width:580px;max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+      <div>
+        <h3 style="margin:0 0 4px 0;font-size:1.2rem;">📋 Clinical Triage & Feedback Log</h3>
+        <p class="ctx-sub" style="margin:0;">User-flagged AI outputs for prompt engineering and clinical review.</p>
+      </div>
+      <button type="button" onclick="closeTriageModal()" style="background:none;border:none;font-size:1.4rem;color:#94a3b8;cursor:pointer;line-height:1;padding:0;">✕</button>
+    </div>
+
+    <div id="triage_list" style="margin:14px 0;display:flex;flex-direction:column;gap:10px;max-height:55vh;overflow-y:auto;">
+      <!-- dynamically populated -->
+    </div>
+
+    <div class="feedback-actions" style="margin-top:14px;border-top:1px solid #e2e8f0;padding-top:12px;gap:8px;">
+      <button type="button" class="secondary" onclick="renderTriageList()">Refresh</button>
+      <button type="button" class="secondary" onclick="exportTriageJson()">📥 Download JSON</button>
+      <button type="button" onclick="clearTriageLog()" style="background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;font-size:0.85rem;padding:8px 14px;border-radius:99px;cursor:pointer;">Clear Log</button>
+      <button type="button" class="secondary" onclick="closeTriageModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="fb_toast" style="display:none;">
+  <span>✅ Thank you! Your feedback was logged to improve our clinical prompts.</span>
+</div>
+
 <script src="assets/i18n.js"></script>
 <script>
 const t = source => window.SmartMedI18n.t(source);
@@ -1251,36 +1309,82 @@ if (guideDetails && guideDesc) {
   });
 }
 
+function getFlags() {
+  try {
+    const raw = localStorage.getItem('smartmed_ai_flags');
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.warn('Could not read smartmed_ai_flags from localStorage:', e);
+    return [];
+  }
+}
+
+function saveFlags(list) {
+  try {
+    localStorage.setItem('smartmed_ai_flags', JSON.stringify(Array.isArray(list) ? list : []));
+  } catch (e) {
+    console.error('Could not save smartmed_ai_flags to localStorage:', e);
+  }
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 let activeFbContext = 'Medicine Card';
 function openFeedbackModal(ctx) {
-  activeFbContext = ctx;
+  activeFbContext = ctx || 'Medicine Card';
   const ctxLabel = document.getElementById('fb_context_label');
-  if (ctxLabel) ctxLabel.textContent = ctx;
+  if (ctxLabel) {
+    const translatedCtx = t(activeFbContext);
+    ctxLabel.textContent = `${t('Section')}: ${translatedCtx}`;
+  }
   const modal = document.getElementById('feedback_modal');
   if (modal) modal.style.display = 'flex';
   const notes = document.getElementById('fb_notes');
   if (notes) notes.value = '';
 }
+
 function closeFeedbackModal() {
   const modal = document.getElementById('feedback_modal');
   if (modal) modal.style.display = 'none';
 }
+
 function submitFeedback() {
-  const reason = document.getElementById('fb_reason')?.value || 'other';
-  const notes = document.getElementById('fb_notes')?.value || '';
+  const reasonSelect = document.getElementById('fb_reason');
+  const reasonText = reasonSelect && reasonSelect.options[reasonSelect.selectedIndex]
+    ? reasonSelect.options[reasonSelect.selectedIndex].text.trim()
+    : 'Other safety concern';
+  const reasonCode = reasonSelect ? reasonSelect.value : 'other';
+  const notes = document.getElementById('fb_notes')?.value?.trim() || '';
+
   const item = {
     section: activeFbContext,
-    reason: reason,
+    reason: reasonText,
+    reasonCode: reasonCode,
     notes: notes,
     timestamp: new Date().toISOString(),
   };
-  try {
-    const list = JSON.parse(localStorage.getItem('smartmed_ai_flags') || '[]');
-    list.push(item);
-    localStorage.setItem('smartmed_ai_flags', JSON.stringify(list));
-    updateTriageCount();
-  } catch(e) {}
+
+  const list = getFlags();
+  list.push(item);
+  saveFlags(list);
+  updateTriageCount();
   closeFeedbackModal();
+
+  const triageModal = document.getElementById('triage_modal');
+  if (triageModal && triageModal.style.display === 'flex') {
+    renderTriageList();
+  }
+
   const toast = document.getElementById('fb_toast');
   if (toast) {
     toast.style.display = 'flex';
@@ -1313,38 +1417,45 @@ function verifyAdmin() {
 
 function updateTriageCount() {
   try {
-    const list = JSON.parse(localStorage.getItem('smartmed_ai_flags') || '[]');
+    const list = getFlags();
     const countEl = document.getElementById('triage_count');
     if (countEl) countEl.textContent = list.length;
-  } catch(e) {}
+  } catch (e) {}
 }
 updateTriageCount();
 
-function openTriageModal() {
-  if (!verifyAdmin()) return;
-  const modal = document.getElementById('triage_modal');
+function renderTriageList() {
   const container = document.getElementById('triage_list');
-  if (!modal || !container) return;
-  const list = JSON.parse(localStorage.getItem('smartmed_ai_flags') || '[]');
+  if (!container) return;
+  const list = getFlags();
   container.innerHTML = '';
   if (!list.length) {
-    container.innerHTML = '<p style="color:#64748b;font-size:0.9rem;text-align:center;padding:24px 10px;margin:0;">No issues flagged yet.<br><span style="font-size:0.8rem;color:#94a3b8;">When users flag an output with 🚩 Report issue, submissions appear here for clinical triage.</span></p>';
+    container.innerHTML = `<p style="color:#64748b;font-size:0.9rem;text-align:center;padding:24px 10px;margin:0;">${t('No issues flagged yet.')}<br><span style="font-size:0.8rem;color:#94a3b8;">${t('When users flag an output with 🚩 Report issue, submissions appear here for clinical triage.')}</span></p>`;
   } else {
     list.slice().reverse().forEach((item) => {
       const card = document.createElement('div');
       card.style.cssText = 'background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;font-size:0.88rem;';
       const dateStr = item.timestamp ? new Date(item.timestamp).toLocaleString() : 'N/A';
+      const sectionName = item.section ? t(item.section) : t('Medicine Card');
+      const safeNotes = item.notes ? escapeHtml(item.notes) : `<em>(${t('(No extra notes provided)')})</em>`;
       card.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-          <strong style="color:#0f172a;">${item.section || 'General'}</strong>
+          <strong style="color:#0f172a;">${escapeHtml(sectionName)}</strong>
           <span style="font-size:0.75rem;color:#94a3b8;">${dateStr}</span>
         </div>
-        <div style="margin-bottom:4px;color:#dc2626;font-weight:600;font-size:0.82rem;">⚠️ Reason: ${item.reason}</div>
-        <div style="color:#334155;white-space:pre-wrap;font-size:0.85rem;background:#fff;border:1px solid #f1f5f9;border-radius:6px;padding:6px 8px;">${item.notes || '<em>(No extra notes provided)</em>'}</div>
+        <div style="margin-bottom:4px;color:#dc2626;font-weight:600;font-size:0.82rem;">⚠️ ${t('Reason')}: ${escapeHtml(item.reason || item.reasonCode || 'N/A')}</div>
+        <div style="color:#334155;white-space:pre-wrap;font-size:0.85rem;background:#fff;border:1px solid #f1f5f9;border-radius:6px;padding:6px 8px;">${safeNotes}</div>
       `;
       container.appendChild(card);
     });
   }
+}
+
+function openTriageModal() {
+  if (!verifyAdmin()) return;
+  const modal = document.getElementById('triage_modal');
+  if (!modal) return;
+  renderTriageList();
   modal.style.display = 'flex';
 }
 
@@ -1354,7 +1465,8 @@ function closeTriageModal() {
 }
 
 function exportTriageJson() {
-  const data = localStorage.getItem('smartmed_ai_flags') || '[]';
+  const list = getFlags();
+  const data = JSON.stringify(list, null, 2);
   const blob = new Blob([data], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -1363,10 +1475,12 @@ function exportTriageJson() {
 }
 
 function clearTriageLog() {
-  if (confirm('Clear all logged feedback reports?')) {
-    localStorage.removeItem('smartmed_ai_flags');
+  if (confirm(t('Clear all logged feedback reports?'))) {
+    try {
+      localStorage.removeItem('smartmed_ai_flags');
+    } catch (e) {}
     updateTriageCount();
-    openTriageModal();
+    renderTriageList();
   }
 }
 
@@ -1397,62 +1511,5 @@ if (brandEl) {
 
 checkAdminAccess();
 </script>
-
-<!-- Feedback Modal (Production Readiness) -->
-<div class="feedback-modal-backdrop" id="feedback_modal" style="display:none;" onclick="if(event.target===this)closeFeedbackModal()">
-  <div class="feedback-modal">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-      <div>
-        <h3>Flag AI Output</h3>
-        <p class="ctx-sub" id="fb_context_label">Section: Medicine Card</p>
-      </div>
-      <button type="button" onclick="closeFeedbackModal()" style="background:none;border:none;font-size:1.4rem;color:#94a3b8;cursor:pointer;line-height:1;padding:0;">✕</button>
-    </div>
-
-    <label for="fb_reason">What seems incorrect or concerning?</label>
-    <select id="fb_reason">
-      <option value="dose_error">Incorrect dose, frequency, or instructions</option>
-      <option value="missing_warning">Missing safety warning or interaction</option>
-      <option value="unclear_wording">Unclear, confusing, or contradictory wording</option>
-      <option value="wrong_ingredient">Wrong medicine or active ingredient</option>
-      <option value="other">Other safety concern</option>
-    </select>
-
-    <label for="fb_notes">Details (optional):</label>
-    <textarea id="fb_notes" placeholder="Describe what looks wrong or what you expected..."></textarea>
-
-    <div class="feedback-actions">
-      <button type="button" class="secondary" onclick="closeFeedbackModal()">Cancel</button>
-      <button type="button" style="background:#dc2626;color:#fff;" onclick="submitFeedback()">Submit Report</button>
-    </div>
-  </div>
-</div>
-
-<!-- Clinical Triage Modal -->
-<div class="feedback-modal-backdrop" id="triage_modal" style="display:none;" onclick="if(event.target===this)closeTriageModal()">
-  <div class="feedback-modal" style="max-width:580px;max-height:85vh;overflow-y:auto;">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
-      <div>
-        <h3 style="margin:0 0 4px 0;font-size:1.2rem;">📋 Clinical Triage & Feedback Log</h3>
-        <p class="ctx-sub" style="margin:0;">User-flagged AI outputs for prompt engineering and clinical review.</p>
-      </div>
-      <button type="button" onclick="closeTriageModal()" style="background:none;border:none;font-size:1.4rem;color:#94a3b8;cursor:pointer;line-height:1;padding:0;">✕</button>
-    </div>
-
-    <div id="triage_list" style="margin:14px 0;display:flex;flex-direction:column;gap:10px;max-height:55vh;overflow-y:auto;">
-      <!-- dynamically populated -->
-    </div>
-
-    <div class="feedback-actions" style="margin-top:14px;border-top:1px solid #e2e8f0;padding-top:12px;gap:8px;">
-      <button type="button" class="secondary" onclick="exportTriageJson()">📥 Download JSON</button>
-      <button type="button" onclick="clearTriageLog()" style="background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;font-size:0.85rem;padding:8px 14px;border-radius:99px;cursor:pointer;">Clear Log</button>
-      <button type="button" class="secondary" onclick="closeTriageModal()">Close</button>
-    </div>
-  </div>
-</div>
-
-<div class="toast" id="fb_toast" style="display:none;">
-  <span>✅ Thank you! Your feedback was logged to improve our clinical prompts.</span>
-</div>
 </body>
 </html>
