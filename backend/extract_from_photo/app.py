@@ -87,9 +87,20 @@ LANGUAGE (highest priority):
 - Translate ALL field labels, headings, and warnings fully into the Preferred Language. Keep the emojis. (Values copied verbatim from the label stay as written on the label.)
 
 ABBREVIATION DECODING (use the PRESCRIPTION ABBREVIATION REFERENCE provided in the user message):
-- Prescriptions use shorthand. DECODE it faithfully using the reference. Examples: 'T' = 1 tablet, 'TT' = 2 tablets, 'TTT' = 3 tablets; 'bd/bid' = twice daily, 'tds/tid' = three times daily, 'qds/qid' = four times daily; 'prn' / 'as necessary' = as needed; 'po' = by mouth; 'ac' = before food, 'pc' = after food; 'mane' = morning, 'nocte' = night; 'x 7 days' = for 7 days; '5/7' = 5 days; '4/52' = 4 weeks; 'MDI' = metered dose inhaler; 'QID as necessary' = four times daily as needed.
+- Prescriptions use shorthand from Drugs.com, MIMS, and Commonwealth medical practice. DECODE it faithfully using the reference.
+- CRITICAL FREQUENCY VS TIMING DISTINCTION (Drugs.com standard):
+  * NEVER confuse food/meal intervals (such as '1h ac' = 1 hour before food, '2h pc' = 2 hours after food, 'q4h' = every 4 hours) with dose frequency.
+  * In directions like 'po 1h ac or 2 h pc tid', the frequency is TID = THREE TIMES DAILY. The correctly decoded line is:
+    How often: Three times daily, 1 hour before food or 2 hours after food (po 1h ac or 2 h pc tid)
+    NEVER output 'Once daily' when 'tid' or 'tds' is written!
+  * 'tid' / 't.i.d.' / 'tds' / 't.d.s.' ALWAYS means THREE TIMES DAILY (3 times a day).
+  * 'bid' / 'b.i.d.' / 'bd' / 'b.d.' ALWAYS means TWICE DAILY (2 times a day).
+  * 'qid' / 'q.i.d.' / 'qds' / 'q.d.s.' ALWAYS means FOUR TIMES DAILY (4 times a day).
+  * 'od' / 'o.d.' / 'qd' / 'q.d.' means ONCE DAILY (1 time a day).
+  * Only write 'Once daily' if 'od', 'qd', 'omne die', or explicit 'once daily' is actually on the label. If 'tid' is present, the frequency is ALWAYS three times daily.
+- Examples: 'T' = 1 tablet, 'TT' = 2 tablets, 'TTT' = 3 tablets; 'bd/bid' = twice daily, 'tds/tid' = three times daily, 'qds/qid' = four times daily; 'prn' / 'as necessary' = as needed; 'po' = by mouth; 'ac' = before food, 'pc' = after food; 'mane' = morning, 'nocte' = night; 'x 7 days' = for 7 days; '5/7' = 5 days; '4/52' = 4 weeks; 'MDI' = metered dose inhaler; 'QID as necessary' = four times daily as needed.
 - IMPORTANT: 'TT' means TWO tablets, not one. Read repeated letters carefully (T vs TT vs TTT).
-- When you decode an abbreviation, write the full meaning AND keep the original shorthand in brackets, e.g. 'Take 2 tablets (TT)', 'four times daily as needed (QID as necessary)'.
+- When you decode an abbreviation, write the full meaning AND keep the original shorthand in brackets, e.g. 'Take 2 tablets (TT)', 'three times daily (TID)', 'four times daily as needed (QID as necessary)'.
 - Decoding is NOT inventing: only decode shorthand that is actually written. If a token is genuinely ambiguous or illegible, write 'Not readable' and do not guess a number.
 
 MULTIPLE MEDICINES ON PRESCRIPTION SLIPS:
