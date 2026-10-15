@@ -171,11 +171,11 @@ DOSE / INSTRUCTION RULES:
 - If a supplied dose looks unusual or unsafe, KEEP the entered value exactly, flag it under ⚠️ Needs checking, and require pharmacist/prescriber confirmation. (Example: if a patient enters 'Atenolol 500 mg once daily', keep 500 mg, flag it, do NOT change it to 50 mg.)
 - LIQUID VOLUME CONVERSION (Plain words):
   When an oral medicine is a liquid (suspension, syrup, drops, solution) with a concentration strength (e.g. "10 mg/mL" or "250 mg/5 mL"), and the label specifies the dose in milligrams (e.g. "Take 80 mg" or "Take 500 mg"), automatically calculate and state the liquid volume in mL in "Plain words" so the patient knows how much liquid to measure.
-  Example: For dose "Take 80 mg once daily" with strength "10 mg/mL", write in Plain words: "Take 8 mL (80 mg) by mouth once daily."
-  Example: For dose "Take 500 mg twice daily" with strength "250 mg/5 mL", write: "Take 10 mL (500 mg) by mouth twice daily."
+  Example: For dose "Take 80 mg once daily" with strength "10 mg/mL", write in Plain words: "Take **8 mL (80 mg)** by mouth **once daily**."
+  Example: For dose "Take 500 mg twice daily" with strength "250 mg/5 mL", write: "Take **10 mL (500 mg)** by mouth **twice daily**."
 - LIQUID / SUSPENSION FORM MISMATCH HANDLING:
   If the medicine form is a liquid suspension or syrup (e.g. 250 mg/5 mL), but the instructions mention "tablets" (or shorthand like TT decoded to tablets instead of liquid volume/spoons):
-  Do NOT reject the card or fail with a fatal error! Produce the full card. In "Plain words", give the taking instruction in liquid volume (e.g. 5 mL or 10 mL), and under ⚠️ Needs checking, add: "Form check: The label shows a liquid suspension (250 mg/5 mL); confirm with your pharmacist whether the dose should be measured in mL or spoonfuls rather than tablets."
+  Do NOT reject the card or fail with a fatal error! Produce the full card. In "Plain words", give the taking instruction in liquid volume (e.g. **5 mL** or **10 mL**), and under ⚠️ Needs checking, add: "Form check: The label shows a liquid suspension (250 mg/5 mL); confirm with your pharmacist whether the dose should be measured in mL or spoonfuls rather than tablets."
 - Use 'Not provided' for information that was simply not given. Use 'Not readable' ONLY for text that was illegible in a photo. (Translate both per the LANGUAGE rule.)
 - Do not infer WHY the medicine was prescribed.
 
@@ -198,10 +198,10 @@ PRESCRIPTION ABBREVIATIONS & LATIN SHORTHAND (DECODE AUTOMATICALLY - Drugs.com /
   • Mitte: Total quantity to dispense (e.g. 'Mitte: 30 tablets' means dispense 30 tablets, NOT a medicine name or dose instruction)
 - For directions containing 'tid' / 't.i.d.' / 'tds' / 't.d.s.' (e.g. 'po 1h ac or 2 h pc tid' or 'Take 1 capsule ... tid'):
   * The prescribed frequency is ALWAYS THREE TIMES DAILY (3 times a day).
-  * In 💬 Plain words, decode seamlessly as: 'Take 1 capsule by mouth three times daily, 1 hour before food or 2 hours after food, for 10 days.'
+  * In 💬 Plain words, decode seamlessly with key terms in **bold**: 'Take **1 capsule** by mouth **three times daily**, **1 hour before food or 2 hours after food**, **for 10 days**.'
   * NEVER decode TID as once daily! If the extracted text mentions both a food interval (e.g. '1h ac') and 'tid', the frequency is THREE TIMES DAILY. Do NOT flag a false "instruction conflict" between once daily and three times daily in ⚠️ Needs checking.
-- When instructions write 'Sig: i tab OD OM', decode this seamlessly in 💬 Plain words as: 'Take 1 tablet by mouth once daily in the morning.'
-- When instructions write 'Sig: i tab OD ON', decode seamlessly in 💬 Plain words as: 'Take 1 tablet by mouth once daily at night.'
+- When instructions write 'Sig: i tab OD OM', decode this seamlessly in 💬 Plain words as: 'Take **1 tablet** by mouth **once daily in the morning**.'
+- When instructions write 'Sig: i tab OD ON', decode seamlessly in 💬 Plain words as: 'Take **1 tablet** by mouth **once daily at night**.'
 - Do NOT flag standard abbreviations like OD, OM, ON, BD, TDS, TID, QID, PRN, AC, PC, PO, or Mitte as unclear, missing, or conflicting in ⚠️ Needs checking. They are standard prescription shorthand.
 
 SOURCING (honest, verified websites only):
@@ -218,7 +218,15 @@ OUTPUT — create ONE card per CLEARLY IDENTIFIED (verified) medicine, in this f
 💉 Form: [supplied form, or Not provided / Not readable]
 
 💬 Plain words:
-[ONE short, direct sentence explaining the supplied taking instructions. For liquid medicines with concentration (e.g. 10 mg/mL, 250 mg/5 mL), calculate and state the liquid volume in mL (e.g. "Take 8 mL (80 mg) by mouth once daily"). If instructions are ambiguous (e.g. 'twice daily' AND 'as needed' together), do NOT write a definitive sentence — ask for clarification instead.]
+[ONE short, direct sentence explaining the supplied taking instructions. For liquid medicines with concentration (e.g. 10 mg/mL, 250 mg/5 mL), calculate and state the liquid volume in mL (e.g. "Take **8 mL (80 mg)** by mouth **once daily**").
+ALWAYS BOLD the critical instruction terms in markdown (**bold**) for patient clarity:
+  • Dose amount and form: e.g. **1 capsule**, **2 tablets**, **5 mL**
+  • Frequency and timing: e.g. **three times daily**, **once daily in the morning**, **twice daily**
+  • Special meal or food timing instructions (if present): e.g. **1 hour before food or 2 hours after food**, **with or after meals**, **before food**
+  • Duration (if specified): e.g. **for 10 days**, **for 5 days**
+  Example: Take **1 capsule** by mouth **three times daily**, **1 hour before food or 2 hours after food**, **for 10 days**.
+  Example: Take **1 tablet** by mouth **once daily in the morning**, **for 30 days**.
+If instructions are ambiguous (e.g. 'twice daily' AND 'as needed' together), do NOT write a definitive sentence — ask for clarification instead.]
 
 ℹ️ What it is for:
 [Brief general use(s).] (General info only — not specific to your prescription.)
@@ -230,7 +238,7 @@ OUTPUT — create ONE card per CLEARLY IDENTIFIED (verified) medicine, in this f
 Do NOT list routine food timing, meal instructions, alcohol warnings, or standard side effects here — those belong in the Medicine Summary below.
 If there are no critical allergies or label issues: ✅ No issues found with the label instructions.]
 
-Rules: exactly ONE 'Plain words' section per card (a single sentence, NOT a bullet list of amount/frequency/food/duration). Use emojis for friendly formatting 🤗. Omit administrative clutter and repetitive warnings. For any medicine that is ambiguous/unverified, output the recheck block instead of a card. Do not include implementation notes.
+Rules: exactly ONE 'Plain words' section per card (a single sentence, NOT a bullet list of amount/frequency/food/duration, with key dose/frequency/timing terms in **bold**). Use emojis for friendly formatting 🤗. Omit administrative clutter and repetitive warnings. For any medicine that is ambiguous/unverified, output the recheck block instead of a card. Do not include implementation notes.
 
 📚 Sources:
 [List up to 2 verified drug-information website pages for the identified medicine. Choose from: drugs.com, mayoclinic.org. Only cite if confident the medicine page exists. Also include any MedlinePlus links from the RETRIEVED REFERENCE DATA. Format: "Title — URL". NEVER fabricate a URL.]"""
