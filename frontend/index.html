@@ -135,6 +135,11 @@
   .dropzone .arrow { font-size: 1.6rem; display: block; margin-bottom: 6px; }
   .dropzone .filename { color: var(--accent); margin-top: 8px; display: block; word-break: break-all; }
   .thumb { max-width: 120px; max-height: 120px; margin-top: 10px; border-radius: 8px; }
+  .thumb-container { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 8px; }
+  .thumb-wrap { position: relative; display: inline-block; }
+  .thumb-wrap img { width: 68px; height: 68px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); display: block; }
+  .thumb-del { position: absolute; top: -5px; right: -5px; background: #dc2626; color: #fff; border: 1px solid #fff; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; padding: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+  .thumb-del:hover { background: #b91c1c; }
 
   /* AI output panels */
   .panel-head {
@@ -536,12 +541,13 @@
         </div>
         <div class="field photo-input">
           <label id="photo-label">Photo upload</label>
-        <div class="dropzone compact-upload" id="dz_med" data-input="file_med" role="button" tabindex="0" aria-labelledby="photo-label">
-          <img class="upload-icon" src="assets/upload.svg" alt="" />
-          <strong>Upload label photo</strong><span>JPG, PNG or WebP</span><span class="filename" id="fn_med"></span>
-        </div>
-        <button type="button" class="remove-photo" id="rm_med" hidden>✕ Remove photo</button>
-        <input type="file" id="file_med" accept="image/jpeg,image/png,image/webp" hidden />
+          <div class="dropzone compact-upload" id="dz_med" data-input="file_med" role="button" tabindex="0" aria-labelledby="photo-label">
+            <img class="upload-icon" src="assets/upload.svg" alt="" />
+            <strong>Upload label photo(s)</strong><span>JPG, PNG or WebP (multiple allowed)</span><span class="filename" id="fn_med"></span>
+            <div class="thumb-container" id="thumbs_med"></div>
+          </div>
+          <button type="button" class="remove-photo" id="rm_med" hidden>✕ Remove all photos</button>
+          <input type="file" id="file_med" accept="image/jpeg,image/png,image/webp" multiple hidden />
         </div>
         <div class="ai-panel"><div class="panel-head">Extract from Photo <button class="secondary" data-run="extract_from_photo">Extract label</button></div><div class="output auto" id="out_extract_from_photo" aria-live="polite"><span class="placeholder">Upload a label photo, then choose Extract label.</span></div></div>
       </div>
@@ -876,53 +882,154 @@ document.getElementById('medicine_details').addEventListener('input', () => inva
 for (const id of ['other_medicines', 'allergies']) document.getElementById(id).addEventListener('input', () => invalidateMedicineResults(true));
 const uploads = { file_med: null, file_ret: null };
 
-function wireDropzone(dzId, inputId, filenameId) {
-  const dz = document.getElementById(dzId);
-  const input = document.getElementById(inputId);
-  if (!dz || !input) return;
-  const fn = document.getElementById(filenameId);
-
-  dz.addEventListener('click', () => { input.value = ''; input.click(); });
-  dz.setAttribute('role', 'button');
-  dz.tabIndex = 0;
-  dz.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.value = ''; input.click(); } });
-  dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('drag'); });
-  dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
-  dz.addEventListener('drop', (e) => {
-    e.preventDefault(); dz.classList.remove('drag');
-    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0], inputId, fn, dz);
-  });
-  input.addEventListener('change', () => {
-    if (input.files.length) handleFile(input.files[0], inputId, fn, dz);
+function compressImage(file, maxDimension = 1600, quality = 0.85) {
+  return new Promise((resolve) => {
+    if (!file.type || !file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = () => resolve({
+        dataUrl: reader.result,
+        file_data: reader.result.split(',')[1],
+        file_mime: file.type || 'application/octet-stream',
+        name: file.name
+      });
+      reader.readAsDataURL(file);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          } else {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve({
+          dataUrl: dataUrl,
+          file_data: dataUrl.split(',')[1],
+          file_mime: 'image/jpeg',
+          name: file.name
+        });
+      };
+      img.onerror = () => {
+        resolve({
+          dataUrl: e.target.result,
+          file_data: e.target.result.split(',')[1],
+          file_mime: file.type || 'image/jpeg',
+          name: file.name
+        });
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
   });
 }
 
-function handleFile(file, inputId, fn, dz) {
-  const reader = new FileReader();
-  reader.onload = () => {
-    if (inputId === 'file_med') {
-      invalidateMedicineResults();
-      const extracted = document.getElementById('out_extract_from_photo');
-      activeRequests.get(extracted)?.abort(); completedResults.delete(extracted);
-      placeholder(extracted, 'Your label details will appear here.');
-      reloadSmartMedHelp();
-      reloadMyReturnPlan();
+function renderThumbnails(inputId, dzId, fnId) {
+  const entry = uploads[inputId];
+  const files = entry ? (entry.files || []) : [];
+  const dz = document.getElementById(dzId);
+  const fn = document.getElementById(fnId);
+  const rm = removeBtns[inputId];
+  let thumbContainer = dz ? dz.querySelector('.thumb-container') : null;
+
+  if (!thumbContainer && dz) {
+    thumbContainer = document.createElement('div');
+    thumbContainer.className = 'thumb-container';
+    dz.appendChild(thumbContainer);
+  }
+
+  if (thumbContainer) {
+    thumbContainer.innerHTML = '';
+    files.forEach((f, idx) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'thumb-wrap';
+      wrap.innerHTML = `
+        <img src="${f.dataUrl}" alt="${escapeHtml(f.name)}" title="${escapeHtml(f.name)}" />
+        <button type="button" class="thumb-del" title="Remove this photo" onclick="event.stopPropagation(); removeSinglePhoto('${inputId}', ${idx}, '${dzId}', '${fnId}')">✕</button>
+      `;
+      thumbContainer.appendChild(wrap);
+    });
+  }
+
+  if (fn) {
+    if (files.length === 0) {
+      fn.textContent = '';
+    } else if (files.length === 1) {
+      fn.textContent = `✅ ${files[0].name} (click to add more)`;
+    } else {
+      fn.textContent = `✅ ${files.length} photos attached (click to add more)`;
     }
-    const dataUrl = reader.result;
-    const base64 = dataUrl.split(',')[1];
-    uploads[inputId] = { file_data: base64, file_mime: file.type || 'image/jpeg' };
-    fn.textContent = '✅ ' + file.name;
-    const existing = dz.querySelector('.thumb');
-    if (existing) existing.remove();
-    if (file.type.startsWith('image/')) {
-      const img = document.createElement('img');
-      img.src = dataUrl; img.className = 'thumb';
-      dz.appendChild(img);
+  }
+
+  if (rm) {
+    rm.hidden = files.length === 0;
+  }
+}
+
+function removeSinglePhoto(inputId, index, dzId, fnId) {
+  if (uploads[inputId] && uploads[inputId].files) {
+    uploads[inputId].files.splice(index, 1);
+    const files = uploads[inputId].files;
+    uploads[inputId].file_data = files.length ? files[0].file_data : null;
+    uploads[inputId].file_mime = files.length ? files[0].file_mime : null;
+    if (files.length === 0) {
+      uploads[inputId] = null;
     }
-    const rm = removeBtns[inputId];
-    if (rm) rm.hidden = false;
-  };
-  reader.readAsDataURL(file);
+  }
+  if (inputId === 'file_med') {
+    invalidateMedicineResults();
+    const extracted = document.getElementById('out_extract_from_photo');
+    activeRequests.get(extracted)?.abort();
+    completedResults.delete(extracted);
+    placeholder(extracted, 'Your label details will appear here.');
+    reloadSmartMedHelp();
+    reloadMyReturnPlan();
+  }
+  renderThumbnails(inputId, dzId, fnId);
+}
+
+async function handleFiles(fileList, inputId, fnId, dzId) {
+  if (!fileList || !fileList.length) return;
+  if (!uploads[inputId]) {
+    uploads[inputId] = { files: [] };
+  } else if (!uploads[inputId].files) {
+    uploads[inputId].files = [];
+  }
+
+  if (inputId === 'file_med') {
+    invalidateMedicineResults();
+    const extracted = document.getElementById('out_extract_from_photo');
+    activeRequests.get(extracted)?.abort();
+    completedResults.delete(extracted);
+    placeholder(extracted, 'Your label details will appear here.');
+    reloadSmartMedHelp();
+    reloadMyReturnPlan();
+  }
+
+  for (let i = 0; i < fileList.length; i++) {
+    const file = fileList[i];
+    const processed = await compressImage(file);
+    uploads[inputId].files.push(processed);
+  }
+
+  const files = uploads[inputId].files;
+  uploads[inputId].file_data = files[0].file_data;
+  uploads[inputId].file_mime = files[0].file_mime;
+
+  renderThumbnails(inputId, dzId, fnId);
 }
 
 // Map each upload input to its Remove button, and clear everything on click.
@@ -943,13 +1050,49 @@ function clearUpload(inputId, dzId, fnId) {
   const fn = document.getElementById(fnId);
   if (fn) fn.textContent = '';
   const dz = document.getElementById(dzId);
-  const thumb = dz && dz.querySelector('.thumb');
-  if (thumb) thumb.remove();
+  const thumbContainer = dz && dz.querySelector('.thumb-container');
+  if (thumbContainer) thumbContainer.innerHTML = '';
+  const oldThumb = dz && dz.querySelector('.thumb');
+  if (oldThumb) oldThumb.remove();
   const rm = removeBtns[inputId];
   if (rm) rm.hidden = true;
 }
 if (removeBtns.file_med) removeBtns.file_med.addEventListener('click', () => clearUpload('file_med', 'dz_med', 'fn_med'));
 if (removeBtns.file_ret) removeBtns.file_ret.addEventListener('click', () => clearUpload('file_ret', 'dz_ret', 'fn_ret'));
+
+function wireDropzone(dzId, inputId, filenameId) {
+  const dz = document.getElementById(dzId);
+  const input = document.getElementById(inputId);
+  if (!dz || !input) return;
+
+  dz.addEventListener('click', (e) => {
+    if (e.target.classList.contains('thumb-del')) return;
+    input.value = '';
+    input.click();
+  });
+  dz.setAttribute('role', 'button');
+  dz.tabIndex = 0;
+  dz.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      input.value = '';
+      input.click();
+    }
+  });
+  dz.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dz.classList.add('drag');
+  });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+  dz.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dz.classList.remove('drag');
+    if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files, inputId, filenameId, dzId);
+  });
+  input.addEventListener('change', () => {
+    if (input.files.length) handleFiles(input.files, inputId, filenameId, dzId);
+  });
+}
 
 wireDropzone('dz_med', 'file_med', 'fn_med');
 wireDropzone('dz_ret', 'file_ret', 'fn_ret');
@@ -1085,17 +1228,31 @@ async function streamInto(url, payload, outEl) {
 
 const val = (id) => (document.getElementById(id)?.value || '').trim();
 
+function getUploadPayload(inputId) {
+  const up = uploads[inputId];
+  if (!up || !up.files || !up.files.length) return {};
+  return {
+    file_data: up.files[0]?.file_data,
+    file_mime: up.files[0]?.file_mime,
+    files: up.files.map(f => ({
+      file_data: f.file_data,
+      file_mime: f.file_mime,
+      name: f.name
+    }))
+  };
+}
+
 function payloadFor(key) {
   const common = { preferred_language: val('preferred_language') };
   switch (key) {
     case 'extract_from_photo':
-      return { ...common, ...(uploads.file_med || {}) };
+      return { ...common, ...getUploadPayload('file_med') };
     case 'medicine_card':
       return {
         ...common,
         medicine_details: val('medicine_details'),
         extract_from_photo: lastText('out_extract_from_photo'),
-        ...(uploads.file_med || {}),
+        ...getUploadPayload('file_med'),
       };
     case 'my_medicine_summary':
       return {
