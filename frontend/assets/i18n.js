@@ -140,6 +140,7 @@
     ['The request could not finish. Check your connection and try again.', 'Permintaan tidak dapat diselesaikan. Semak sambungan anda dan cuba lagi.', '请求未能完成。请检查网络连接并重试。'],
     ['Your label details will appear here.', 'Butiran label anda akan dipaparkan di sini.', '标签详情将显示在这里。'],
     ['Did anything look incorrect or unclear?', 'Ada maklumat yang kelihatan salah atau tidak jelas?', '是否有任何信息不正确或不清晰？'],
+    ['🚩 Report issue', '🚩 Laporkan isu', '🚩 反馈问题'],
     ['Report issue', 'Laporkan isu', '反馈问题'],
     ['Report an issue with this output', 'Laporkan isu berkaitan maklumat ini', '反馈此输出的问题'],
     ['Flag AI Output', 'Laporkan Output AI', '反馈 AI 输出'],
@@ -149,9 +150,25 @@
     ['Unclear, confusing, or contradictory wording', 'Ayat mengelirukan atau bercanggah', '用词晦涩、易混淆或前后矛盾'],
     ['Wrong medicine or active ingredient', 'Nama ubat atau bahan aktif salah', '药物名称或活性成分错误'],
     ['Other safety concern', 'Kebimbangan keselamatan lain', '其他安全顾虑'],
+    ['Details (optional):', 'Butiran (pilihan):', '详情（选填）：'],
+    ['Describe what looks wrong or what you expected...', 'Terangkan apa yang kelihatan salah atau apa yang anda jangkakan...', '请描述错误之处或您的预期...'],
     ['Cancel', 'Batal', '取消'],
     ['Submit Report', 'Hantar Laporan', '提交反馈'],
     ['Thank you! Your feedback was logged to improve our clinical prompts.', 'Terima kasih! Maklum balas anda telah direkodkan untuk menambah baik ketepatan klinikal.', '感谢您！您的反馈已记录，用于改进临床提示词。'],
+    ['✅ Thank you! Your feedback was logged to improve our clinical prompts.', '✅ Terima kasih! Maklum balas anda telah direkodkan untuk menambah baik ketepatan klinikal.', '✅ 感谢您！您的反馈已记录，用于改进临床提示词。'],
+    ['Section', 'Bahagian', '部分'],
+    ['📋 Clinical Triage & Feedback Log', '📋 Log Triaj Klinikal & Maklum Balas', '📋 临床分流与反馈日志'],
+    ['Clinical Triage Log', 'Log Triaj Klinikal', '临床分流日志'],
+    ['User-flagged AI outputs for prompt engineering and clinical review.', 'Output AI yang ditandakan pengguna untuk semakan klinikal dan kejuruteraan prompt.', '用户标记的 AI 输出，用于提示词工程与临床审核。'],
+    ['No issues flagged yet.', 'Tiada isu ditandakan lagi.', '暂无标记的问题。'],
+    ['When users flag an output with 🚩 Report issue, submissions appear here for clinical triage.', 'Apabila pengguna menandakan maklumat dengan 🚩 Laporkan isu, laporan akan dipaparkan di sini untuk triaj klinikal.', '当用户点击“🚩 反馈问题”时，提交的报告将显示在此处以供临床分流。'],
+    ['Reason', 'Sebab', '原因'],
+    ['📥 Download JSON', '📥 Muat Turun JSON', '📥 下载 JSON'],
+    ['Clear Log', 'Kosongkan Log', '清除日志'],
+    ['Close', 'Tutup', '关闭'],
+    ['Refresh', 'Muat Semula', '刷新'],
+    ['(No extra notes provided)', '(Tiada butiran tambahan diberikan)', '(未提供额外说明)'],
+    ['Clear all logged feedback reports?', 'Kosongkan semua laporan maklum balas yang direkodkan?', '清除所有已记录的反馈报告？'],
   ];
   const normalize = text => text.replace(/\s+/g, ' ').trim();
   const translations = new Map(copy.map(row => [normalize(row[0]), row]));
@@ -159,20 +176,26 @@
   let language = 'English';
   const t = source => translations.get(normalize(source))?.[languages[language].index] ?? source;
   const bindings = [];
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-  while (walker.nextNode()) {
-    const node = walker.currentNode;
-    if (node.parentElement.closest('script, style, option')) continue;
-    const source = node.nodeValue;
-    if (translations.has(normalize(source))) bindings.push({ node, source });
-  }
   const attributes = [];
-  document.querySelectorAll('[placeholder], [aria-label], [alt]').forEach(el => {
-    for (const name of ['placeholder', 'aria-label', 'alt']) {
-      const source = el.getAttribute(name);
-      if (source && translations.has(normalize(source))) attributes.push({ el, name, source });
+
+  function collectBindings() {
+    bindings.length = 0;
+    attributes.length = 0;
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (node.parentElement && node.parentElement.closest('script, style, #preferred_language')) continue;
+      const source = node.nodeValue;
+      if (translations.has(normalize(source))) bindings.push({ node, source });
     }
-  });
+    document.querySelectorAll('[placeholder], [aria-label], [alt]').forEach(el => {
+      for (const name of ['placeholder', 'aria-label', 'alt']) {
+        const source = el.getAttribute(name);
+        if (source && translations.has(normalize(source))) attributes.push({ el, name, source });
+      }
+    });
+  }
+
   const title = document.title;
   const select = document.getElementById('preferred_language');
   const notice = document.createElement('p');
@@ -185,13 +208,14 @@
     select.value = language;
     document.documentElement.lang = languages[language].tag;
     document.title = t(title);
+    collectBindings();
     for (const { node, source } of bindings) {
       if (node.isConnected) node.nodeValue = source.match(/^\s*/)[0] + t(source) + source.match(/\s*$/)[0];
     }
     for (const { el, name, source } of attributes) el.setAttribute(name, t(source));
     document.querySelectorAll('[data-ui-copy]').forEach(el => { el.textContent = t(el.dataset.uiCopy); });
     const menu = document.getElementById('menu_toggle');
-    menu.setAttribute('aria-label', t(menu.getAttribute('aria-expanded') === 'true' ? 'Close navigation' : 'Open navigation'));
+    if (menu) menu.setAttribute('aria-label', t(menu.getAttribute('aria-expanded') === 'true' ? 'Close navigation' : 'Open navigation'));
     if (announce) notice.hidden = false;
     notice.textContent = t('Language changed. Regenerate existing results for this language; earlier responses keep their original wording.');
     try { localStorage.setItem('smartmed.language', language); } catch { /* Storage may be unavailable. */ }
@@ -201,4 +225,7 @@
   try { saved = localStorage.getItem('smartmed.language'); } catch { /* Use English. */ }
   apply(saved || select.value);
   select.addEventListener('change', () => apply(select.value, true));
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => apply(language));
+  }
 })();
