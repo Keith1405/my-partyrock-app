@@ -883,8 +883,8 @@
       <div class="footer-legal-links">
         <a href="privacy.html">Privacy</a>
         <a href="terms.html">Terms of use</a>
-        <button type="button" id="admin_triage_btn" onclick="openTriageModal()" style="display:none;background:#f1f5f9;border:1px solid #cbd5e1;color:#1e293b;border-radius:99px;font-size:0.75rem;font-weight:700;cursor:pointer;padding:4px 10px;margin-left:10px;">
-          📋 Triage (<span id="triage_count">0</span>)
+        <button type="button" id="admin_triage_btn" onclick="openTriageModal()" style="display:none;background:#f1f5f9;border:1px solid #cbd5e1;color:#1e293b;border-radius:99px;font-size:0.75rem;font-weight:700;cursor:pointer;padding:4px 12px;margin-left:10px;align-items:center;gap:6px;">
+          📋 Triage (<span id="triage_count">0</span>) &bull; 👁️ <span id="footer_views_count">--</span> views
         </button>
       </div>
     </div>
@@ -927,14 +927,51 @@
   <div class="feedback-modal" style="max-width:580px;max-height:85vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
       <div>
-        <h3 style="margin:0 0 4px 0;font-size:1.2rem;">📋 Clinical Triage & Feedback Log</h3>
-        <p class="ctx-sub" style="margin:0;">User-flagged AI outputs for prompt engineering and clinical review.</p>
+        <h3 style="margin:0 0 4px 0;font-size:1.2rem;">📋 Clinical Triage & Analytics Log</h3>
+        <p class="ctx-sub" style="margin:0;">Live website traffic, visitor stats, and user-flagged safety items.</p>
         <div id="triage_sync_status" style="font-size:0.75rem;color:#16a34a;font-weight:600;margin-top:4px;">🟢 Live Cloud Sync Active &bull; Connected to all devices</div>
       </div>
       <button type="button" onclick="closeTriageModal()" style="background:none;border:none;font-size:1.4rem;color:#94a3b8;cursor:pointer;line-height:1;padding:0;">✕</button>
     </div>
 
-    <div id="triage_list" style="margin:14px 0;display:flex;flex-direction:column;gap:10px;max-height:55vh;overflow-y:auto;">
+    <!-- Live Analytics Dashboard -->
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <strong style="font-size:0.9rem;color:#0f172a;display:inline-flex;align-items:center;gap:6px;">📊 Pageview Analytics & Traffic</strong>
+        <span id="stat_status" style="font-size:0.72rem;color:#16a34a;font-weight:600;">🟢 Live</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;margin-bottom:10px;">
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 8px;text-align:center;">
+          <div style="font-size:0.7rem;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:0.3px;">Total Views</div>
+          <div id="stat_total_views" style="font-size:1.45rem;font-weight:800;color:#15803d;line-height:1.2;margin:2px 0;">--</div>
+          <div style="font-size:0.68rem;color:#16a34a;">Lifetime Views</div>
+        </div>
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 8px;text-align:center;">
+          <div style="font-size:0.7rem;font-weight:700;color:#1e40af;text-transform:uppercase;letter-spacing:0.3px;">Unique Visitors</div>
+          <div id="stat_unique_visitors" style="font-size:1.45rem;font-weight:800;color:#2563eb;line-height:1.2;margin:2px 0;">--</div>
+          <div style="font-size:0.68rem;color:#3b82f6;">Distinct People</div>
+        </div>
+        <div style="background:#fefce8;border:1px solid #fef08a;border-radius:8px;padding:10px 8px;text-align:center;">
+          <div style="font-size:0.7rem;font-weight:700;color:#854d0e;text-transform:uppercase;letter-spacing:0.3px;">Today's Views</div>
+          <div id="stat_today_views" style="font-size:1.45rem;font-weight:800;color:#ca8a04;line-height:1.2;margin:2px 0;">--</div>
+          <div style="font-size:0.68rem;color:#a16207;">Active Today</div>
+        </div>
+      </div>
+
+      <div style="background:#f8fafc;border:1px solid #f1f5f9;border-radius:6px;padding:8px 10px;font-size:0.78rem;color:#475569;display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px;">
+        <div>📱 <strong>Devices:</strong> <span id="stat_devices">Mobile: -- | Desktop: --</span></div>
+        <div>🌐 <strong>Languages:</strong> <span id="stat_languages">EN: -- | BM: -- | CN: --</span></div>
+        <div>🕒 <strong>Last Visit:</strong> <span id="stat_last_view">--</span></div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0 6px;">
+      <h4 style="margin:0;font-size:0.95rem;color:#0f172a;">🚩 Clinical Feedback Log</h4>
+      <span style="font-size:0.75rem;color:#64748b;">User-flagged AI safety items</span>
+    </div>
+
+    <div id="triage_list" style="margin:6px 0 14px;display:flex;flex-direction:column;gap:10px;max-height:42vh;overflow-y:auto;">
       <!-- dynamically populated -->
     </div>
 
@@ -1620,6 +1657,158 @@ function closeFeedbackModal() {
 }
 
 const CLOUD_TRIAGE_ENDPOINT = 'https://api.restful-api.dev/objects/ff808181a09d98f701a13fdc5d04692f';
+const CLOUD_ANALYTICS_ENDPOINT = 'https://api.restful-api.dev/objects/ff808181a09d98f701a14a40900c00d8';
+
+function updateAnalyticsUI(data) {
+  if (!data) return;
+  const totalEl = document.getElementById('stat_total_views');
+  const uniqueEl = document.getElementById('stat_unique_visitors');
+  const todayEl = document.getElementById('stat_today_views');
+  const devicesEl = document.getElementById('stat_devices');
+  const languagesEl = document.getElementById('stat_languages');
+  const lastViewEl = document.getElementById('stat_last_view');
+  const footerViewsEl = document.getElementById('footer_views_count');
+
+  if (totalEl) totalEl.textContent = (data.total_views || 0).toLocaleString();
+  if (uniqueEl) uniqueEl.textContent = (data.unique_visitors || 0).toLocaleString();
+  if (todayEl) todayEl.textContent = (data.today_views || 0).toLocaleString();
+  if (footerViewsEl) footerViewsEl.textContent = (data.total_views || 0).toLocaleString();
+
+  if (devicesEl) {
+    devicesEl.textContent = `Mobile: ${data.mobile_views || 0} | Desktop: ${data.desktop_views || 0}`;
+  }
+  if (languagesEl) {
+    languagesEl.textContent = `EN: ${data.english_views || 0} | BM: ${data.malay_views || 0} | CN: ${data.chinese_views || 0}`;
+  }
+  if (lastViewEl && data.last_view) {
+    try {
+      const date = new Date(data.last_view);
+      lastViewEl.textContent = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' (' + date.toLocaleDateString() + ')';
+    } catch (e) {
+      lastViewEl.textContent = 'Just now';
+    }
+  }
+}
+
+function loadCachedAnalytics() {
+  try {
+    const raw = localStorage.getItem('smartmed_analytics_cache');
+    if (raw) updateAnalyticsUI(JSON.parse(raw));
+  } catch (e) {}
+}
+
+async function recordPageView() {
+  try {
+    // Unique visitor identity
+    let vid = localStorage.getItem('smartmed_vid');
+    let isUnique = false;
+    if (!vid) {
+      vid = 'v_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+      localStorage.setItem('smartmed_vid', vid);
+      isUnique = true;
+    }
+
+    // Session debounce (1 hit per 15 seconds per tab to prevent rapid F5 inflation)
+    const lastSessionHit = sessionStorage.getItem('smartmed_last_hit');
+    const now = Date.now();
+    if (lastSessionHit && (now - parseInt(lastSessionHit, 10)) < 15000) {
+      loadCachedAnalytics();
+      return;
+    }
+    sessionStorage.setItem('smartmed_last_hit', String(now));
+
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const lang = (document.getElementById('preferred_language')?.value || 'English').toLowerCase();
+    const todayStr = new Date().toISOString().slice(0, 10);
+
+    const res = await fetch(CLOUD_ANALYTICS_ENDPOINT + '?_t=' + now, {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache, no-store' }
+    });
+    let data = {
+      total_views: 0,
+      unique_visitors: 0,
+      today_views: 0,
+      today_date: todayStr,
+      last_view: new Date().toISOString(),
+      english_views: 0,
+      malay_views: 0,
+      chinese_views: 0,
+      mobile_views: 0,
+      desktop_views: 0
+    };
+
+    if (res.ok) {
+      const doc = await res.json();
+      if (doc?.data && typeof doc.data.total_views === 'number') {
+        data = { ...data, ...doc.data };
+      }
+    }
+
+    data.total_views = (data.total_views || 0) + 1;
+    if (isUnique) {
+      data.unique_visitors = (data.unique_visitors || 0) + 1;
+    }
+    if (data.today_date === todayStr) {
+      data.today_views = (data.today_views || 0) + 1;
+    } else {
+      data.today_date = todayStr;
+      data.today_views = 1;
+    }
+    data.last_view = new Date().toISOString();
+
+    if (lang.includes('melayu') || lang.includes('bm')) {
+      data.malay_views = (data.malay_views || 0) + 1;
+    } else if (lang.includes('中文') || lang.includes('mandarin') || lang.includes('chinese')) {
+      data.chinese_views = (data.chinese_views || 0) + 1;
+    } else {
+      data.english_views = (data.english_views || 0) + 1;
+    }
+
+    if (isMobile) {
+      data.mobile_views = (data.mobile_views || 0) + 1;
+    } else {
+      data.desktop_views = (data.desktop_views || 0) + 1;
+    }
+
+    await fetch(CLOUD_ANALYTICS_ENDPOINT, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      keepalive: true,
+      body: JSON.stringify({
+        name: 'SmartMed Cycle - Live Analytics & Visitor Statistics',
+        data: data
+      })
+    });
+
+    localStorage.setItem('smartmed_analytics_cache', JSON.stringify(data));
+    updateAnalyticsUI(data);
+  } catch (err) {
+    console.warn('Analytics tracking error:', err);
+    loadCachedAnalytics();
+  }
+}
+
+async function refreshAnalytics() {
+  const statStatus = document.getElementById('stat_status');
+  if (statStatus) statStatus.textContent = '⏳ Refreshing...';
+  try {
+    const res = await fetch(CLOUD_ANALYTICS_ENDPOINT + '?_t=' + Date.now(), {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache, no-store' }
+    });
+    if (res.ok) {
+      const doc = await res.json();
+      if (doc?.data) {
+        localStorage.setItem('smartmed_analytics_cache', JSON.stringify(doc.data));
+        updateAnalyticsUI(doc.data);
+      }
+    }
+    if (statStatus) statStatus.textContent = '🟢 Live (' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ')';
+  } catch (e) {
+    if (statStatus) statStatus.textContent = '⚠️ Cached';
+  }
+}
 
 async function submitFeedback() {
   const submitBtn = document.getElementById('fb_submit_btn');
@@ -1728,6 +1917,7 @@ function checkAdminAccess() {
     if (btn) btn.style.display = 'inline-flex';
     // Auto-sync from cloud on page load so badge count is immediately accurate
     syncFromCloud();
+    refreshAnalytics();
   }
 }
 
@@ -1882,13 +2072,14 @@ async function openTriageModal() {
   if (container) {
     container.innerHTML = '<div style="text-align:center;padding:30px 10px;color:#64748b;font-size:0.9rem;">⏳ <strong>Syncing reports from cloud...</strong><br><span style="font-size:0.78rem;color:#94a3b8;">Fetching latest submissions from all devices</span></div>';
   }
+  refreshAnalytics();
   await syncFromCloud();
 }
 
 async function refreshTriage() {
   const syncStatus = document.getElementById('triage_sync_status');
-  if (syncStatus) syncStatus.textContent = '⏳ Refreshing reports from cloud...';
-  await syncFromCloud();
+  if (syncStatus) syncStatus.textContent = '⏳ Refreshing reports & analytics from cloud...';
+  await Promise.all([syncFromCloud(), refreshAnalytics()]);
 }
 
 function closeTriageModal() {
@@ -1999,6 +2190,8 @@ if (brandEl) {
   });
 })();
 
+loadCachedAnalytics();
+recordPageView();
 checkAdminAccess();
 </script>
 </body>
