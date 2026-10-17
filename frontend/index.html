@@ -801,12 +801,87 @@
     </div>
   </section>
 
-  <footer style="margin-top:60px;padding:24px 0 10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;font-size:0.85rem;color:#64748b;">
-    <div>SmartMed Cycle &bull; Clinical Safety & AI Verification</div>
-    <div>
-      <button type="button" id="admin_triage_btn" onclick="openTriageModal()" style="display:none;background:#f1f5f9;border:1px solid #cbd5e1;color:#1e293b;border-radius:99px;font-size:0.82rem;font-weight:700;cursor:pointer;align-items:center;gap:6px;padding:6px 14px;">
-        📋 Clinical Triage Log (<span id="triage_count">0</span>)
-      </button>
+  <!-- ============ FOOTER SECTION ============ -->
+  <!-- Callout Banner -->
+  <div class="footer-callout-banner">
+    <h3>A small step towards safer medicine disposal.</h3>
+    <p>Find a collection point and confirm the details before your visit.</p>
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-grid">
+      <!-- Col 1: Brand & About -->
+      <div class="footer-col footer-col-brand">
+        <a class="brand" href="#top" style="margin-bottom:12px;">
+          <img class="brand-logo" src="assets/logo_icon.png" alt="SmartMed Cycle icon" />SmartMed<span>Cycle</span>
+        </a>
+        <p class="footer-brand-motto">
+          Understand your medicines.<br />
+          Prepare your questions.<br />
+          Return with care.
+        </p>
+        <a href="#medicine" class="footer-about-link">About us</a>
+      </div>
+
+      <!-- Col 2: Use SmartMed -->
+      <div class="footer-col">
+        <h4>Use SmartMed</h4>
+        <ul>
+          <li><a href="#medicine">Medicine Card</a></li>
+          <li><a href="#precautions">My Medicine Summary</a></li>
+          <li><a href="#ask">SmartMed Help</a></li>
+          <li><a href="#returns">Return medicines</a></li>
+        </ul>
+      </div>
+
+      <!-- Col 3: Help & Support -->
+      <div class="footer-col">
+        <h4>Help & support</h4>
+        <ul>
+          <li><a href="#medicine">How to use SmartMed</a></li>
+          <li><a href="#photo-label">Photo upload guide</a></li>
+          <li><a href="javascript:void(0)" onclick="openFeedbackModal('General Feedback')">Feedback / report a problem</a></li>
+          <li><a href="#medicine">Accessibility</a></li>
+        </ul>
+      </div>
+
+      <!-- Col 4: Connect With Us -->
+      <div class="footer-col">
+        <h4>Connect with us</h4>
+        <ul class="footer-connect-list">
+          <li>
+            <a href="mailto:support@smartmedcycle.org" class="connect-link">
+              <span class="connect-icon">✉</span> Email us <span class="arrow-ext">↗</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="connect-link">
+              Follow on Instagram <span class="arrow-ext">↗</span>
+            </a>
+          </li>
+        </ul>
+        <p class="footer-contact-note">
+          Questions about the app? Get in touch.<br />
+          For personal medicine advice, ask your pharmacist.
+        </p>
+      </div>
+    </div>
+
+    <!-- Divider Sub-Text -->
+    <div class="footer-helping-line">
+      Helping you prepare for a better conversation with your pharmacist.
+    </div>
+
+    <!-- Bottom Copyright & Legal Links -->
+    <div class="footer-bottom-bar">
+      <div>&copy; 2026 SmartMed Cycle</div>
+      <div class="footer-legal-links">
+        <a href="javascript:void(0)">Privacy</a>
+        <a href="javascript:void(0)">Terms of use</a>
+        <button type="button" id="admin_triage_btn" onclick="openTriageModal()" style="display:none;background:#f1f5f9;border:1px solid #cbd5e1;color:#1e293b;border-radius:99px;font-size:0.75rem;font-weight:700;cursor:pointer;padding:4px 10px;margin-left:10px;">
+          📋 Triage (<span id="triage_count">0</span>)
+        </button>
+      </div>
     </div>
   </footer>
 
