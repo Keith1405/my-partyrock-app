@@ -917,7 +917,7 @@
 
     <div class="feedback-actions">
       <button type="button" class="secondary" onclick="closeFeedbackModal()">Cancel</button>
-      <button type="button" style="background:#dc2626;color:#fff;" onclick="submitFeedback()">Submit Report</button>
+      <button type="button" id="fb_submit_btn" style="background:#dc2626;color:#fff;" onclick="submitFeedback()">Submit Report</button>
     </div>
   </div>
 </div>
@@ -939,9 +939,9 @@
     </div>
 
     <div class="feedback-actions" style="margin-top:14px;border-top:1px solid #e2e8f0;padding-top:12px;gap:8px;">
-      <button type="button" class="secondary" onclick="refreshTriage()">Refresh</button>
+      <button type="button" class="secondary" onclick="refreshTriage()">🔄 Refresh from Cloud</button>
       <button type="button" class="secondary" onclick="exportTriageJson()">📥 Download JSON</button>
-      <button type="button" onclick="clearTriageLog()" style="background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;font-size:0.85rem;padding:8px 14px;border-radius:99px;cursor:pointer;">Clear Log</button>
+      <button type="button" onclick="clearTriageLog()" style="background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;font-size:0.85rem;padding:8px 14px;border-radius:99px;cursor:pointer;font-weight:600;">Clear All</button>
       <button type="button" class="secondary" onclick="closeTriageModal()">Close</button>
     </div>
   </div>
@@ -1622,6 +1622,7 @@ function closeFeedbackModal() {
 const CLOUD_TRIAGE_ENDPOINT = 'https://api.restful-api.dev/objects/ff808181a09d98f701a13fdc5d04692f';
 
 async function submitFeedback() {
+  const submitBtn = document.getElementById('fb_submit_btn');
   const reasonSelect = document.getElementById('fb_reason');
   const reasonText = reasonSelect && reasonSelect.options[reasonSelect.selectedIndex]
     ? reasonSelect.options[reasonSelect.selectedIndex].text.trim()
@@ -1630,6 +1631,7 @@ async function submitFeedback() {
   const notes = document.getElementById('fb_notes')?.value?.trim() || '';
 
   const item = {
+    id: 'rep_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
     section: activeFbContext,
     reason: reasonText,
     reasonCode: reasonCode,
@@ -1637,46 +1639,72 @@ async function submitFeedback() {
     timestamp: new Date().toISOString(),
   };
 
-  // 1. Save locally to browser immediately
-  const list = getFlags();
-  list.push(item);
-  saveFlags(list);
-  updateTriageCount();
-  closeFeedbackModal();
-
-  const toast = document.getElementById('fb_toast');
-  if (toast) {
-    toast.style.display = 'flex';
-    setTimeout(() => { toast.style.display = 'none'; }, 4000);
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = '⏳ Submitting report...';
   }
 
-  // 2. Push to Global Cloud Database so all devices/admin see it instantly
+  // 1. Save locally to browser immediately
+  const localList = getFlags();
+  localList.push(item);
+  saveFlags(localList);
+  updateTriageCount();
+
+  // 2. Push to Global Cloud Database with cache-busting so all devices/admin see it immediately
   try {
-    const res = await fetch(CLOUD_TRIAGE_ENDPOINT);
+    const res = await fetch(CLOUD_TRIAGE_ENDPOINT + '?_t=' + Date.now(), {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache, no-store' }
+    });
     let cloudReports = [];
     if (res.ok) {
       const doc = await res.json();
       cloudReports = Array.isArray(doc?.data?.reports) ? doc.data.reports : [];
     }
-    cloudReports.push(item);
-    if (cloudReports.length > 200) cloudReports = cloudReports.slice(-200);
-    await fetch(CLOUD_TRIAGE_ENDPOINT, {
+    // Prevent duplicate report
+    if (!cloudReports.some(r => r.id === item.id)) {
+      cloudReports.push(item);
+    }
+    if (cloudReports.length > 300) cloudReports = cloudReports.slice(-300);
+
+    const putRes = await fetch(CLOUD_TRIAGE_ENDPOINT, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
+      keepalive: true,
       body: JSON.stringify({
         name: 'SmartMed Cycle - Global Clinical Triage Log',
         data: { reports: cloudReports }
       })
     });
+
+    if (putRes.ok) {
+      // Synchronize local flags with authoritative cloud list
+      saveFlags(cloudReports);
+    }
   } catch (err) {
-    console.warn('Cloud sync error (report safely saved locally):', err);
+    console.warn('Cloud sync error (report safely saved in local storage):', err);
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Submit Report';
+    }
+    updateTriageCount();
+    closeFeedbackModal();
   }
 
-  // 3. Also log to AWS Lambda Function if reachable
+  // Show confirmation toast
+  const toast = document.getElementById('fb_toast');
+  if (toast) {
+    toast.style.display = 'flex';
+    setTimeout(() => { toast.style.display = 'none'; }, 4500);
+  }
+
+  // 3. Log to AWS Lambda Function if reachable
   if (STREAM_URLS.medicine_card && !STREAM_URLS.medicine_card.startsWith('__URL_')) {
     fetch(STREAM_URLS.medicine_card, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      keepalive: true,
       body: JSON.stringify({
         type: 'feedback',
         ...item,
@@ -1698,6 +1726,8 @@ function checkAdminAccess() {
   if (params.has('admin') || sessionStorage.getItem('smartmed_admin_auth') === 'true') {
     const btn = document.getElementById('admin_triage_btn');
     if (btn) btn.style.display = 'inline-flex';
+    // Auto-sync from cloud on page load so badge count is immediately accurate
+    syncFromCloud();
   }
 }
 
@@ -1724,31 +1754,88 @@ function updateTriageCount() {
 updateTriageCount();
 
 async function syncFromCloud() {
+  const statusEl = document.getElementById('triage_sync_status');
+  if (statusEl) statusEl.textContent = '⏳ Syncing reports from cloud...';
+
   try {
-    const res = await fetch(CLOUD_TRIAGE_ENDPOINT);
-    if (!res.ok) return;
+    const res = await fetch(CLOUD_TRIAGE_ENDPOINT + '?_t=' + Date.now(), {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache, no-store' }
+    });
+    if (!res.ok) {
+      if (statusEl) statusEl.textContent = '⚠️ Could not reach cloud (showing local storage)';
+      return;
+    }
     const doc = await res.json();
-    const cloudReports = Array.isArray(doc?.data?.reports) ? doc.data.reports : [];
-    if (cloudReports.length) {
-      const localList = getFlags();
-      const existingKeys = new Set(localList.map(r => (r.timestamp || '') + '|' + (r.notes || '') + '|' + (r.reason || '')));
-      let updated = false;
-      cloudReports.forEach(cr => {
-        const key = (cr.timestamp || '') + '|' + (cr.notes || '') + '|' + (cr.reason || '');
-        if (!existingKeys.has(key)) {
-          localList.push(cr);
-          existingKeys.add(key);
-          updated = true;
-        }
-      });
-      if (updated) {
-        saveFlags(localList);
-        updateTriageCount();
-        renderTriageList();
-      }
+    let cloudReports = Array.isArray(doc?.data?.reports) ? doc.data.reports : [];
+
+    // Ensure every report has a consistent ID
+    cloudReports = cloudReports.map((r, idx) => ({
+      ...r,
+      id: r.id || ('rep_' + (r.timestamp ? new Date(r.timestamp).getTime() : Date.now()) + '_' + idx)
+    }));
+
+    // Authoritative sync: cloud database is the single source of truth across all devices
+    saveFlags(cloudReports);
+    updateTriageCount();
+    renderTriageList();
+
+    if (statusEl) {
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      statusEl.textContent = `🟢 Connected to Cloud • Synced at ${timeStr} (${cloudReports.length} total reports)`;
     }
   } catch (e) {
     console.warn('Could not sync triage from cloud:', e);
+    if (statusEl) statusEl.textContent = '⚠️ Offline mode (showing local reports)';
+  }
+}
+
+async function deleteSingleTriageReport(reportId) {
+  if (!confirm('Are you sure you want to delete this report from the triage log?')) return;
+
+  const statusEl = document.getElementById('triage_sync_status');
+  if (statusEl) statusEl.textContent = '⏳ Deleting report from cloud...';
+
+  // 1. Remove from local list immediately for instant UI feedback
+  let localList = getFlags();
+  localList = localList.filter(item => item.id !== reportId && String(item.id) !== String(reportId));
+  saveFlags(localList);
+  updateTriageCount();
+  renderTriageList();
+
+  // 2. Remove from Cloud Database
+  try {
+    const res = await fetch(CLOUD_TRIAGE_ENDPOINT + '?_t=' + Date.now(), {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache, no-store' }
+    });
+    if (res.ok) {
+      const doc = await res.json();
+      let cloudReports = Array.isArray(doc?.data?.reports) ? doc.data.reports : [];
+      cloudReports = cloudReports.filter(item => item.id !== reportId && String(item.id) !== String(reportId));
+
+      await fetch(CLOUD_TRIAGE_ENDPOINT, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: 'SmartMed Cycle - Global Clinical Triage Log',
+          data: { reports: cloudReports }
+        })
+      });
+
+      // Synchronize local storage with updated cloud list
+      saveFlags(cloudReports);
+      updateTriageCount();
+      renderTriageList();
+
+      if (statusEl) {
+        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        statusEl.textContent = `🟢 Report deleted from cloud • Synced at ${timeStr}`;
+      }
+    }
+  } catch (err) {
+    console.warn('Cloud delete error:', err);
+    if (statusEl) statusEl.textContent = '⚠️ Deleted locally, cloud sync failed. Click Refresh.';
   }
 }
 
@@ -1760,40 +1847,48 @@ function renderTriageList() {
   if (!list.length) {
     container.innerHTML = `<p style="color:#64748b;font-size:0.9rem;text-align:center;padding:24px 10px;margin:0;">${t('No issues flagged yet.')}<br><span style="font-size:0.8rem;color:#94a3b8;">${t('When users flag an output with 🚩 Report issue, submissions appear here for clinical triage.')}</span></p>`;
   } else {
-    list.slice().reverse().forEach((item) => {
+    list.slice().reverse().forEach((item, revIdx) => {
+      const itemId = item.id || ('rep_' + (item.timestamp ? new Date(item.timestamp).getTime() : revIdx));
       const card = document.createElement('div');
       card.style.cssText = 'background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;font-size:0.88rem;';
       const dateStr = item.timestamp ? new Date(item.timestamp).toLocaleString() : 'N/A';
       const sectionName = item.section ? t(item.section) : t('Medicine Card');
       const safeNotes = item.notes ? escapeHtml(item.notes) : `<em>(${t('(No extra notes provided)')})</em>`;
       card.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-          <strong style="color:#0f172a;">${escapeHtml(sectionName)}</strong>
-          <span style="font-size:0.75rem;color:#94a3b8;">${dateStr}</span>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;gap:8px;">
+          <div>
+            <strong style="color:#0f172a;font-size:0.92rem;">${escapeHtml(sectionName)}</strong>
+            <div style="font-size:0.75rem;color:#94a3b8;margin-top:1px;">${dateStr}</div>
+          </div>
+          <button type="button" onclick="deleteSingleTriageReport('${escapeHtml(itemId)}')" title="Delete this report" style="background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;border-radius:6px;padding:3px 8px;font-size:0.75rem;font-weight:700;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:3px;">
+            🗑️ Delete
+          </button>
         </div>
-        <div style="margin-bottom:4px;color:#dc2626;font-weight:600;font-size:0.82rem;">⚠️ ${t('Reason')}: ${escapeHtml(item.reason || item.reasonCode || 'N/A')}</div>
-        <div style="color:#334155;white-space:pre-wrap;font-size:0.85rem;background:#fff;border:1px solid #f1f5f9;border-radius:6px;padding:6px 8px;">${safeNotes}</div>
+        <div style="margin-bottom:6px;color:#dc2626;font-weight:600;font-size:0.82rem;">⚠️ ${t('Reason')}: ${escapeHtml(item.reason || item.reasonCode || 'N/A')}</div>
+        <div style="color:#334155;white-space:pre-wrap;font-size:0.85rem;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:8px 10px;line-height:1.45;">${safeNotes}</div>
       `;
       container.appendChild(card);
     });
   }
 }
 
-function openTriageModal() {
+async function openTriageModal() {
   if (!verifyAdmin()) return;
   const modal = document.getElementById('triage_modal');
   if (!modal) return;
-  renderTriageList();
   modal.style.display = 'flex';
-  syncFromCloud();
+
+  const container = document.getElementById('triage_list');
+  if (container) {
+    container.innerHTML = '<div style="text-align:center;padding:30px 10px;color:#64748b;font-size:0.9rem;">⏳ <strong>Syncing reports from cloud...</strong><br><span style="font-size:0.78rem;color:#94a3b8;">Fetching latest submissions from all devices</span></div>';
+  }
+  await syncFromCloud();
 }
 
 async function refreshTriage() {
   const syncStatus = document.getElementById('triage_sync_status');
-  if (syncStatus) syncStatus.textContent = '⏳ Syncing reports from cloud...';
+  if (syncStatus) syncStatus.textContent = '⏳ Refreshing reports from cloud...';
   await syncFromCloud();
-  renderTriageList();
-  if (syncStatus) syncStatus.textContent = '🟢 Live Cloud Sync Active • Connected to all devices';
 }
 
 function closeTriageModal() {
@@ -1812,7 +1907,9 @@ function exportTriageJson() {
 }
 
 async function clearTriageLog() {
-  if (confirm(t('Clear all logged feedback reports?'))) {
+  if (confirm(t('Clear all logged feedback reports? This will remove all reports across all devices.'))) {
+    const statusEl = document.getElementById('triage_sync_status');
+    if (statusEl) statusEl.textContent = '⏳ Clearing all reports from cloud...';
     try {
       localStorage.removeItem('smartmed_ai_flags');
       // Reset cloud database
@@ -1823,8 +1920,12 @@ async function clearTriageLog() {
           name: 'SmartMed Cycle - Global Clinical Triage Log',
           data: { reports: [] }
         })
-      }).catch(() => {});
-    } catch (e) {}
+      });
+      if (statusEl) statusEl.textContent = '🟢 All reports cleared • Live sync active';
+    } catch (e) {
+      console.warn('Could not clear cloud triage:', e);
+      if (statusEl) statusEl.textContent = '⚠️ Cleared locally, cloud sync failed';
+    }
     updateTriageCount();
     renderTriageList();
   }
