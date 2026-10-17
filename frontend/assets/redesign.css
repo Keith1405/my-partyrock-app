@@ -89,12 +89,8 @@ details[open].help-collapse .help-icon{transform:rotate(180deg)}
 .help-content ul{margin:0;padding-left:18px}.help-content li{margin-bottom:4px}.help-content li:last-child{margin:0}
 
 /* ============ FOOTER STYLES ============ */
-.footer-callout-banner{background:linear-gradient(135deg,rgba(220,252,231,.5) 0%,rgba(240,253,250,.7) 50%,rgba(255,255,255,.9) 100%);border:1px solid #d1fae5;border-radius:24px;padding:36px 32px;text-align:left;margin:70px 0 40px}
-.footer-callout-banner h3{font-size:26px;font-weight:700;color:#15803d;margin:0 0 6px;letter-spacing:-0.5px}
-.footer-callout-banner p{font-size:16px;color:#475569;margin:0}
-
-.site-footer{margin-top:20px;padding:20px 0 30px}
-.footer-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1.2fr;gap:40px;margin-bottom:36px}
+.site-footer{margin-top:60px;padding:36px 0 30px;border-top:1px solid #e2e8f0}
+.footer-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1.2fr;gap:40px;margin-bottom:30px}
 .footer-col h4{font-size:16px;font-weight:700;color:#15803d;margin:0 0 16px;letter-spacing:-0.2px}
 .footer-col ul{list-style:none;padding:0;margin:0}
 .footer-col li{margin-bottom:10px}
@@ -105,11 +101,10 @@ details[open].help-collapse .help-icon{transform:rotate(180deg)}
 .connect-link{display:inline-flex;align-items:center;gap:6px}
 .arrow-ext{font-size:13px;color:#94a3b8}
 .footer-contact-note{font-size:13px;line-height:1.5;color:#64748b;margin:14px 0 0}
-.footer-helping-line{font-size:15px;color:#64748b;border-top:1px solid #e2e8f0;padding:24px 0 16px;text-align:left}
-.footer-bottom-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;font-size:14px;color:#94a3b8}
+.footer-bottom-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;font-size:14px;color:#94a3b8;border-top:1px solid #f1f5f9;padding-top:20px}
 .footer-legal-links{display:flex;align-items:center;gap:20px}
 .footer-legal-links a{color:#64748b;text-decoration:none}
 .footer-legal-links a:hover{color:#0f766e;text-decoration:underline}
 
 @media(max-width:950px){.footer-grid{grid-template-columns:1fr 1fr;gap:30px}}
-@media(max-width:600px){.footer-grid{grid-template-columns:1fr;gap:24px}.footer-callout-banner{padding:24px 20px}.footer-callout-banner h3{font-size:21px}.footer-bottom-bar{flex-direction:column;align-items:flex-start;gap:8px}}
+@media(max-width:600px){.footer-grid{grid-template-columns:1fr;gap:24px}.footer-bottom-bar{flex-direction:column;align-items:flex-start;gap:8px}}
