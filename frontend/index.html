@@ -515,8 +515,8 @@
   <nav class="topbar" aria-label="Main navigation">
     <a class="brand" href="#top"><img class="brand-logo" src="assets/logo.png" alt="SmartMed Cycle logo" />SmartMed<span>Cycle</span></a>
     <div class="navlinks" id="navigation">
-      <a href="#medicine">Medicine</a><a href="#precautions">Precautions</a>
-      <a href="#ask">Ask</a><a href="#returns">Returns</a>
+      <a href="#medicine" class="active" data-sec="medicine">Medicine</a><a href="#precautions" data-sec="precautions">Precautions</a>
+      <a href="#ask" data-sec="ask">Ask</a><a href="#returns" data-sec="returns">Returns</a>
     </div>
     <select id="preferred_language" aria-label="Preferred language">
       <option value="Bahasa Melayu">Bahasa Melayu</option>
@@ -524,6 +524,7 @@
       <option value="中文">Mandarin 中文</option>
     </select>
     <button class="menu-toggle" id="menu_toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="navigation"><img src="assets/list.svg" alt="" /></button>
+    <div class="nav-progress-line" id="navProgressLine"></div>
   </nav>
   <header class="hero" id="top">
     <h1>Know your medicine.<br />Feel prepared.</h1>
@@ -1751,6 +1752,49 @@ if (brandEl) {
     }
   });
 }
+
+// Navbar reading progress line and section active indicator
+(function() {
+  const line = document.getElementById('navProgressLine');
+  const navLinks = document.querySelectorAll('.navlinks a[data-sec]');
+  const sections = ['medicine', 'precautions', 'ask', 'returns'];
+
+  window.addEventListener('scroll', () => {
+    const winScroll = document.documentElement.scrollTop || document.body.scrollTop;
+    const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    if (height > 0 && line) {
+      line.style.width = ((winScroll / height) * 100) + '%';
+    }
+
+    let current = '';
+    sections.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        if (rect.top <= 220 && rect.bottom >= 140) {
+          current = id;
+        }
+      }
+    });
+
+    if (current) {
+      navLinks.forEach(a => {
+        if (a.getAttribute('data-sec') === current) {
+          a.classList.add('active');
+        } else {
+          a.classList.remove('active');
+        }
+      });
+    }
+  });
+
+  navLinks.forEach(a => {
+    a.addEventListener('click', function() {
+      navLinks.forEach(el => el.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+})();
 
 checkAdminAccess();
 </script>
