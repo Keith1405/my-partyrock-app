@@ -240,11 +240,23 @@
   .remove-photo { display:inline-block; margin-top:8px; background:#e74c3c; color:#fff; border:none; border-radius:8px; padding:6px 14px; font-size:0.82rem; font-weight:600; cursor:pointer; }
   .remove-photo:hover { background:#c0392b; }
   .remove-photo[hidden] { display:none; }
-  /* Brand logo in the navbar */
-  .brand { display:inline-flex; align-items:center; gap:10px; }
-  .brand-logo { height:34px; width:auto; display:block; }
-  .footer-col-brand .brand { font-size: 32px !important; font-weight: 800; letter-spacing: -1.2px; margin-bottom: 14px; }
-  .footer-col-brand .brand-logo { height: 28px !important; }
+  /* Brand logo in the navbar and footer */
+  .brand, .brand:link, .brand:visited, .footer-col-brand .brand, .footer-col-brand .brand:visited {
+    color: #09090b !important;
+    text-decoration: none !important;
+    font-weight: 800 !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+  }
+  .brand span, .footer-col-brand .brand span {
+    color: #15803d !important;
+    margin-left: 2px;
+  }
+  .brand-logo { height: 34px; width: auto; display: block; }
+  .footer-col-brand .brand { font-size: 30px !important; letter-spacing: -1.2px; margin-bottom: 14px; }
+  .footer-col-brand .brand-logo { height: 30px !important; }
   .footer-brand-motto { font-size: 18px; line-height: 1.6; color: #1e293b; font-weight: 500; margin: 0 0 16px; }
   .footer-about-link { font-size: 16px; font-weight: 700; color: #09090b!important; text-decoration: underline!important; }
 
