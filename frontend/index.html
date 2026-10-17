@@ -544,6 +544,15 @@
         <div class="field medicine-input">
           <label for="medicine_details">Medicine name and details</label>
           <textarea id="medicine_details" placeholder="Medicine name, strength and label instructions"></textarea>
+          <details class="help-collapse">
+            <summary class="help-summary">
+              <span class="help-icon">▾</span> What should I type here?
+            </summary>
+            <div class="help-content">
+              <p>Copy the medicine name and strength from your label. Add the instructions if you have them.</p>
+              <p>If typing is difficult, you can upload a label photo instead.</p>
+            </div>
+          </details>
         </div>
         <div class="field photo-input">
           <label id="photo-label">Photo upload</label>
@@ -554,6 +563,19 @@
           </div>
           <button type="button" class="remove-photo" id="rm_med" hidden>✕ Remove all photos</button>
           <input type="file" id="file_med" accept="image/jpeg,image/png,image/webp" multiple hidden />
+          <details class="help-collapse">
+            <summary class="help-summary">
+              <span class="help-icon">▾</span> Help with taking a clear photo
+            </summary>
+            <div class="help-content">
+              <ul>
+                <li>Use good lighting and avoid glare.</li>
+                <li>Keep the whole label in focus.</li>
+                <li>Show the name, strength and instructions.</li>
+                <li>You may cover your personal details.</li>
+              </ul>
+            </div>
+          </details>
         </div>
         <div class="ai-panel"><div class="panel-head">Extract from Photo <button class="secondary" data-run="extract_from_photo">Extract label</button></div><div class="output auto" id="out_extract_from_photo" aria-live="polite"><span class="placeholder">Upload a label photo, then choose Extract label.</span></div></div>
       </div>
