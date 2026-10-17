@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>About Us — SmartMed Cycle</title>
+  <link rel="stylesheet" href="assets/redesign.css" />
+  <style>
+    body {
+      background: #ffffff;
+      color: #0c0c10;
+      font-family: Manrope, 'Segoe UI', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+      line-height: 1.65;
+      padding: 24px 16px 60px;
+      margin: 0;
+    }
+    .container {
+      max-width: 780px;
+      margin: 0 auto;
+    }
+    .header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0 28px;
+      border-bottom: 1px solid #e2e8f0;
+      margin-bottom: 36px;
+    }
+    .brand {
+      color: #09090b;
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 28px;
+      letter-spacing: -1px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand span { color: #15803d; }
+    .brand-logo { height: 38px; width: auto; display: block; }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #0f766e;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 8px 16px;
+      border-radius: 99px;
+      border: 1.5px solid #cbd5e1;
+      background: #ffffff;
+      transition: all .15s ease;
+    }
+    .back-link:hover {
+      background: #f8fafc;
+      border-color: #0f766e;
+      text-decoration: none;
+    }
+    .content-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 36px 40px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    }
+    @media (max-width: 640px) {
+      .content-card {
+        padding: 24px 20px;
+        border-radius: 16px;
+      }
+    }
+    h1 {
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin: 0 0 12px;
+      color: #09090b;
+    }
+    .lead-tag {
+      font-size: 19px;
+      font-weight: 600;
+      color: #15803d;
+      margin: 0 0 24px;
+      line-height: 1.4;
+    }
+    p {
+      margin: 0 0 18px;
+      font-size: 16.5px;
+      color: #334155;
+      line-height: 1.7;
+    }
+    .highlight-box {
+      background: #f8fafc;
+      border-left: 4px solid #15803d;
+      border-radius: 0 12px 12px 0;
+      padding: 18px 22px;
+      margin: 28px 0;
+      color: #334155;
+      font-size: 16px;
+      line-height: 1.65;
+    }
+    .notice-box {
+      background: #effaf4;
+      border: 1.5px solid #bbf7d0;
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-top: 30px;
+      color: #166534;
+      font-size: 15px;
+    }
+    .notice-box strong {
+      color: #14532d;
+    }
+    .meta-note {
+      margin-top: 36px;
+      padding-top: 20px;
+      border-top: 1px solid #f1f5f9;
+      font-size: 14px;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header-bar">
+      <a class="brand" href="index.html" aria-label="SmartMed Cycle home">
+        <img class="brand-logo" src="assets/logo_icon.png" alt="SmartMed Cycle icon" />SmartMed<span>Cycle</span>
+      </a>
+      <a href="index.html" class="back-link">← Back to app</a>
+    </header>
+
+    <main class="content-card">
+      <article>
+        <h1>About SmartMed Cycle</h1>
+        <p class="lead-tag">Understanding your medicines should feel simpler.</p>
+
+        <p>SmartMed Cycle helps patients and caregivers understand medicine information, prepare questions for their pharmacist and find guidance on returning unwanted medicines.</p>
+
+        <p>Whether you type medicine details or upload a label photo, our aim is to make information clearer and help you feel more prepared for your next pharmacist conversation.</p>
+
+        <div class="highlight-box">
+          We believe that better understanding and responsible medicine disposal are small steps towards a healthier community.
+        </div>
+
+        <div class="notice-box">
+          <strong>SmartMed Cycle is a preparation tool.</strong> Always check your original medicine label and confirm medicine advice with your pharmacist.
+        </div>
+
+        <div class="meta-note">
+          SmartMed Cycle &bull; Contact: <a href="mailto:support@smartmedcycle.org" style="color:#0f766e;font-weight:700;">support@smartmedcycle.org</a>
+        </div>
+      </article>
+    </main>
+  </div>
+</body>
+</html>
