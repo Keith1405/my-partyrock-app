@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Accessibility — SmartMed Cycle</title>
+  <link rel="stylesheet" href="assets/redesign.css" />
+  <style>
+    body {
+      background: #ffffff;
+      color: #0c0c10;
+      font-family: Manrope, 'Segoe UI', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+      line-height: 1.65;
+      padding: 24px 16px 60px;
+      margin: 0;
+    }
+    .container {
+      max-width: 780px;
+      margin: 0 auto;
+    }
+    .header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0 28px;
+      border-bottom: 1px solid #e2e8f0;
+      margin-bottom: 36px;
+    }
+    .brand-logo {
+      height: 38px;
+      width: auto;
+      display: block;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #0f766e;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 8px 16px;
+      border-radius: 99px;
+      border: 1.5px solid #cbd5e1;
+      background: #ffffff;
+      transition: all .15s ease;
+    }
+    .back-link:hover {
+      background: #f8fafc;
+      border-color: #0f766e;
+      text-decoration: none;
+    }
+    .content-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 36px 40px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    }
+    @media (max-width: 640px) {
+      .content-card {
+        padding: 24px 20px;
+        border-radius: 16px;
+      }
+    }
+    h1 {
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin: 0 0 16px;
+      color: #09090b;
+    }
+    h2 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      margin: 32px 0 12px;
+      color: #15803d;
+    }
+    p {
+      margin: 0 0 16px;
+      font-size: 16px;
+      color: #334155;
+    }
+    ul {
+      margin: 0 0 20px;
+      padding-left: 24px;
+      color: #334155;
+    }
+    li {
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+    .meta-note {
+      margin-top: 36px;
+      padding-top: 20px;
+      border-top: 1px solid #f1f5f9;
+      font-size: 14px;
+      color: #64748b;
+    }
+    .contact-box {
+      background: #f8fafc;
+      border-left: 4px solid #15803d;
+      border-radius: 0 12px 12px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+    .contact-box a {
+      color: #0f766e;
+      font-weight: 700;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header-bar">
+      <a href="index.html" aria-label="SmartMed Cycle home">
+        <img class="brand-logo" src="assets/logo.png" alt="SmartMed Cycle" />
+      </a>
+      <a href="index.html" class="back-link">← Back to app</a>
+    </header>
+
+    <main class="content-card">
+      <article>
+        <h1>Accessibility Statement</h1>
+        <p>SmartMed Cycle aims to make medicine information easier to understand for patients and caregivers, including older adults and people with disabilities.</p>
+
+        <h2>Using this website</h2>
+        <ul>
+          <li>Use your browser’s zoom controls to make text and images larger.</li>
+          <li>You can type medicine details instead of uploading a photo.</li>
+          <li>If any step is difficult, ask someone you trust to help you use the website.</li>
+        </ul>
+
+        <h2>Tell us about a difficulty</h2>
+        <div class="contact-box">
+          <p style="margin:0;">If you have trouble reading information, using a control or completing a step, please email us at <a href="mailto:support@smartmedcycle.org">support@smartmedcycle.org</a>.</p>
+        </div>
+
+        <p>Please tell us which page you were using, what you were trying to do and, if possible, your device and browser. Do not include personal medical information or unedited prescription photos.</p>
+
+        <p>We welcome suggestions and will use your feedback to improve accessibility. We have not yet completed a formal accessibility audit.</p>
+
+        <p><strong>For questions about your medicines, speak with your pharmacist.</strong></p>
+
+        <div class="meta-note">
+          Last updated: 17 October 2026
+        </div>
+      </article>
+    </main>
+  </div>
+</body>
+</html>
