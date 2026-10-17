@@ -1,0 +1,78 @@
+@font-face{font-family:Manrope;src:url('manrope.ttf') format('truetype');font-weight:200 800;font-display:swap}
+:root{--bg:#ffffff;--panel:#fff;--panel-2:#fafafa;--border:#d8d5d8;--accent:#0f766e;--accent-dim:#115e59;--logo-green:#14532d;--text:#0c0c10;--text-dim:#62636d;--danger:#ae283c;--link:#0f766e;--radius:28px}
+html{scroll-behavior:smooth;scroll-padding-top:120px}
+body{font-family:Manrope,'Segoe UI',Arial,sans-serif;background:#ffffff;line-height:1.5}
+.wrap{max-width:1536px;padding:22px 48px 80px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.skip-link{position:absolute;left:48px;top:-100px;background:white;padding:12px;z-index:100}.skip-link:focus{top:12px}
+.topbar{display:flex;align-items:center;gap:24px;position:sticky;top:12px;z-index:50;background:rgba(240,238,240,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(30,30,30,.12);border-radius:60px;padding:12px 14px 12px 32px;min-height:88px;box-shadow:0 6px 24px rgba(0,0,0,.08);overflow:hidden}
+.nav-progress-line{position:absolute;bottom:0;left:0;height:3.5px;background:linear-gradient(90deg,#15803d,#0f766e);width:0%;transition:width .1s ease-out;border-radius:0 2px 2px 0}
+.menu-toggle{display:none!important}
+a{color:var(--link)}
+.brand{color:#09090b;text-decoration:none;font-weight:800;font-size:36px;letter-spacing:-1.6px;white-space:nowrap;display:inline-flex;align-items:center;gap:12px}.brand span{color:var(--logo-green);margin-left:2px}.brand-logo{height:42px;width:auto;display:block}
+.navlinks{display:flex;gap:8px;margin-left:auto;align-items:center}.navlinks a{font-size:18px;font-weight:700;color:#15803d;text-decoration:none;padding:9px 18px;border-radius:99px;transition:all .2s ease;border:1.5px solid transparent;white-space:nowrap}.navlinks a:hover{background:rgba(15,118,110,.08);color:#0f766e;text-decoration:none}.navlinks a.active{background:rgba(15,118,110,.16)!important;color:#15803d!important;border-color:rgba(15,118,110,.38)!important;box-shadow:0 2px 8px rgba(15,118,110,.12)}
+#preferred_language{width:175px;background:rgba(255,255,255,.55);border-color:#929197;padding:10px 28px 10px 12px;font-size:16px;flex-shrink:0}
+.navlinks.is-open{position:absolute;top:calc(100% + 12px);right:0;display:flex;flex-direction:column;align-items:stretch;width:240px;padding:20px 30px;border-radius:24px;background:#fff;border:1px solid var(--border);gap:6px}
+header.hero{background:none;border:0;border-radius:0;text-align:center;padding:56px 0 0;margin:0 0 38px}
+.hero h1{font-size:clamp(48px,6.3vw,94px);font-weight:400;line-height:.99;letter-spacing:-5.5px;margin:6px auto 32px}
+.hero .tag{font-style:normal;font-size:30px;line-height:1.35;letter-spacing:-.6px;color:#52525a;margin:0 auto 34px;max-width:950px}
+.primary{display:inline-flex;align-items:center;justify-content:center;gap:26px;background:var(--accent);border:1px solid #115e59;border-radius:99px;padding:18px 40px;color:#ffffff;font-size:23px;font-weight:800;text-decoration:none;min-height:76px}.primary img{width:23px;height:23px}.primary:hover{background:#115e59}
+.hero-note{font-size:17px;color:#666977;margin:20px 0 0}
+.medicine-section{scroll-margin-top:20px}
+.entry-surface{background:rgba(255,255,255,.89);border:1px solid #e1dde1;border-radius:32px;padding:30px 44px 40px}
+.entry-surface h2{font-size:38px;font-weight:800;letter-spacing:-1.4px;margin:0 0 24px}
+.entry-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;gap:20px}
+.entry-grid .field{margin:0}.entry-grid textarea{height:122px;resize:vertical;padding:18px 20px;font-size:17px;background:#fff}.entry-grid select{background:#fff;font-size:16px;padding:12px 16px}
+.compact-upload{background:#f5f5f6;border:1px solid var(--border);min-height:122px;padding:16px 12px 10px;white-space:normal;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#111}
+.upload-icon{width:26px;height:26px;margin-bottom:4px}.compact-upload strong{font-size:16px}.compact-upload>span:not(.filename){font-size:13px;color:#666977}.compact-upload .filename:empty{display:none}.dropzone .filename{color:#426000;font-size:12px;margin:0}.compact-upload .thumb{max-height:70px}
+.steps{display:grid;grid-template-columns:1fr 1fr 1fr;list-style:none;gap:60px;margin:10px 0 48px;padding:0 32px}.steps li{display:flex;align-items:flex-start;gap:24px}.step-number{display:flex;align-items:center;justify-content:center;width:60px;height:60px;border-radius:50%;background:#e6f4ea;color:#15803d;border:1.5px solid #86efac;flex-shrink:0;font-size:22px;font-weight:700}.steps strong{display:block;font-size:18px;margin:4px 0 4px}.steps p{margin:0;font-size:16px;color:#626673;line-height:1.4}
+.medicine-workspace{border-top:1px solid var(--border);padding:44px 0}
+.section-intro{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:16px}.eyebrow{font-size:12px;letter-spacing:2px;color:#666}.section-intro h2{font-size:32px;letter-spacing:-1px;font-weight:500;margin:8px 0}.section-intro button{display:flex;align-items:center;gap:20px;flex-shrink:0}.section-intro button img{width:20px}
+section.sec{background:transparent;border:0;border-top:1px solid var(--border);border-radius:0;padding:40px 0;margin-bottom:24px}
+section.sec>h2{font-size:32px;letter-spacing:-1px;font-weight:500;margin-bottom:12px}.sec-desc{max-width:100%;color:#555b64;font-size:16px}.sec-desc blockquote{border-color:#b5d930;color:#555b64}
+button{font-family:inherit;border-radius:99px;min-height:44px;padding:12px 22px}button:hover{filter:brightness(.96)}button.secondary{background:var(--accent);color:#ffffff;border:1px solid #115e59;font-weight:700}
+:focus-visible{outline:3px solid #667f00!important;outline-offset:4px}
+textarea,select,input[type=text]{background:#fff;border-radius:12px;resize:vertical;min-height:44px}textarea.hinted{height:165px;line-height:1.5}
+.notice{background:#f4f5df;border:1px solid #dedfbd;color:#575a34;padding:14px 18px;font-size:14px}.notice.emergency{background:#ffe9ed;border-color:#edc9d0;color:#952337}
+.notice-red{background:#fdecec;border:1px solid #e4572e;border-left:5px solid #c0392b;border-radius:10px;padding:14px 18px;color:#a01b1b;font-size:15px;margin:14px 0;max-width:100%}.notice-red a{color:#7a1414;text-decoration:underline}.notice-red strong{color:#8a1414}
+.ai-panel{margin-top:24px;border:1px solid var(--border);border-radius:18px;overflow:hidden}.panel-head{background:#f2f1f2;border-radius:0;font-size:16px;padding:12px 20px;min-height:64px}.panel-head button{margin-left:auto;padding:6px 18px!important}
+.output{background:#fff;border:0;border-top:1px solid var(--border);border-radius:0;line-height:1.7;min-height:120px}.placeholder{font-style:normal;color:#686a73}.md-line code{background:#eee;color:#222}.md-line.li::before{color:#526700}
+.run-all-bar{position:static;background:none;backdrop-filter:none;margin:16px 0 0;padding:0}
+.dropzone{background:#f5f5f6}.dropzone.drag{border-color:#668000;background:#eff6d1}.bubble.bot{background:#f7f7f7}.bubble{white-space:pre-wrap}.chat-input-row input{min-width:0}.chat-input-row{padding:0 16px 16px;margin-top:16px}.output.chat{max-height:560px}
+@media(min-width:1600px){.hero h1{font-size:94px}}
+@media(max-width:1200px){.wrap{padding:20px 28px 60px}.topbar{gap:16px;padding-left:24px}.brand{font-size:28px}.navlinks{gap:22px}.navlinks a{font-size:16px}#preferred_language{width:138px}.hero h1{letter-spacing:-3px}.hero .tag{font-size:25px}.steps{gap:24px;padding:0 16px}.steps li{gap:16px}.entry-surface{padding:28px}.entry-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:950px){.topbar{flex-wrap:wrap;gap:10px 14px;border-radius:26px;padding:12px 18px}.brand{margin-right:auto}.navlinks{order:4;width:100%;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;border-top:1px solid rgba(0,0,0,.08);padding:8px 0 2px;margin:0}.navlinks a{padding:8px 2px;font-size:14px;text-align:center;justify-content:center;flex-shrink:0}.entry-grid{grid-template-columns:1fr}.steps{gap:18px}.steps strong{font-size:16px}.steps p{font-size:14px}.step-number{width:44px;height:44px;font-size:18px}.steps li{gap:12px}}
+@media(max-width:600px){html{scroll-padding-top:20px}.wrap{padding:10px 14px 40px}.topbar{padding:10px 12px;gap:8px 10px;border-radius:20px;min-height:0;box-shadow:0 4px 18px rgba(0,0,0,.08)}.brand{font-size:20px;letter-spacing:-1px;gap:8px;width:auto;margin-right:auto}.brand-logo{height:28px;width:auto}#preferred_language{width:125px;max-width:38%;margin:0;order:2;padding:6px 18px 6px 8px;font-size:12px!important;height:36px;min-height:36px}.navlinks{order:4;width:100%;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;border-top:1px solid rgba(0,0,0,.08);padding:8px 0 2px;margin:0}.navlinks a{padding:7px 2px;font-size:13px;min-height:36px;display:flex;align-items:center;justify-content:center;text-align:center;border-radius:8px;white-space:nowrap}.hero h1{font-size:42px;line-height:1.06;letter-spacing:-2px;margin:0 0 18px}.hero .tag{font-size:17px;line-height:1.5;letter-spacing:-.2px;margin-bottom:24px}.desktop-break{display:none}header.hero{padding:28px 0 0;margin-bottom:24px}.primary{font-size:18px;padding:14px 28px;min-height:56px;gap:14px;width:100%;max-width:340px;box-sizing:border-box}.hero-note{font-size:13px;line-height:1.6;margin:14px 8px 0}.entry-surface{padding:20px 16px;border-radius:24px}.entry-surface h2{font-size:26px;margin-bottom:16px;letter-spacing:-1px}.entry-grid{grid-template-columns:1fr;gap:16px}.entry-grid textarea{font-size:15px;height:130px;padding:14px}.compact-upload{min-height:122px}.steps{grid-template-columns:1fr;padding:0 8px;gap:18px;margin:16px 0 32px}.steps li{gap:16px}.steps strong{font-size:16px}.steps p{font-size:14px}.steps br{display:none}.step-number{width:46px;height:46px;font-size:18px}.section-intro{display:block}.section-intro h2,section.sec>h2{font-size:26px}.section-intro button{margin-top:16px}.medicine-workspace,section.sec{padding:26px 0}.panel-head{padding:10px 14px;font-size:15px}.chat-input-row{gap:6px;padding:0 10px 12px}.chat-input-row button{padding:10px 16px;min-height:44px}.bubble{max-width:94%}.sec-desc{font-size:15px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* Equal-width medicine, photo upload and extraction columns. */
+.entry-grid .field label{font-size:16px;font-weight:600;line-height:24px;margin-bottom:10px}
+.entry-grid textarea{height:220px;min-height:220px}
+.entry-grid .compact-upload{height:220px;min-height:220px}
+.entry-grid>.ai-panel{margin:0;border:0;border-radius:0;overflow:visible;min-width:0}
+.entry-grid>.ai-panel .panel-head{background:none;padding:0;margin:0 0 10px;min-height:24px;height:24px;border:0;font-size:16px;font-weight:600;line-height:24px;white-space:nowrap}
+.entry-grid>.ai-panel .panel-head button{min-height:28px;padding:2px 12px!important;font-size:12px}
+.entry-grid>.ai-panel .output{height:220px;min-height:220px;max-height:220px;border:1px solid var(--border);border-radius:12px;padding:14px;font-size:14px;overflow-wrap:anywhere}
+@media(max-width:950px){.entry-grid{grid-template-columns:1fr;gap:22px}}
+
+/* Allow longer translated headings and navigation labels to wrap on large screens only. */
+@media(min-width:951px){.navlinks{flex-wrap:wrap;min-width:0}}
+.entry-grid>.ai-panel .panel-head{height:auto;min-height:28px;white-space:normal;flex-wrap:wrap;gap:8px}
+.language-notice{margin:12px 0}
+.language-notice[hidden]{display:none}
+
+/* Patient reading: avoid nested scrolling and keep controls easy to select. */
+.output:not(.chat){max-height:none!important;height:auto!important;min-height:120px;overflow:visible;font-size:17px;line-height:1.65}
+.entry-grid>.ai-panel .output{min-height:220px}
+.output a{overflow-wrap:anywhere;text-decoration:underline}
+button{min-height:44px}button:disabled{opacity:.65;cursor:wait}
+textarea,input,select{font-size:16px!important}
+/* Keep the floating navigation visible; reserve its measured height for anchors. */
+.topbar{position:sticky;top:12px}
+html{scroll-padding-top:var(--nav-offset,140px)}
+.medicine-section{scroll-margin-top:0}
+.md-line{overflow-wrap:anywhere}
+
+/* Requested section-heading increase: +2 px on desktop and small screens. */
+.section-intro h2, section.sec>h2{font-size:34px}
+@media(max-width:600px){.section-intro h2, section.sec>h2{font-size:28px}}
