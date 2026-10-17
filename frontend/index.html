@@ -207,9 +207,9 @@
 
   button {
     background: var(--accent);
-    color: #0f1419;
-    border: none;
-    border-radius: 10px;
+    color: #ffffff;
+    border: 1px solid #115e59;
+    border-radius: 99px;
     padding: 10px 18px;
     font-weight: 700;
     font-size: 0.95rem;
@@ -217,7 +217,7 @@
     transition: filter .15s;
   }
   button:hover { filter: brightness(1.08); }
-  button.secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
+  button.secondary { background: var(--accent); color: #ffffff; border: 1px solid #115e59; }
   button:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .run-all-bar {
@@ -644,7 +644,7 @@
       </div>
       <div class="chat-input-row">
         <input type="text" id="chat_input" placeholder="Ask anything. For example: explain this instruction, prepare my pharmacist summary, quiz me" />
-        <button id="chat_send">Send</button>
+        <button id="chat_send" class="secondary">Send</button>
       </div>
     </div>
   </section>
