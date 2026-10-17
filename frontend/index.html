@@ -521,7 +521,7 @@
     <select id="preferred_language" aria-label="Preferred language">
       <option value="Bahasa Melayu">Bahasa Melayu</option>
       <option value="English" selected>English</option>
-      <option value="中文">中文</option>
+      <option value="中文">Mandarin 中文</option>
     </select>
     <button class="menu-toggle" id="menu_toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="navigation"><img src="assets/list.svg" alt="" /></button>
   </nav>
@@ -532,6 +532,11 @@
     <p class="hero-note">Preparation tool only. Always check your original label and speak with your pharmacist.</p>
   </header>
   <section class="medicine-section" id="medicine" aria-labelledby="medicine-title">
+    <ol class="steps" aria-label="How it works">
+      <li><span class="step-number">1</span><div><strong>Add your medicine</strong><p>Type it or upload a photo<br /> of your label.</p></div></li>
+      <li><span class="step-number">2</span><div><strong>Get clear information</strong><p>See key points in plain language.</p></div></li>
+      <li><span class="step-number">3</span><div><strong>Take to your pharmacist</strong><p>Bring your questions and<br /> feel prepared.</p></div></li>
+    </ol>
     <div class="entry-surface">
       <h2 id="medicine-title">Medicine details</h2>
       <div class="entry-grid">
@@ -552,11 +557,6 @@
         <div class="ai-panel"><div class="panel-head">Extract from Photo <button class="secondary" data-run="extract_from_photo">Extract label</button></div><div class="output auto" id="out_extract_from_photo" aria-live="polite"><span class="placeholder">Upload a label photo, then choose Extract label.</span></div></div>
       </div>
     </div>
-    <ol class="steps" aria-label="How it works">
-      <li><span class="step-number">1</span><div><strong>Add your medicine</strong><p>Type it or upload a photo<br /> of your label.</p></div></li>
-      <li><span class="step-number">2</span><div><strong>Get clear information</strong><p>See key points in plain language.</p></div></li>
-      <li><span class="step-number">3</span><div><strong>Take to your pharmacist</strong><p>Bring your questions and<br /> feel prepared.</p></div></li>
-    </ol>
     <div class="medicine-workspace">
       <div class="section-intro"><div><h2>01 / Your medicine, in plain language.</h2><p class="tag" style="margin: 4px 0 10px; color: var(--text-dim); font-size: 1.15rem; font-weight: 500;">Understand your medicine</p></div></div>
       <p class="sec-desc">Type medicine details or upload a clear label photo. Show the name, strength and instructions. You may cover personal details.</p>
